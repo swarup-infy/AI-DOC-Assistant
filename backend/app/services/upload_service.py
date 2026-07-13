@@ -1,24 +1,23 @@
-import shutil
-from pathlib import Path
-from fastapi import UploadFile
-from app.ml.document_processor import extract_text_from_pdf
-
-UPLOAD_DIR = Path("uploads")
-UPLOAD_DIR.mkdir(exist_ok=True)
-
-
 def save_uploaded_file(file: UploadFile):
     file_path = UPLOAD_DIR / file.filename
 
+    # Save uploaded file
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
-    extracted_text = ""
+    # Step 1: Extract text
+    extracted_text = extract_text(str(file_path))
 
-    if file.filename.lower().endswith(".pdf"):
-        extracted_text = extract_text_from_pdf(str(file_path))
+    # Step 2: Clean text
+    cleaned_text = clean_text(extracted_text)
 
+    # Step 3: Split into chunks
+    chunks = chunk_text(cleaned_text)
+
+    # Step 4: Return everything
     return {
         "file_path": file_path,
-        "text": extracted_text
+        "text": cleaned_text,
+        "total_chunks": len(chunks),
+        "chunks": chunks
     }
