@@ -3,24 +3,31 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 
 from app.core.config import settings
 
-# PostgreSQL Connection
+# SQLAlchemy Engine
 engine = create_engine(
     settings.DATABASE_URL,
-    echo=True
+    pool_pre_ping=True,
+    pool_size=10,
+    max_overflow=20,
+    echo=False,
+    future=True,
 )
 
-# Database Session
+# Session Factory
 SessionLocal = sessionmaker(
     autocommit=False,
     autoflush=False,
-    bind=engine
+    bind=engine,
 )
 
-# Base class for all models
+# Base Class
 Base = declarative_base()
 
 
 def get_db():
+    """
+    Database dependency.
+    """
     db = SessionLocal()
     try:
         yield db

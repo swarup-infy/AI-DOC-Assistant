@@ -52,9 +52,9 @@ class DocumentService:
 
             return document
 
-        except SQLAlchemyError as e:
+        except SQLAlchemyError:
             db.rollback()
-            logger.error(str(e))
+            logger.exception("Database error while creating document.")
             raise
 
     @staticmethod
@@ -112,7 +112,7 @@ class DocumentService:
 
             return True
 
-        except SQLAlchemyError as e:
+        except SQLAlchemyError:
             db.rollback()
-            logger.error(str(e))
+            logger.exception("Database error while deleting document.")
             raise

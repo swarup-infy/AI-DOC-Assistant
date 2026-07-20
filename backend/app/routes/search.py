@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
-from app.auth.security import get_current_user
+from app.core.security import get_current_user
 from app.models.user import User
 from app.services.embedding_service import EmbeddingService
 from app.vector_db.chroma_service import ChromaService
