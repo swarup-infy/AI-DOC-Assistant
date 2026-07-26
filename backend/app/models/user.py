@@ -1,15 +1,36 @@
+from __future__ import annotations
+
 from datetime import datetime
 
-from sqlalchemy import Boolean, Column, DateTime, Integer, String
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    Integer,
+    String,
+    func,
+)
 from sqlalchemy.orm import relationship
 
 from app.db.database import Base
 
 
 class User(Base):
+    """
+    User model.
+
+    Stores authentication and profile information for each user.
+    A user can upload multiple documents and have multiple chat
+    history records.
+    """
+
     __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True,
+    )
 
     username = Column(
         String(100),
@@ -26,24 +47,53 @@ class User(Base):
     )
 
     hashed_password = Column(
-        String,
+        String(255),
         nullable=False,
     )
 
     is_active = Column(
         Boolean,
-        default=True,
         nullable=False,
+        default=True,
+        server_default="true",
     )
 
     created_at = Column(
-        DateTime,
-        default=datetime.utcnow,
+        DateTime(timezone=True),
         nullable=False,
+        default=datetime.utcnow,
+        server_default=func.now(),
+    )
+
+    updated_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+        server_default=func.now(),
     )
 
     documents = relationship(
         "Document",
         back_populates="user",
         cascade="all, delete-orphan",
+        passive_deletes=True,
+        lazy="selectin",
     )
+
+    chat_history = relationship(
+        "ChatHistory",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+        lazy="selectin",
+    )
+
+    def __repr__(self) -> str:
+        return (
+            f"<User("
+            f"id={self.id}, "
+            f"username='{self.username}', "
+            f"email='{self.email}'"
+            f")>"
+        )

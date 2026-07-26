@@ -1,4 +1,10 @@
 import { useState } from "react";
+import {
+  Check,
+  Copy,
+  ThumbsDown,
+  ThumbsUp,
+} from "lucide-react";
 
 interface BubbleActionsProps {
   message: string;
@@ -7,12 +13,10 @@ interface BubbleActionsProps {
 export default function BubbleActions({
   message,
 }: BubbleActionsProps) {
-
   const [copied, setCopied] = useState(false);
 
-  const copyMessage = async () => {
+  async function copyMessage() {
     try {
-
       await navigator.clipboard.writeText(message);
 
       setCopied(true);
@@ -20,70 +24,43 @@ export default function BubbleActions({
       setTimeout(() => {
         setCopied(false);
       }, 2000);
-
     } catch (error) {
       console.error(error);
     }
-  };
+  }
 
   return (
-
-    <div className="mt-3 flex items-center gap-3">
-
+    <div className="mt-4 flex flex-wrap items-center gap-2">
       <button
         onClick={copyMessage}
-        className="
-          rounded-lg
-          border
-          border-gray-200
-          bg-white
-          px-3
-          py-1.5
-          text-sm
-          transition-all
-          duration-200
-          hover:bg-gray-100
-          hover:shadow
-        "
+        className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm transition hover:bg-accent"
       >
-        {copied ? "✅ Copied" : "📋 Copy"}
+        {copied ? (
+          <>
+            <Check size={16} />
+            Copied
+          </>
+        ) : (
+          <>
+            <Copy size={16} />
+            Copy
+          </>
+        )}
       </button>
 
       <button
-        className="
-          rounded-lg
-          border
-          border-gray-200
-          bg-white
-          px-3
-          py-1.5
-          text-sm
-          transition-all
-          duration-200
-          hover:bg-gray-100
-        "
+        className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm transition hover:bg-accent"
       >
-        👍 Like
+        <ThumbsUp size={16} />
+        Like
       </button>
 
       <button
-        className="
-          rounded-lg
-          border
-          border-gray-200
-          bg-white
-          px-3
-          py-1.5
-          text-sm
-          transition-all
-          duration-200
-          hover:bg-gray-100
-        "
+        className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm transition hover:bg-accent"
       >
-        👎 Dislike
+        <ThumbsDown size={16} />
+        Dislike
       </button>
-
     </div>
-
   );
 }

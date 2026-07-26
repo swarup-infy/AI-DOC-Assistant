@@ -44,3 +44,10 @@ htmlcov/
 build/
 dist/
 *.egg-info/
+
+backend/app/vector_db/chroma_data/
+frontend.zip
+__pycache__/
+*.pyc
+.env
+venv/

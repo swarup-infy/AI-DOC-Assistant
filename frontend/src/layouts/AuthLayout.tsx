@@ -1,15 +1,13 @@
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 
 interface Props {
   children: ReactNode;
 }
 
-export default function AuthLayout({
-  children,
-}: Props) {
+export default function AuthLayout({ children }: Props) {
   return (
-    <div className="min-h-screen bg-slate-100 flex items-center justify-center p-6">
-      <div className="w-full max-w-md rounded-2xl bg-white shadow-xl p-8">
+    <div className="flex min-h-screen items-center justify-center bg-background px-6 py-10 transition-colors duration-300">
+      <div className="w-full max-w-md rounded-2xl border border-border bg-card p-8 shadow-xl transition-colors duration-300">
         {children}
       </div>
     </div>

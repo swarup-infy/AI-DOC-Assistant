@@ -24,13 +24,12 @@ export default function ChatPage() {
   const [question, setQuestion] = useState("");
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<ChatMode>("document");
-
   const [messages, setMessages] = useState<ChatMessage[]>([]);
 
   async function handleAsk() {
-    if (!question.trim()) return;
+    if (!question.trim() || loading) return;
 
-    const currentQuestion = question;
+    const currentQuestion = question.trim();
 
     setMessages((prev) => [
       ...prev,
@@ -74,7 +73,7 @@ export default function ChatPage() {
 
   return (
     <DashboardLayout>
-      <div className="mx-auto max-w-6xl space-y-6 p-6">
+      <div className="space-y-6">
         <ChatHeader mode={mode} />
 
         <ModeSelector
@@ -82,7 +81,7 @@ export default function ChatPage() {
           setMode={setMode}
         />
 
-        <div className="overflow-hidden rounded-2xl border bg-white shadow-sm">
+        <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
           <ChatWindow
             messages={messages}
             loading={loading}

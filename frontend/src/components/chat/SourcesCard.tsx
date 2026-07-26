@@ -1,3 +1,5 @@
+import { FileText } from "lucide-react";
+
 import type { Source } from "../../services/chatService";
 
 interface SourcesCardProps {
@@ -7,56 +9,39 @@ interface SourcesCardProps {
 export default function SourcesCard({
   sources,
 }: SourcesCardProps) {
-
-  if (!sources || sources.length === 0) {
+  if (sources.length === 0) {
     return null;
   }
 
   return (
     <div className="mt-5">
-
       <div className="mb-3 flex items-center gap-2">
+        <FileText
+          size={18}
+          className="text-primary"
+        />
 
-        <span className="text-lg">📄</span>
-
-        <h3 className="text-sm font-semibold text-gray-700">
+        <h3 className="text-sm font-semibold text-foreground">
           Sources
         </h3>
-
       </div>
 
       <div className="space-y-3">
-
         {sources.map((source, index) => (
-
           <div
             key={`${source.document_name}-${source.page}-${index}`}
-            className="
-              rounded-xl
-              border
-              border-slate-200
-              bg-slate-50
-              p-4
-              transition-all
-              hover:border-blue-300
-              hover:bg-blue-50
-            "
+            className="rounded-xl border border-border bg-card p-4 transition hover:border-primary/40 hover:bg-muted"
           >
+            <p className="font-medium text-foreground">
+              {source.document_name}
+            </p>
 
-            <div className="font-medium text-slate-900">
-              📘 {source.document_name}
-            </div>
-
-            <div className="mt-1 text-sm text-gray-600">
+            <p className="mt-1 text-sm text-muted-foreground">
               Page {source.page}
-            </div>
-
+            </p>
           </div>
-
         ))}
-
       </div>
-
     </div>
   );
 }

@@ -1,101 +1,346 @@
 from __future__ import annotations
 
 import random
+import threading
 import time
+from abc import ABC, abstractmethod
 from typing import Any
 
-from google import genai
-from google.genai import types
-from google.genai import errors as genai_errors
+from groq import (
+    APIConnectionError,
+    APIStatusError,
+    Groq,
+    RateLimitError,
+)
 
 from app.core.config import settings
 from app.core.logger import logger
 
 
+class BaseLLMProvider(ABC):
+    """
+    Abstract base class for all LLM providers.
+
+    Every future provider (OpenAI, Gemini, Ollama, etc.)
+    should implement this interface.
+    """
+
+    @abstractmethod
+    def generate(
+        self,
+        messages: list[dict[str, str]],
+    ) -> str:
+        """
+        Generate a response from the LLM.
+        """
+        raise NotImplementedError
+
+
+class GroqProvider(BaseLLMProvider):
+    """
+    Production-ready Groq provider.
+    """
+
+    RETRYABLE_STATUS_CODES = {
+        429,
+        500,
+        502,
+        503,
+        504,
+    }
+
+    def __init__(self) -> None:
+
+        if not settings.GROQ_API_KEY:
+            raise ValueError(
+                "GROQ_API_KEY is missing."
+            )
+
+        self.client = Groq(
+            api_key=settings.GROQ_API_KEY
+        )
+
+        self.model = settings.GROQ_MODEL
+        self.temperature = settings.GROQ_TEMPERATURE
+        self.max_tokens = settings.GROQ_MAX_OUTPUT_TOKENS
+        self.top_p = settings.GROQ_TOP_P
+
+        if not 0 <= self.temperature <= 2:
+            raise ValueError(
+                "Invalid GROQ_TEMPERATURE."
+            )
+
+        if not 0 <= self.top_p <= 1:
+            raise ValueError(
+                "Invalid GROQ_TOP_P."
+            )
+
+        if self.max_tokens <= 0:
+            raise ValueError(
+                "GROQ_MAX_OUTPUT_TOKENS must be positive."
+            )
+
+        self.max_retries = 3
+        self.base_backoff = 1.0
+        self.max_jitter = 0.5
+
+        logger.info(
+            "Groq provider initialized using model '%s'.",
+            self.model,
+        )
+
+    def generate(
+        self,
+        messages: list[dict[str, str]],
+    ) -> str:
+
+        last_exception: Exception | None = None
+
+        for attempt in range(
+            1,
+            self.max_retries + 1,
+        ):
+
+            try:
+
+                response = (
+                    self.client.chat.completions.create(
+                        model=self.model,
+                        messages=messages,
+                        temperature=self.temperature,
+                        max_tokens=self.max_tokens,
+                        top_p=self.top_p,
+                    )
+                )
+
+                return self._extract_response(
+                    response
+                )
+
+            except RateLimitError as exc:
+
+                last_exception = exc
+
+                logger.warning(
+                    "Groq rate limit reached."
+                )
+
+            except APIConnectionError as exc:
+
+                last_exception = exc
+
+                logger.warning(
+                    "Groq connection failed."
+                )
+
+            except APIStatusError as exc:
+
+                last_exception = exc
+
+                if (
+                    exc.status_code
+                    not in self.RETRYABLE_STATUS_CODES
+                ):
+                    logger.exception(
+                        "Non-retryable Groq API error."
+                    )
+                    raise
+
+            except Exception as exc:
+
+                logger.exception(
+                    "Unexpected Groq error."
+                )
+
+                raise exc
+
+            if attempt == self.max_retries:
+                if last_exception is not None:
+                    raise last_exception
+                raise RuntimeError(
+                    "Groq request failed after all retries."
+                )
+
+            wait = (
+                self.base_backoff
+                * (2 ** (attempt - 1))
+                + random.uniform(
+                    0,
+                    self.max_jitter,
+                )
+            )
+
+            logger.warning(
+                "Retrying in %.2f seconds...",
+                wait,
+            )
+
+            time.sleep(wait)
+
+        raise RuntimeError(
+            "Groq request failed."
+        )
+
+    @staticmethod
+    def _extract_response(
+        response: Any,
+    ) -> str:
+        """
+        Extract text safely from Groq response.
+        """
+
+        try:
+
+            text = (
+                response
+                .choices[0]
+                .message
+                .content
+            )
+
+            if not text:
+                raise ValueError(
+                    "Empty response."
+                )
+
+            return text.strip()
+
+        except Exception:
+
+            logger.exception(
+                "Failed parsing Groq response."
+            )
+
+            return (
+                "I wasn't able to generate a response."
+            )
+
+
 class LLMService:
     """
-    Service for interacting with Google Gemini.
+    High-level service used by the rest
+    of the application.
 
-    Public interface (generate_response) is provider-agnostic by
-    design — all Gemini-specific details are isolated below it, so
-    swapping providers later only touches this file.
+    The application should never interact
+    with Groq/OpenAI directly.
+
+    It should only call LLMService.
     """
 
-    # Errors worth retrying: rate limits and transient server issues.
-    # Anything else (bad request, auth failure) fails fast on purpose.
-    _RETRYABLE_STATUS_CODES = {429, 500, 502, 503, 504}
-    _MAX_RETRIES = 3
-    _BASE_BACKOFF_SECONDS = 1.0
-    _JITTER_MAX_SECONDS = 0.5
+    _instance: "LLMService | None" = None
+    _lock = threading.Lock()
 
-    # RAG system prompt. Kept as a class constant so LLMService stays
-    # focused on orchestration, not prompt text — worth moving to a
-    # dedicated prompts module if this grows further.
-    _RAG_PROMPT_TEMPLATE = """You are an AI Document Assistant.
+    SYSTEM_PROMPT = """
+You are an AI Document Assistant.
 
-Use ONLY the supplied document context.
+You must answer professionally.
 
-Instructions:
-- Never use outside knowledge.
-- Never invent facts.
-- If the answer is incomplete, say so.
-- If multiple sources disagree, state the disagreement rather than choosing one.
-- If the answer cannot be found, reply exactly:
+Never invent facts.
 
-I couldn't find that information in the uploaded documents.
+Never use outside knowledge when
+document context is provided.
 
-- When the context includes source labels (e.g. Source 1), mention them naturally in your answer.
-- Keep answers concise unless the user requests more detail.
+If the answer is missing,
+say exactly:
 
-------------------------------------------------------------
+I couldn't find that information
+in the uploaded documents.
+
+Keep answers clear and concise.
+"""
+
+    RAG_TEMPLATE = """
+=========================
+DOCUMENT CONTEXT
+=========================
 
 {context}
 
-------------------------------------------------------------
+=========================
+QUESTION
+=========================
 
-User Question:
 {question}
+
+=========================
+ANSWER
+=========================
 """
 
+    def __new__(cls) -> "LLMService":
+        """
+        Thread-safe singleton implementation.
+        """
+
+        if cls._instance is None:
+            with cls._lock:
+                if cls._instance is None:
+                    cls._instance = super().__new__(cls)
+
+        return cls._instance
+
     def __init__(self) -> None:
-        if not settings.GEMINI_API_KEY:
-            raise ValueError("GEMINI_API_KEY is not configured.")
 
-        try:
-            self.client = genai.Client(
-                api_key=settings.GEMINI_API_KEY
+        if getattr(self, "_initialized", False):
+            return
+
+        provider_name = settings.LLM_PROVIDER.lower()
+
+        providers: dict[str, type[BaseLLMProvider]] = {
+            "groq": GroqProvider,
+        }
+
+        if provider_name not in providers:
+            raise ValueError(
+                f"Unsupported LLM provider: {provider_name}"
             )
-        except Exception:
-            logger.exception("Failed to initialize Gemini client.")
-            raise
 
-        self.model = getattr(settings, "GEMINI_MODEL", "gemini-3.5-flash")
-        logger.info("Initialized Gemini model: %s", self.model)
+        self.provider = providers[
+            provider_name
+        ]()
 
-        temperature = getattr(settings, "GEMINI_TEMPERATURE", 0.3)
-        max_output_tokens = getattr(settings, "GEMINI_MAX_OUTPUT_TOKENS", 1024)
-        top_p = getattr(settings, "GEMINI_TOP_P", 0.95)
+        self._initialized = True
 
-        # Fail fast on misconfiguration at startup rather than at the
-        # first request.
-        if not 0 <= temperature <= 2:
-            raise ValueError("GEMINI_TEMPERATURE must be between 0 and 2.")
-
-        if not 0 <= top_p <= 1:
-            raise ValueError("GEMINI_TOP_P must be between 0 and 1.")
-
-        if not isinstance(max_output_tokens, int) or max_output_tokens <= 0:
-            raise ValueError("GEMINI_MAX_OUTPUT_TOKENS must be a positive integer.")
-
-        self.generation_config = types.GenerateContentConfig(
-            temperature=temperature,
-            max_output_tokens=max_output_tokens,
-            top_p=top_p,
+        logger.info(
+            "LLMService initialized using '%s'.",
+            provider_name,
         )
 
-    # -------------------------------------------------------
-    # Public API
-    # -------------------------------------------------------
+    @staticmethod
+    def _build_system_message() -> dict[str, str]:
+        """
+        Build the system prompt.
+        """
+
+        return {
+            "role": "system",
+            "content": LLMService.SYSTEM_PROMPT.strip(),
+        }
+
+    @staticmethod
+    def _build_user_message(
+        prompt: str,
+    ) -> dict[str, str]:
+
+        return {
+            "role": "user",
+            "content": prompt.strip(),
+        }
+
+    @classmethod
+    def _build_rag_prompt(
+        cls,
+        question: str,
+        context: str,
+    ) -> str:
+        """
+        Build the RAG prompt.
+        """
+
+        return cls.RAG_TEMPLATE.format(
+            context=context.strip(),
+            question=question.strip(),
+        )
 
     def generate_response(
         self,
@@ -103,133 +348,240 @@ User Question:
         context: str = "",
     ) -> str:
         """
-        Generate an AI response.
-
-        If context is empty:
-            -> Normal Gemini Chat
-
-        If context exists:
-            -> Document/RAG Chat
+        Main public API used by the application.
         """
 
-        if not question or not question.strip():
+        question = question.strip()
+
+        if not question:
             return "Please enter a question."
 
-        if not context.strip():
-            return self._chat(question)
+        if context.strip():
+            return self._rag_chat(
+                question,
+                context,
+            )
 
-        return self._rag_chat(question, context)
+        return self._chat(question)
 
-    # -------------------------------------------------------
-    # Modes
-    # -------------------------------------------------------
+    def _chat(
+        self,
+        question: str,
+    ) -> str:
+        """
+        Normal chat mode.
+        """
 
-    def _chat(self, question: str) -> str:
-        logger.info("Generating chat response (no context).")
-        return self._generate(question)
-
-    def _rag_chat(self, question: str, context: str) -> str:
-        logger.info("Generating RAG response with document context.")
-        prompt = self._build_rag_prompt(question, context)
-        return self._generate(prompt)
-
-    # -------------------------------------------------------
-    # Prompt building
-    # -------------------------------------------------------
-
-    def _build_rag_prompt(self, question: str, context: str) -> str:
-        return self._RAG_PROMPT_TEMPLATE.format(
-            context=context,
-            question=question,
+        logger.info(
+            "Running normal chat."
         )
 
-    # -------------------------------------------------------
-    # Generation + retry
-    # -------------------------------------------------------
+        messages = [
+            self._build_system_message(),
+            self._build_user_message(
+                question,
+            ),
+        ]
 
-    def _generate(self, contents: str) -> str:
+        return self.provider.generate(
+            messages,
+        )
+
+    def _rag_chat(
+        self,
+        question: str,
+        context: str,
+    ) -> str:
         """
-        Call Gemini with a narrow retry policy: only retry on
-        transient errors (rate limits, 5xx), with exponential
-        backoff plus jitter. Non-transient errors (bad request,
-        auth) fail immediately rather than wasting time retrying
-        something that can't succeed.
+        Retrieval-Augmented Generation.
         """
 
-        last_exception: Exception | None = None
+        logger.info(
+            "Running RAG chat."
+        )
 
-        for attempt in range(1, self._MAX_RETRIES + 1):
-            try:
-                response = self.client.models.generate_content(
-                    model=self.model,
-                    contents=contents,
-                    config=self.generation_config,
-                )
+        rag_prompt = (
+            self._build_rag_prompt(
+                question,
+                context,
+            )
+        )
 
-                return self._extract_response(response)
+        messages = [
+            self._build_system_message(),
+            self._build_user_message(
+                rag_prompt,
+            ),
+        ]
 
-            except genai_errors.APIError as exc:
-                last_exception = exc
-                status_code = getattr(exc, "code", None)
+        return self.provider.generate(
+            messages,
+        )
 
-                if status_code not in self._RETRYABLE_STATUS_CODES:
-                    logger.exception(
-                        "Non-retryable Gemini API error (status=%s).",
-                        status_code,
-                    )
-                    raise
-
-                if attempt == self._MAX_RETRIES:
-                    logger.exception(
-                        "Gemini API error persisted after %d attempts.",
-                        attempt,
-                    )
-                    raise
-
-                backoff = self._BASE_BACKOFF_SECONDS * (2 ** (attempt - 1))
-                backoff += random.uniform(0, self._JITTER_MAX_SECONDS)
-
-                logger.warning(
-                    "Transient Gemini error (status=%s) on attempt %d/%d. "
-                    "Retrying in %.2fs.",
-                    status_code,
-                    attempt,
-                    self._MAX_RETRIES,
-                    backoff,
-                )
-                time.sleep(backoff)
-
-            except Exception:
-                logger.exception("Unexpected error during Gemini generation.")
-                raise
-
-        if last_exception:
-            raise last_exception
-        raise RuntimeError("Gemini generation failed for an unknown reason.")
-
-    def _extract_response(self, response: Any) -> str:
+    def health_check(self) -> bool:
         """
-        Centralized response parsing. If the SDK's response shape
-        changes later, this is the only place that needs updating.
+        Verify that the configured provider is reachable.
         """
+
+        logger.info("Running LLM health check.")
 
         try:
-            text = response.text
+            self.provider.generate(
+                [
+                    self._build_system_message(),
+                    self._build_user_message("Reply with the word OK."),
+                ]
+            )
+            return True
+
+        except Exception:
+            logger.exception(
+                "LLM health check failed."
+            )
+            return False
+
+    def get_provider_name(self) -> str:
+        """
+        Return the configured provider name.
+        """
+
+        return settings.LLM_PROVIDER.lower()
+
+    def get_model_name(self) -> str:
+        """
+        Return the active model.
+        """
+
+        return settings.GROQ_MODEL
+
+    def reload(self) -> None:
+        """
+        Reload the underlying provider.
+        Useful after configuration changes.
+        """
+
+        logger.info("Reloading LLM provider.")
+
+        provider_name = settings.LLM_PROVIDER.lower()
+
+        providers: dict[str, type[BaseLLMProvider]] = {
+            "groq": GroqProvider,
+        }
+
+        if provider_name not in providers:
+            raise ValueError(
+                f"Unsupported LLM provider: {provider_name}"
+            )
+
+        self.provider = providers[provider_name]()
+
+    def supports_streaming(self) -> bool:
+        """
+        Placeholder for future streaming support.
+        """
+
+        return False
+
+    def available_providers(self) -> list[str]:
+        """
+        Return supported providers.
+        """
+
+        return [
+            "groq",
+        ]
+
+    def warmup(self) -> None:
+        """
+        Warm up the model by sending a lightweight request.
+        """
+
+        logger.info("Warming up LLM.")
+
+        try:
+            self.provider.generate(
+                [
+                    self._build_system_message(),
+                    self._build_user_message("Hello"),
+                ]
+            )
         except Exception:
             logger.warning(
-                "Could not extract text from Gemini response "
-                "(possibly blocked by safety filters or no candidates)."
-            )
-            return (
-                "I wasn't able to generate a response to that. "
-                "Please try rephrasing your question."
+                "LLM warmup failed."
             )
 
-        if not text:
-            logger.warning("Gemini returned an empty response.")
-            return (
-                "I wasn't able to generate a response to that. "
-                "Please try rephrasing your question."
-            )
+    def __repr__(self) -> str:
+        return (
+            f"{self.__class__.__name__}("
+            f"provider={self.get_provider_name()}, "
+            f"model={self.get_model_name()})"
+        )
 
-        return text
+    def close(self) -> None:
+        """
+        Release resources held by the provider.
+
+        The Groq SDK currently does not require explicit cleanup,
+        but this method exists so future providers (OpenAI, Ollama,
+        etc.) can implement their own cleanup logic.
+        """
+
+        logger.info(
+            "Closing LLM service."
+        )
+
+        client = getattr(
+            self.provider,
+            "client",
+            None,
+        )
+
+        if client is None:
+            return
+
+        close_method = getattr(
+            client,
+            "close",
+            None,
+        )
+
+        if callable(close_method):
+            try:
+                close_method()
+            except Exception:
+                logger.exception(
+                    "Error while closing LLM client."
+                )
+
+    def reset(self) -> None:
+        """
+        Reset the singleton instance.
+
+        Mainly useful during testing.
+        """
+
+        logger.info(
+            "Resetting LLM service."
+        )
+
+        self.close()
+
+        with self._lock:
+            type(self)._instance = None
+            self._initialized = False
+
+
+def get_llm_service() -> LLMService:
+    """
+    Dependency helper for FastAPI.
+
+    Example:
+
+        llm = get_llm_service()
+
+    or
+
+        Depends(get_llm_service)
+    """
+
+    return LLMService()

@@ -1,5 +1,10 @@
-from sqlalchemy.orm import Session
+from __future__ import annotations
+
+from typing import Optional
+
+from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import Session
 
 from app.core.logger import logger
 from app.models.document import Document
@@ -7,7 +12,7 @@ from app.models.document import Document
 
 class DocumentService:
     """
-    Service for managing uploaded documents.
+    Service responsible for CRUD operations on documents.
     """
 
     @staticmethod
@@ -20,18 +25,28 @@ class DocumentService:
         file_size: int,
         chroma_collection: str = "documents",
     ) -> Document:
+        """
+        Create a document record.
+
+        If a document with the same filename already exists for the
+        same user, return the existing document instead.
+        """
 
         existing_document = (
             db.query(Document)
             .filter(
                 Document.user_id == user_id,
-                Document.filename == filename,
+                func.lower(Document.filename) == filename.lower(),
             )
             .first()
         )
 
         if existing_document:
-            logger.info(f"Duplicate document skipped: {filename}")
+            logger.info(
+                "Duplicate document skipped for user %s: %s",
+                user_id,
+                filename,
+            )
             return existing_document
 
         try:
@@ -48,20 +63,28 @@ class DocumentService:
             db.commit()
             db.refresh(document)
 
-            logger.info(f"Document created: {document.id}")
+            logger.info(
+                "Document created successfully (id=%s)",
+                document.id,
+            )
 
             return document
 
         except SQLAlchemyError:
             db.rollback()
-            logger.exception("Database error while creating document.")
+            logger.exception(
+                "Database error while creating document."
+            )
             raise
 
     @staticmethod
     def get_documents(
         db: Session,
         user_id: int,
-    ):
+    ) -> list[Document]:
+        """
+        Return all documents belonging to a user.
+        """
 
         return (
             db.query(Document)
@@ -74,7 +97,10 @@ class DocumentService:
     def get_document(
         db: Session,
         document_id: int,
-    ):
+    ) -> Optional[Document]:
+        """
+        Return a document by ID.
+        """
 
         return (
             db.query(Document)
@@ -87,7 +113,10 @@ class DocumentService:
         db: Session,
         document_id: int,
         user_id: int,
-    ):
+    ) -> Optional[Document]:
+        """
+        Return a document only if it belongs to the specified user.
+        """
 
         return (
             db.query(Document)
@@ -102,17 +131,25 @@ class DocumentService:
     def delete_document(
         db: Session,
         document: Document,
-    ):
+    ) -> bool:
+        """
+        Delete a document.
+        """
 
         try:
             db.delete(document)
             db.commit()
 
-            logger.info(f"Deleted document {document.id}")
+            logger.info(
+                "Document deleted successfully (id=%s)",
+                document.id,
+            )
 
             return True
 
         except SQLAlchemyError:
             db.rollback()
-            logger.exception("Database error while deleting document.")
-            raise
+            logger.exception(
+                "Database error while deleting document."
+            )
+            raise   

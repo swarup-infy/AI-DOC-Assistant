@@ -1,6 +1,9 @@
 import api from "../api/api";
 
-export type ChatMode = "document" | "gemini" | "smart";
+export type ChatMode =
+  | "document"
+  | "gemini"
+  | "smart";
 
 export interface ChatRequest {
   question: string;
@@ -16,18 +19,84 @@ export interface ChatResponse {
   status: string;
   question: string;
   answer: string;
+  sources: Source[];
   retrieved_chunks?: string[];
-  sources?: Source[];
+  response_time?: number;
+  tokens_used?: number;
+}
+
+export interface ChatHistory {
+  id: number;
+  question: string;
+  answer: string;
+  mode: ChatMode;
+  created_at: string;
 }
 
 export async function askAI(
   question: string,
   mode: ChatMode
 ): Promise<ChatResponse> {
-  const response = await api.post("/chat/", {
-    question,
-    mode,
-  });
+  const { data } = await api.post<ChatResponse>(
+    "/chat/",
+    {
+      question,
+      mode,
+    }
+  );
 
-  return response.data;
+  return data;
+}
+
+export async function regenerateAnswer(
+  question: string,
+  mode: ChatMode
+): Promise<ChatResponse> {
+  const { data } = await api.post<ChatResponse>(
+    "/chat/regenerate",
+    {
+      question,
+      mode,
+    }
+  );
+
+  return data;
+}
+
+export async function summarizeDocument(
+  documentId: number
+) {
+  const { data } = await api.post(
+    `/chat/summarize/${documentId}`
+  );
+
+  return data;
+}
+
+export async function getChatHistory(): Promise<
+  ChatHistory[]
+> {
+  const { data } = await api.get(
+    "/chat/history"
+  );
+
+  return data;
+}
+
+export async function deleteChatHistory(
+  id: number
+) {
+  const { data } = await api.delete(
+    `/chat/history/${id}`
+  );
+
+  return data;
+}
+
+export async function clearChatHistory() {
+  const { data } = await api.delete(
+    "/chat/history"
+  );
+
+  return data;
 }

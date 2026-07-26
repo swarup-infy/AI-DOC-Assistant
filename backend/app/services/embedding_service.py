@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import threading
-from typing import List
 
 from sentence_transformers import SentenceTransformer
 
@@ -12,8 +11,9 @@ from app.core.logger import logger
 class EmbeddingService:
     """
     Service responsible for generating sentence embeddings.
-    The model is loaded only once (singleton) and reused
-    throughout the application's lifetime.
+
+    The embedding model is loaded once and shared across the
+    entire application (singleton pattern).
     """
 
     _model: SentenceTransformer | None = None
@@ -21,84 +21,167 @@ class EmbeddingService:
     _lock = threading.Lock()
 
     def __init__(self) -> None:
+        """
+        Load the embedding model if it has not already been loaded.
+        """
+
         if EmbeddingService._model is None:
             with EmbeddingService._lock:
-                # Re-check inside the lock in case another thread
-                # finished loading while we were waiting for it.
+
                 if EmbeddingService._model is None:
                     logger.info(
                         "Loading embedding model: %s",
                         settings.EMBEDDING_MODEL,
                     )
+
                     try:
-                        EmbeddingService._model = SentenceTransformer(
+                        EmbeddingService._model = (
+                            SentenceTransformer(
+                                settings.EMBEDDING_MODEL
+                            )
+                        )
+
+                        EmbeddingService._model_name = (
                             settings.EMBEDDING_MODEL
                         )
-                        EmbeddingService._model_name = settings.EMBEDDING_MODEL
-                        logger.info("Embedding model loaded successfully.")
+
+                        logger.info(
+                            "Embedding model loaded successfully."
+                        )
+
                     except Exception:
-                        logger.exception("Failed to load embedding model.")
+                        logger.exception(
+                            "Failed to load embedding model."
+                        )
                         raise
 
         self.model = EmbeddingService._model
 
+        if self.model is None:
+            raise RuntimeError(
+                "Embedding model failed to initialize."
+            )
+
     def create_embeddings(
         self,
-        chunks: List[str],
-    ) -> List[List[float]]:
+        chunks: list[str],
+    ) -> list[list[float]]:
         """
-        Convert multiple text chunks into embeddings.
+        Generate embeddings for multiple text chunks.
         """
+
         if not chunks:
             return []
 
-        empty_count = sum(1 for c in chunks if not c or not c.strip())
-        if empty_count:
+        cleaned_chunks = [
+            chunk.strip()
+            for chunk in chunks
+            if chunk and chunk.strip()
+        ]
+
+        if not cleaned_chunks:
+            return []
+
+        if len(cleaned_chunks) != len(chunks):
             logger.warning(
-                "%d of %d chunks are empty/whitespace; embeddings for "
-                "these will be low-signal.",
-                empty_count,
-                len(chunks),
+                "Ignored %s empty text chunks.",
+                len(chunks) - len(cleaned_chunks),
             )
 
         try:
             logger.info(
-                "Generating embeddings for %d chunks.",
-                len(chunks),
+                "Generating embeddings for %s chunks.",
+                len(cleaned_chunks),
             )
+
             embeddings = self.model.encode(
-                chunks,
-                batch_size=32,
+                cleaned_chunks,
+                batch_size=settings.EMBEDDING_BATCH_SIZE,
                 show_progress_bar=False,
                 convert_to_numpy=True,
                 normalize_embeddings=True,
             )
+
             return embeddings.tolist()
+
         except Exception:
-            logger.exception("Failed to generate embeddings.")
+            logger.exception(
+                "Failed to generate embeddings."
+            )
             raise
 
+            
     def create_embedding(
         self,
         text: str,
-    ) -> List[float]:
+    ) -> list[float]:
         """
         Generate an embedding for a single piece of text.
         """
-        result = self.create_embeddings([text])
-        return result[0] if result else []
+
+        if not text or not text.strip():
+            return []
+
+        embeddings = self.create_embeddings([text])
+
+        return embeddings[0] if embeddings else []
 
     @property
     def dimension(self) -> int:
         """
-        Return embedding dimension.
+        Return the embedding dimension.
         """
+
+        if self.model is None:
+            raise RuntimeError(
+                "Embedding model is not initialized."
+            )
+
         return self.model.get_sentence_embedding_dimension()
 
     @property
     def model_name(self) -> str:
         """
-        Return the name of the model that is actually loaded
-        (captured at load time, not re-read from live settings).
+        Return the loaded model name.
         """
-        return EmbeddingService._model_name or settings.EMBEDDING_MODEL
+
+        return (
+            EmbeddingService._model_name
+            or settings.EMBEDDING_MODEL
+        )
+
+    @property
+    def is_loaded(self) -> bool:
+        """
+        Check whether the embedding model has been loaded.
+        """
+
+        return self.model is not None
+
+    def reload_model(self) -> None:
+        """
+        Reload the embedding model from configuration.
+
+        Mainly useful for testing or when changing models.
+        """
+
+        with EmbeddingService._lock:
+
+            logger.info(
+                "Reloading embedding model: %s",
+                settings.EMBEDDING_MODEL,
+            )
+
+            EmbeddingService._model = SentenceTransformer(
+                settings.EMBEDDING_MODEL
+            )
+
+            EmbeddingService._model_name = (
+                settings.EMBEDDING_MODEL
+            )
+
+            self.model = EmbeddingService._model
+
+            logger.info(
+                "Embedding model reloaded successfully."
+            )        

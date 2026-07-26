@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { Bot } from "lucide-react";
 
 import type {
   ChatMode,
@@ -24,8 +25,7 @@ export default function ChatWindow({
   messages,
   loading,
 }: ChatWindowProps) {
-
-  const bottomRef = useRef<HTMLDivElement | null>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({
@@ -34,44 +34,44 @@ export default function ChatWindow({
   }, [messages, loading]);
 
   return (
-    <div className="h-[520px] overflow-y-auto bg-gray-50 p-6">
-
+    <div className="h-[520px] overflow-y-auto bg-muted/30 p-6">
       {messages.length === 0 && !loading && (
         <div className="flex h-full items-center justify-center">
-
-          <div className="text-center">
-
-            <div className="text-6xl">
-              👾
+          <div className="max-w-md text-center">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+              <Bot
+                size={30}
+                className="text-primary"
+              />
             </div>
 
-            <h2 className="mt-4 text-2xl font-semibold">
+            <h2 className="mt-5 text-2xl font-semibold text-foreground">
               AI Document Assistant
             </h2>
 
-            <p className="mt-2 text-gray-500">
-              Start a conversation by asking a question.
+            <p className="mt-2 text-muted-foreground">
+              Ask questions about your uploaded documents, search
+              information, or get AI-powered summaries.
             </p>
-
           </div>
-
         </div>
       )}
 
-      {messages.map((message, index) => (
-        <ChatBubble
-          key={index}
-          role={message.role}
-          message={message.content}
-          mode={message.mode}
-          sources={message.sources}
-        />
-      ))}
+      <div className="space-y-5">
+        {messages.map((message, index) => (
+          <ChatBubble
+            key={index}
+            role={message.role}
+            message={message.content}
+            mode={message.mode}
+            sources={message.sources}
+          />
+        ))}
 
-      {loading && <ThinkingBubble />}
+        {loading && <ThinkingBubble />}
 
-      <div ref={bottomRef} />
-
+        <div ref={bottomRef} />
+      </div>
     </div>
   );
 }

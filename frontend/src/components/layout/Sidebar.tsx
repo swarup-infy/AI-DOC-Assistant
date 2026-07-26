@@ -1,66 +1,140 @@
+import type { LucideIcon } from "lucide-react";
 import {
-  LayoutDashboard,
   FileText,
+  History,
+  LayoutDashboard,
   MessageSquare,
   Search,
-  History,
+  Sparkles,
 } from "lucide-react";
-
 import { NavLink } from "react-router-dom";
 
-const menus = [
+interface SidebarItem {
+  name: string;
+  path: string;
+  icon: LucideIcon;
+}
+
+const menuItems: SidebarItem[] = [
   {
     name: "Dashboard",
-    icon: LayoutDashboard,
     path: "/dashboard",
+    icon: LayoutDashboard,
   },
   {
     name: "Documents",
-    icon: FileText,
     path: "/documents",
+    icon: FileText,
   },
   {
     name: "AI Chat",
-    icon: MessageSquare,
     path: "/chat",
+    icon: MessageSquare,
   },
   {
-    name: "Search",
-    icon: Search,
+    name: "Semantic Search",
     path: "/search",
+    icon: Search,
   },
   {
     name: "History",
-    icon: History,
     path: "/history",
+    icon: History,
   },
 ];
 
 export default function Sidebar() {
   return (
-    <aside className="w-64 bg-slate-900 text-white min-h-screen p-6">
-      <h2 className="text-xl font-bold mb-8">
-        Navigation
-      </h2>
+    <aside className="flex h-full flex-col bg-card">
+      {/* Brand */}
+      <div className="border-b border-border/60 px-8 py-8">
+        <div className="flex items-start gap-4">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/20">
+            <Sparkles
+              size={28}
+              className="text-primary"
+            />
+          </div>
 
-      <nav className="space-y-3">
-        {menus.map((menu) => (
-          <NavLink
-            key={menu.path}
-            to={menu.path}
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-4 py-3 rounded-lg ${
-                isActive
-                  ? "bg-blue-600"
-                  : "hover:bg-slate-700"
-              }`
-            }
-          >
-            <menu.icon size={20} />
-            {menu.name}
-          </NavLink>
-        ))}
+          <div>
+            <h1
+              className="leading-none tracking-tight text-4xl font-light text-foreground"
+              style={{
+                fontFamily:
+                  '"Cormorant Garamond", "Playfair Display", serif',
+              }}
+            >
+              AIDoc
+            </h1>
+
+            <p className="mt-2 text-[11px] uppercase tracking-[0.35em] text-muted-foreground">
+              AI DOCUMENT ASSISTANT
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Navigation */}
+      <nav
+        className="flex-1 px-5 py-8"
+        aria-label="Main Navigation"
+      >
+        <ul className="space-y-3">
+          {menuItems.map(({ name, path, icon: Icon }) => (
+            <li key={path}>
+              <NavLink
+                to={path}
+                end
+                className={({ isActive }) =>
+                  `group flex items-center gap-4 rounded-2xl px-5 py-4 transition-all duration-300 ${
+                    isActive
+                      ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
+                      : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                  }`
+                }
+              >
+                <Icon
+                  size={22}
+                  className="transition-transform duration-300 group-hover:scale-110"
+                />
+
+                <span className="text-[15px] font-medium">
+                  {name}
+                </span>
+              </NavLink>
+            </li>
+          ))}
+        </ul>
       </nav>
+
+      {/* Footer */}
+      <footer className="border-t border-border/60 p-6">
+        <div className="rounded-2xl border border-border/60 bg-muted/40 p-5">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10">
+              <Sparkles
+                size={18}
+                className="text-primary"
+              />
+            </div>
+
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">
+                AI Workspace
+              </h3>
+
+              <p className="text-xs text-muted-foreground">
+                Powered by AI
+              </p>
+            </div>
+          </div>
+
+          <p className="mt-4 text-sm leading-6 text-muted-foreground">
+            Upload documents, perform semantic search, generate summaries,
+            and chat with your knowledge base.
+          </p>
+        </div>
+      </footer>
     </aside>
   );
 }

@@ -1,14 +1,21 @@
 from app.services.embedding_service import EmbeddingService
 
-service = EmbeddingService()
 
-texts = [
-    "Artificial Intelligence",
-    "Machine Learning",
-    "Deep Learning"
-]
+def main():
+    service = EmbeddingService()
 
-embeddings = service.create_embeddings(texts)
+    texts = [
+        "Artificial Intelligence",
+        "Machine Learning",
+        "Deep Learning",
+    ]
 
-print("Number of embeddings:", len(embeddings))
-print("Embedding dimension:", len(embeddings[0]))
+    embeddings = service.create_embeddings(texts)
+
+    print(f"Texts: {len(texts)}")
+    print(f"Embeddings Generated: {len(embeddings)}")
+    print(f"Embedding Dimension: {len(embeddings[0])}")
+
+
+if __name__ == "__main__":
+    main()

@@ -1,3 +1,35 @@
+import { useMemo } from "react";
+
 import { useAuthContext } from "../context/AuthContext";
 
-export const useAuth = () => useAuthContext();
+import {
+  getAccessToken,
+  getCurrentUser,
+  isAuthenticated,
+  logout,
+} from "../services/authService";
+
+export function useAuth() {
+  const auth = useAuthContext();
+
+  return useMemo(
+    () => ({
+      ...auth,
+
+      token: getAccessToken(),
+
+      user:
+        auth.user ??
+        getCurrentUser(),
+
+      isAuthenticated:
+        auth.isAuthenticated ??
+        isAuthenticated(),
+
+      logout,
+    }),
+    [auth]
+  );
+}
+
+export default useAuth;

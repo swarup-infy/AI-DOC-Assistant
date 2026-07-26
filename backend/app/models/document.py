@@ -1,18 +1,43 @@
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
+from __future__ import annotations
+
+from sqlalchemy import (
+    Column,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    func,
+)
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
 
 from app.db.database import Base
 
 
 class Document(Base):
+    """
+    Document model.
+
+    Stores metadata for uploaded documents.
+
+    The actual file is stored on disk while embeddings are stored
+    in ChromaDB. This table maintains the metadata linking all
+    parts of the document pipeline.
+    """
+
     __tablename__ = "documents"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True,
+    )
 
     user_id = Column(
         Integer,
-        ForeignKey("users.id", ondelete="CASCADE"),
+        ForeignKey(
+            "users.id",
+            ondelete="CASCADE",
+        ),
         nullable=False,
         index=True,
     )
@@ -30,6 +55,7 @@ class Document(Base):
     file_type = Column(
         String(50),
         nullable=False,
+        index=True,
     )
 
     file_size = Column(
@@ -41,15 +67,41 @@ class Document(Base):
         String(255),
         nullable=False,
         default="documents",
+        server_default="documents",
     )
 
     uploaded_at = Column(
         DateTime(timezone=True),
-        server_default=func.now(),
         nullable=False,
+        server_default=func.now(),
+    )
+
+    updated_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        onupdate=func.now(),
     )
 
     user = relationship(
         "User",
         back_populates="documents",
+        lazy="selectin",
     )
+
+    chat_history = relationship(
+        "ChatHistory",
+        back_populates="document",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+        lazy="selectin",
+    )
+
+    def __repr__(self) -> str:
+        return (
+            f"<Document("
+            f"id={self.id}, "
+            f"filename='{self.filename}', "
+            f"user_id={self.user_id}"
+            f")>"
+        )

@@ -2,55 +2,71 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 interface BubbleContentProps {
-    message: string;
+  message: string;
 }
 
 export default function BubbleContent({
-    message,
+  message,
 }: BubbleContentProps) {
+  return (
+    <div
+      className="
+        rounded-2xl
+        rounded-tl-md
+        border
+        border-border
+        bg-card
+        px-6
+        py-5
+        shadow-sm
 
-    return (
-        <div
-            className="
-                rounded-2xl
-                rounded-tl-md
-                border
-                border-gray-200
-                bg-white
-                px-6
-                py-5
-                shadow-sm
+        prose
+        max-w-none
+        prose-neutral
+        dark:prose-invert
 
-                prose
-                prose-slate
-                max-w-none
+        prose-headings:font-semibold
+        prose-headings:text-foreground
 
-                prose-headings:font-bold
-                prose-headings:text-slate-900
+        prose-p:text-foreground
+        prose-p:leading-7
 
-                prose-p:leading-8
-                prose-p:text-gray-700
+        prose-strong:text-foreground
 
-                prose-ul:list-disc
-                prose-ol:list-decimal
+        prose-a:text-primary
+        prose-a:no-underline
+        hover:prose-a:underline
 
-                prose-li:my-2
+        prose-ul:my-4
+        prose-ol:my-4
 
-                prose-strong:text-black
+        prose-code:rounded
+        prose-code:bg-muted
+        prose-code:px-1.5
+        prose-code:py-1
+        prose-code:text-primary
+        prose-code:before:content-none
+        prose-code:after:content-none
 
-                prose-code:rounded
-                prose-code:bg-gray-100
-                prose-code:px-1.5
-                prose-code:py-1
+        prose-pre:rounded-xl
+        prose-pre:border
+        prose-pre:border-border
+        prose-pre:bg-muted
+        prose-pre:text-foreground
 
-                prose-pre:bg-slate-900
-                prose-pre:text-white
-                prose-pre:rounded-xl
-            "
-        >
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {message}
-            </ReactMarkdown>
-        </div>
-    );
+        prose-blockquote:border-primary
+        prose-blockquote:text-muted-foreground
+
+        prose-table:border-collapse
+        prose-th:border
+        prose-th:border-border
+        prose-td:border
+        prose-td:border-border
+      "
+    >
+      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+        {message}
+      </ReactMarkdown>
+    </div>
+  );
 }
