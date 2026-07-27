@@ -13,7 +13,7 @@ class EmbeddingService:
     Service responsible for generating sentence embeddings.
 
     The embedding model is loaded once and shared across the
-    entire application (singleton pattern).
+    entire application.
     """
 
     _model: SentenceTransformer | None = None
@@ -27,7 +27,6 @@ class EmbeddingService:
 
         if EmbeddingService._model is None:
             with EmbeddingService._lock:
-
                 if EmbeddingService._model is None:
                     logger.info(
                         "Loading embedding model: %s",
@@ -35,10 +34,8 @@ class EmbeddingService:
                     )
 
                     try:
-                        EmbeddingService._model = (
-                            SentenceTransformer(
-                                settings.EMBEDDING_MODEL
-                            )
+                        EmbeddingService._model = SentenceTransformer(
+                            settings.EMBEDDING_MODEL
                         )
 
                         EmbeddingService._model_name = (
@@ -110,7 +107,6 @@ class EmbeddingService:
             )
             raise
 
-            
     def create_embedding(
         self,
         text: str,
@@ -122,9 +118,15 @@ class EmbeddingService:
         if not text or not text.strip():
             return []
 
-        embeddings = self.create_embeddings([text])
+        embeddings = self.create_embeddings(
+            [text]
+        )
 
-        return embeddings[0] if embeddings else []
+        return (
+            embeddings[0]
+            if embeddings
+            else []
+        )
 
     @property
     def dimension(self) -> int:
@@ -137,7 +139,14 @@ class EmbeddingService:
                 "Embedding model is not initialized."
             )
 
-        return self.model.get_sentence_embedding_dimension()
+        dimension = self.model.get_embedding_dimension()
+
+        if dimension is None:
+            raise RuntimeError(
+                "Unable to determine embedding dimension."
+            )
+
+        return dimension
 
     @property
     def model_name(self) -> str:
@@ -166,22 +175,29 @@ class EmbeddingService:
         """
 
         with EmbeddingService._lock:
-
             logger.info(
                 "Reloading embedding model: %s",
                 settings.EMBEDDING_MODEL,
             )
 
-            EmbeddingService._model = SentenceTransformer(
-                settings.EMBEDDING_MODEL
-            )
+            try:
+                new_model = SentenceTransformer(
+                    settings.EMBEDDING_MODEL
+                )
 
+            except Exception:
+                logger.exception(
+                    "Failed to reload embedding model."
+                )
+                raise
+
+            EmbeddingService._model = new_model
             EmbeddingService._model_name = (
                 settings.EMBEDDING_MODEL
             )
 
-            self.model = EmbeddingService._model
+            self.model = new_model
 
             logger.info(
                 "Embedding model reloaded successfully."
-            )        
+            )

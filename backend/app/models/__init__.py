@@ -1,19 +1,15 @@
 """
-Application SQLAlchemy models.
+SQLAlchemy ORM models package.
 
-This package exports all ORM models so they are registered with
-SQLAlchemy metadata and can be imported directly from ``app.models``.
+Individual models should be imported directly from their modules.
 
-Example:
-    from app.models import User, Document, ChatHistory
+Examples:
+    from app.models.user import User
+    from app.models.document import Document
+    from app.models.chat_history import ChatHistory
+
+Model registration for SQLAlchemy metadata and Alembic is handled by
+``app.db.base``.
 """
 
-from .chat_history import ChatHistory
-from .document import Document
-from .user import User
-
-__all__ = (
-    "User",
-    "Document",
-    "ChatHistory",
-)
+__all__: tuple[str, ...] = ()

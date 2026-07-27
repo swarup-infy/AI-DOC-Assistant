@@ -17,12 +17,17 @@ from app.core.config import settings
 from app.core.logger import logger
 
 
+# ==========================================================
+# Base Provider
+# ==========================================================
+
+
 class BaseLLMProvider(ABC):
     """
-    Abstract base class for all LLM providers.
+    Common interface for all LLM providers.
 
-    Every future provider (OpenAI, Gemini, Ollama, etc.)
-    should implement this interface.
+    Application code communicates with this abstraction instead
+    of depending directly on a provider-specific SDK.
     """
 
     @abstractmethod
@@ -31,14 +36,27 @@ class BaseLLMProvider(ABC):
         messages: list[dict[str, str]],
     ) -> str:
         """
-        Generate a response from the LLM.
+        Generate a text response from chat messages.
         """
+
         raise NotImplementedError
+
+    def close(self) -> None:
+        """
+        Release resources owned by the provider.
+
+        Providers that require cleanup may override this method.
+        """
+
+
+# ==========================================================
+# Groq Provider
+# ==========================================================
 
 
 class GroqProvider(BaseLLMProvider):
     """
-    Production-ready Groq provider.
+    Groq implementation of the LLM provider interface.
     """
 
     RETRYABLE_STATUS_CODES = {
@@ -49,43 +67,53 @@ class GroqProvider(BaseLLMProvider):
         504,
     }
 
+    MAX_RETRIES = 3
+    BASE_BACKOFF_SECONDS = 1.0
+    MAX_JITTER_SECONDS = 0.5
+
     def __init__(self) -> None:
+        """
+        Initialize the Groq client from application settings.
+        """
 
-        if not settings.GROQ_API_KEY:
-            raise ValueError(
-                "GROQ_API_KEY is missing."
-            )
-
-        self.client = Groq(
-            api_key=settings.GROQ_API_KEY
+        api_key = (
+            settings.GROQ_API_KEY
+            .get_secret_value()
+            .strip()
         )
 
-        self.model = settings.GROQ_MODEL
-        self.temperature = settings.GROQ_TEMPERATURE
-        self.max_tokens = settings.GROQ_MAX_OUTPUT_TOKENS
-        self.top_p = settings.GROQ_TOP_P
-
-        if not 0 <= self.temperature <= 2:
+        if not api_key:
             raise ValueError(
-                "Invalid GROQ_TEMPERATURE."
+                "GROQ_API_KEY is missing or empty."
             )
 
-        if not 0 <= self.top_p <= 1:
+        self.model = (
+            settings.GROQ_MODEL.strip()
+        )
+
+        if not self.model:
             raise ValueError(
-                "Invalid GROQ_TOP_P."
+                "GROQ_MODEL is missing or empty."
             )
 
-        if self.max_tokens <= 0:
-            raise ValueError(
-                "GROQ_MAX_OUTPUT_TOKENS must be positive."
-            )
+        self.temperature = (
+            settings.GROQ_TEMPERATURE
+        )
 
-        self.max_retries = 3
-        self.base_backoff = 1.0
-        self.max_jitter = 0.5
+        self.max_tokens = (
+            settings.GROQ_MAX_OUTPUT_TOKENS
+        )
+
+        self.top_p = (
+            settings.GROQ_TOP_P
+        )
+
+        self.client = Groq(
+            api_key=api_key,
+        )
 
         logger.info(
-            "Groq provider initialized using model '%s'.",
+            "Groq provider initialized. model=%s.",
             self.model,
         )
 
@@ -93,16 +121,22 @@ class GroqProvider(BaseLLMProvider):
         self,
         messages: list[dict[str, str]],
     ) -> str:
+        """
+        Generate a Groq response with retry and exponential backoff.
+        """
+
+        if not messages:
+            raise ValueError(
+                "At least one message is required."
+            )
 
         last_exception: Exception | None = None
 
         for attempt in range(
             1,
-            self.max_retries + 1,
+            self.MAX_RETRIES + 1,
         ):
-
             try:
-
                 response = (
                     self.client.chat.completions.create(
                         model=self.model,
@@ -118,67 +152,84 @@ class GroqProvider(BaseLLMProvider):
                 )
 
             except RateLimitError as exc:
-
                 last_exception = exc
 
                 logger.warning(
-                    "Groq rate limit reached."
+                    "Groq rate limit reached. "
+                    "attempt=%d/%d.",
+                    attempt,
+                    self.MAX_RETRIES,
                 )
 
             except APIConnectionError as exc:
-
                 last_exception = exc
 
                 logger.warning(
-                    "Groq connection failed."
+                    "Groq connection failed. "
+                    "attempt=%d/%d.",
+                    attempt,
+                    self.MAX_RETRIES,
                 )
 
             except APIStatusError as exc:
-
                 last_exception = exc
 
                 if (
                     exc.status_code
                     not in self.RETRYABLE_STATUS_CODES
                 ):
-                    logger.exception(
-                        "Non-retryable Groq API error."
+                    logger.error(
+                        "Non-retryable Groq API error. "
+                        "status_code=%s.",
+                        exc.status_code,
                     )
                     raise
 
-            except Exception as exc:
+                logger.warning(
+                    "Retryable Groq API error. "
+                    "status_code=%s attempt=%d/%d.",
+                    exc.status_code,
+                    attempt,
+                    self.MAX_RETRIES,
+                )
 
+            except Exception:
                 logger.exception(
-                    "Unexpected Groq error."
+                    "Unexpected error while calling Groq."
                 )
+                raise
 
-                raise exc
+            if attempt >= self.MAX_RETRIES:
+                break
 
-            if attempt == self.max_retries:
-                if last_exception is not None:
-                    raise last_exception
-                raise RuntimeError(
-                    "Groq request failed after all retries."
-                )
-
-            wait = (
-                self.base_backoff
+            wait_seconds = (
+                self.BASE_BACKOFF_SECONDS
                 * (2 ** (attempt - 1))
                 + random.uniform(
-                    0,
-                    self.max_jitter,
+                    0.0,
+                    self.MAX_JITTER_SECONDS,
                 )
             )
 
             logger.warning(
-                "Retrying in %.2f seconds...",
-                wait,
+                "Retrying Groq request in %.2f seconds.",
+                wait_seconds,
             )
 
-            time.sleep(wait)
+            time.sleep(
+                wait_seconds
+            )
+
+        if last_exception is not None:
+            logger.error(
+                "Groq request failed after %d attempts.",
+                self.MAX_RETRIES,
+            )
+
+            raise last_exception
 
         raise RuntimeError(
-            "Groq request failed."
+            "Groq request failed without a captured exception."
         )
 
     @staticmethod
@@ -186,146 +237,302 @@ class GroqProvider(BaseLLMProvider):
         response: Any,
     ) -> str:
         """
-        Extract text safely from Groq response.
+        Extract and validate text from a Groq response.
         """
 
-        try:
+        choices = getattr(
+            response,
+            "choices",
+            None,
+        )
 
-            text = (
-                response
-                .choices[0]
-                .message
-                .content
+        if not choices:
+            raise RuntimeError(
+                "Groq returned no response choices."
             )
 
-            if not text:
-                raise ValueError(
-                    "Empty response."
-                )
+        message = getattr(
+            choices[0],
+            "message",
+            None,
+        )
 
-            return text.strip()
-
-        except Exception:
-
-            logger.exception(
-                "Failed parsing Groq response."
+        if message is None:
+            raise RuntimeError(
+                "Groq returned a choice without a message."
             )
 
-            return (
-                "I wasn't able to generate a response."
+        content = getattr(
+            message,
+            "content",
+            None,
+        )
+
+        if not isinstance(
+            content,
+            str,
+        ):
+            raise RuntimeError(
+                "Groq returned invalid response content."
             )
+
+        content = content.strip()
+
+        if not content:
+            raise RuntimeError(
+                "Groq returned an empty response."
+            )
+
+        return content
+
+    def close(self) -> None:
+        """
+        Close the Groq client when supported by the SDK.
+        """
+
+        close_method = getattr(
+            self.client,
+            "close",
+            None,
+        )
+
+        if callable(close_method):
+            close_method()
+
+
+# ==========================================================
+# LLM Service
+# ==========================================================
 
 
 class LLMService:
     """
-    High-level service used by the rest
-    of the application.
+    High-level LLM service.
 
-    The application should never interact
-    with Groq/OpenAI directly.
+    Supports:
 
-    It should only call LLMService.
+    - General LLM conversations.
+    - Document-grounded RAG conversations.
+    - Provider abstraction.
+    - Shared provider instance.
+    - Provider health checks.
     """
 
-    _instance: "LLMService | None" = None
-    _lock = threading.Lock()
+    _instance: LLMService | None = None
+    _instance_lock = threading.Lock()
 
-    SYSTEM_PROMPT = """
+    # ======================================================
+    # General Chat Prompt
+    # ======================================================
+
+    GENERAL_SYSTEM_PROMPT = """
+You are a helpful AI assistant.
+
+Follow these rules:
+
+1. Answer the user's question clearly and accurately.
+2. Be concise unless the question requires additional detail.
+3. Use your general knowledge when answering.
+4. Never claim that uploaded documents were searched unless document context
+   was explicitly provided.
+5. If you are uncertain about something, clearly communicate that uncertainty.
+6. Never invent sources, quotations, statistics, or factual details.
+""".strip()
+
+    # ======================================================
+    # RAG System Prompt
+    # ======================================================
+
+    RAG_SYSTEM_PROMPT = """
 You are an AI Document Assistant.
 
-You must answer professionally.
+Your task is to answer questions using retrieved evidence from the user's
+uploaded documents.
 
-Never invent facts.
+Follow these rules:
 
-Never use outside knowledge when
-document context is provided.
+1. Use only the retrieved document evidence as the factual basis for the answer.
+2. Do not use outside knowledge to fill gaps in the document evidence.
+3. Never invent information that is not supported by the retrieved evidence.
+4. Preserve important names, values, terminology, and technical details.
+5. Previous conversation may be provided for conversational continuity, but
+   it must not be treated as document evidence.
+6. If the retrieved document evidence does not contain enough information to
+   answer the question, respond exactly with:
 
-If the answer is missing,
-say exactly:
+I couldn't find that information in the uploaded documents.
+""".strip()
 
-I couldn't find that information
-in the uploaded documents.
-
-Keep answers clear and concise.
-"""
+    # ======================================================
+    # RAG User Template
+    # ======================================================
 
     RAG_TEMPLATE = """
-=========================
-DOCUMENT CONTEXT
-=========================
-
 {context}
 
-=========================
-QUESTION
-=========================
-
+USER QUESTION
+=============
 {question}
 
-=========================
-ANSWER
-=========================
-"""
+TASK
+====
+Answer the user's question using only the RETRIEVED DOCUMENT EVIDENCE
+provided above.
 
-    def __new__(cls) -> "LLMService":
+PREVIOUS CONVERSATION, if present, may only be used to understand
+conversational references. It is not factual document evidence.
+
+If the retrieved document evidence does not contain enough information
+to answer the question, respond exactly with:
+
+I couldn't find that information in the uploaded documents.
+""".strip()
+
+    # ======================================================
+    # Providers
+    # ======================================================
+
+    PROVIDERS: dict[
+        str,
+        type[BaseLLMProvider],
+    ] = {
+        "groq": GroqProvider,
+    }
+
+    # ======================================================
+    # Singleton
+    # ======================================================
+
+    def __new__(
+        cls,
+    ) -> LLMService:
         """
-        Thread-safe singleton implementation.
+        Return the thread-safe singleton service instance.
         """
 
         if cls._instance is None:
-            with cls._lock:
+            with cls._instance_lock:
                 if cls._instance is None:
-                    cls._instance = super().__new__(cls)
+                    cls._instance = (
+                        super().__new__(cls)
+                    )
 
         return cls._instance
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+    ) -> None:
+        """
+        Initialize the configured provider once.
+        """
 
-        if getattr(self, "_initialized", False):
+        if getattr(
+            self,
+            "_initialized",
+            False,
+        ):
             return
 
-        provider_name = settings.LLM_PROVIDER.lower()
+        self.provider_name = (
+            settings.LLM_PROVIDER
+            .lower()
+            .strip()
+        )
 
-        providers: dict[str, type[BaseLLMProvider]] = {
-            "groq": GroqProvider,
-        }
-
-        if provider_name not in providers:
-            raise ValueError(
-                f"Unsupported LLM provider: {provider_name}"
+        self.provider = (
+            self._create_provider(
+                self.provider_name
             )
-
-        self.provider = providers[
-            provider_name
-        ]()
+        )
 
         self._initialized = True
 
         logger.info(
-            "LLMService initialized using '%s'.",
-            provider_name,
+            "LLMService initialized. provider=%s.",
+            self.provider_name,
         )
 
+    # ======================================================
+    # Provider Creation
+    # ======================================================
+
+    @classmethod
+    def _create_provider(
+        cls,
+        provider_name: str,
+    ) -> BaseLLMProvider:
+        """
+        Create the configured LLM provider.
+        """
+
+        provider_class = (
+            cls.PROVIDERS.get(
+                provider_name
+            )
+        )
+
+        if provider_class is None:
+            supported = ", ".join(
+                sorted(
+                    cls.PROVIDERS
+                )
+            )
+
+            raise ValueError(
+                f"Unsupported LLM provider: "
+                f"{provider_name}. "
+                f"Supported providers: {supported}."
+            )
+
+        return provider_class()
+
+    # ======================================================
+    # Message Builders
+    # ======================================================
+
     @staticmethod
-    def _build_system_message() -> dict[str, str]:
+    def _build_system_message(
+        prompt: str,
+    ) -> dict[str, str]:
         """
-        Build the system prompt.
+        Build a system message.
         """
+
+        prompt = prompt.strip()
+
+        if not prompt:
+            raise ValueError(
+                "System prompt cannot be empty."
+            )
 
         return {
             "role": "system",
-            "content": LLMService.SYSTEM_PROMPT.strip(),
+            "content": prompt,
         }
 
     @staticmethod
     def _build_user_message(
         prompt: str,
     ) -> dict[str, str]:
+        """
+        Build a user message.
+        """
+
+        prompt = prompt.strip()
+
+        if not prompt:
+            raise ValueError(
+                "Prompt cannot be empty."
+            )
 
         return {
             "role": "user",
-            "content": prompt.strip(),
+            "content": prompt,
         }
+
+    # ======================================================
+    # RAG Prompt Builder
+    # ======================================================
 
     @classmethod
     def _build_rag_prompt(
@@ -334,13 +541,30 @@ ANSWER
         context: str,
     ) -> str:
         """
-        Build the RAG prompt.
+        Build the document-grounded RAG user prompt.
         """
 
+        question = question.strip()
+        context = context.strip()
+
+        if not question:
+            raise ValueError(
+                "Question cannot be empty."
+            )
+
+        if not context:
+            raise ValueError(
+                "RAG context cannot be empty."
+            )
+
         return cls.RAG_TEMPLATE.format(
-            context=context.strip(),
-            question=question.strip(),
+            context=context,
+            question=question,
         )
+
+    # ======================================================
+    # Public Generation API
+    # ======================================================
 
     def generate_response(
         self,
@@ -348,44 +572,68 @@ ANSWER
         context: str = "",
     ) -> str:
         """
-        Main public API used by the application.
+        Generate a response.
+
+        When context is present:
+            Run document-grounded RAG.
+
+        When context is absent:
+            Run normal general-purpose Groq chat.
         """
 
         question = question.strip()
 
         if not question:
-            return "Please enter a question."
-
-        if context.strip():
-            return self._rag_chat(
-                question,
-                context,
+            raise ValueError(
+                "Question cannot be empty."
             )
 
-        return self._chat(question)
+        context = context.strip()
+
+        if context:
+            return self._rag_chat(
+                question=question,
+                context=context,
+            )
+
+        return self._chat(
+            question=question,
+        )
+
+    # ======================================================
+    # General Chat
+    # ======================================================
 
     def _chat(
         self,
         question: str,
     ) -> str:
         """
-        Normal chat mode.
+        Generate a normal general-knowledge LLM response.
         """
 
         logger.info(
-            "Running normal chat."
+            "Generating general LLM response. "
+            "provider=%s.",
+            self.provider_name,
         )
 
         messages = [
-            self._build_system_message(),
+            self._build_system_message(
+                self.GENERAL_SYSTEM_PROMPT
+            ),
             self._build_user_message(
-                question,
+                question
             ),
         ]
 
         return self.provider.generate(
-            messages,
+            messages
         )
+
+    # ======================================================
+    # RAG Chat
+    # ======================================================
 
     def _rag_chat(
         self,
@@ -393,195 +641,318 @@ ANSWER
         context: str,
     ) -> str:
         """
-        Retrieval-Augmented Generation.
+        Generate a document-grounded response.
         """
 
         logger.info(
-            "Running RAG chat."
+            "Generating RAG response. "
+            "provider=%s.",
+            self.provider_name,
         )
 
-        rag_prompt = (
+        prompt = (
             self._build_rag_prompt(
-                question,
-                context,
+                question=question,
+                context=context,
             )
         )
 
         messages = [
-            self._build_system_message(),
+            self._build_system_message(
+                self.RAG_SYSTEM_PROMPT
+            ),
             self._build_user_message(
-                rag_prompt,
+                prompt
             ),
         ]
 
         return self.provider.generate(
-            messages,
+            messages
         )
 
-    def health_check(self) -> bool:
+    # ======================================================
+    # Health Check
+    # ======================================================
+
+    def health_check(
+        self,
+    ) -> bool:
         """
-        Verify that the configured provider is reachable.
+        Check whether the configured provider can respond.
         """
 
-        logger.info("Running LLM health check.")
+        logger.info(
+            "Running LLM provider health check."
+        )
 
         try:
-            self.provider.generate(
-                [
-                    self._build_system_message(),
-                    self._build_user_message("Reply with the word OK."),
-                ]
+            response = (
+                self.provider.generate(
+                    [
+                        self._build_system_message(
+                            (
+                                "You are performing a health "
+                                "check. Follow the user's "
+                                "instruction exactly."
+                            )
+                        ),
+                        self._build_user_message(
+                            "Reply with exactly: OK"
+                        ),
+                    ]
+                )
             )
-            return True
+
+            healthy = (
+                response.strip().upper()
+                == "OK"
+            )
+
+            if not healthy:
+                logger.warning(
+                    "LLM health check returned "
+                    "an unexpected response."
+                )
+
+            return healthy
 
         except Exception:
             logger.exception(
-                "LLM health check failed."
+                "LLM provider health check failed."
             )
+
             return False
 
-    def get_provider_name(self) -> str:
-        """
-        Return the configured provider name.
-        """
+    # ======================================================
+    # Provider Information
+    # ======================================================
 
-        return settings.LLM_PROVIDER.lower()
-
-    def get_model_name(self) -> str:
+    def get_provider_name(
+        self,
+    ) -> str:
         """
-        Return the active model.
-        """
-
-        return settings.GROQ_MODEL
-
-    def reload(self) -> None:
-        """
-        Reload the underlying provider.
-        Useful after configuration changes.
+        Return the active provider name.
         """
 
-        logger.info("Reloading LLM provider.")
+        return self.provider_name
 
-        provider_name = settings.LLM_PROVIDER.lower()
-
-        providers: dict[str, type[BaseLLMProvider]] = {
-            "groq": GroqProvider,
-        }
-
-        if provider_name not in providers:
-            raise ValueError(
-                f"Unsupported LLM provider: {provider_name}"
-            )
-
-        self.provider = providers[provider_name]()
-
-    def supports_streaming(self) -> bool:
+    def get_model_name(
+        self,
+    ) -> str:
         """
-        Placeholder for future streaming support.
+        Return the active model name.
+        """
+
+        if isinstance(
+            self.provider,
+            GroqProvider,
+        ):
+            return self.provider.model
+
+        return "unknown"
+
+    def available_providers(
+        self,
+    ) -> list[str]:
+        """
+        Return supported provider names.
+        """
+
+        return sorted(
+            self.PROVIDERS.keys()
+        )
+
+    def supports_streaming(
+        self,
+    ) -> bool:
+        """
+        Return whether streaming is currently exposed.
         """
 
         return False
 
-    def available_providers(self) -> list[str]:
-        """
-        Return supported providers.
-        """
+    # ======================================================
+    # Reload
+    # ======================================================
 
-        return [
-            "groq",
-        ]
-
-    def warmup(self) -> None:
+    def reload(
+        self,
+    ) -> None:
         """
-        Warm up the model by sending a lightweight request.
+        Recreate the configured provider.
         """
 
-        logger.info("Warming up LLM.")
-
-        try:
-            self.provider.generate(
-                [
-                    self._build_system_message(),
-                    self._build_user_message("Hello"),
-                ]
-            )
-        except Exception:
-            logger.warning(
-                "LLM warmup failed."
-            )
-
-    def __repr__(self) -> str:
-        return (
-            f"{self.__class__.__name__}("
-            f"provider={self.get_provider_name()}, "
-            f"model={self.get_model_name()})"
+        logger.info(
+            "Reloading LLM provider."
         )
 
-    def close(self) -> None:
-        """
-        Release resources held by the provider.
+        old_provider = (
+            self.provider
+        )
 
-        The Groq SDK currently does not require explicit cleanup,
-        but this method exists so future providers (OpenAI, Ollama,
-        etc.) can implement their own cleanup logic.
+        provider_name = (
+            settings.LLM_PROVIDER
+            .lower()
+            .strip()
+        )
+
+        new_provider = (
+            self._create_provider(
+                provider_name
+            )
+        )
+
+        self.provider = (
+            new_provider
+        )
+
+        self.provider_name = (
+            provider_name
+        )
+
+        try:
+            old_provider.close()
+
+        except Exception:
+            logger.exception(
+                "Failed to close previous LLM provider."
+            )
+
+        logger.info(
+            "LLM provider reloaded successfully. "
+            "provider=%s.",
+            provider_name,
+        )
+
+    # ======================================================
+    # Warmup
+    # ======================================================
+
+    def warmup(
+        self,
+    ) -> bool:
+        """
+        Send a lightweight request to initialize provider resources.
+        """
+
+        logger.info(
+            "Warming up LLM provider."
+        )
+
+        try:
+            response = (
+                self.provider.generate(
+                    [
+                        self._build_system_message(
+                            (
+                                "You are performing a service "
+                                "warmup. Follow the user's "
+                                "instruction exactly."
+                            )
+                        ),
+                        self._build_user_message(
+                            "Reply with exactly: OK"
+                        ),
+                    ]
+                )
+            )
+
+            success = (
+                response.strip().upper()
+                == "OK"
+            )
+
+            if success:
+                logger.info(
+                    "LLM provider warmup completed."
+                )
+            else:
+                logger.warning(
+                    "LLM provider warmup returned "
+                    "an unexpected response."
+                )
+
+            return success
+
+        except Exception:
+            logger.exception(
+                "LLM provider warmup failed."
+            )
+
+            return False
+
+    # ======================================================
+    # Cleanup
+    # ======================================================
+
+    def close(
+        self,
+    ) -> None:
+        """
+        Release resources held by the active provider.
         """
 
         logger.info(
             "Closing LLM service."
         )
 
-        client = getattr(
-            self.provider,
-            "client",
-            None,
-        )
+        try:
+            self.provider.close()
 
-        if client is None:
-            return
+        except Exception:
+            logger.exception(
+                "Failed to close LLM provider."
+            )
 
-        close_method = getattr(
-            client,
-            "close",
-            None,
-        )
+    # ======================================================
+    # Reset
+    # ======================================================
 
-        if callable(close_method):
-            try:
-                close_method()
-            except Exception:
-                logger.exception(
-                    "Error while closing LLM client."
-                )
-
-    def reset(self) -> None:
+    @classmethod
+    def reset(
+        cls,
+    ) -> None:
         """
-        Reset the singleton instance.
+        Reset the singleton.
 
-        Mainly useful during testing.
+        Intended primarily for tests.
         """
+
+        with cls._instance_lock:
+            instance = cls._instance
+
+            if instance is not None:
+                instance.close()
+
+            cls._instance = None
 
         logger.info(
-            "Resetting LLM service."
+            "LLM service singleton reset."
         )
 
-        self.close()
+    # ======================================================
+    # Representation
+    # ======================================================
 
-        with self._lock:
-            type(self)._instance = None
-            self._initialized = False
+    def __repr__(
+        self,
+    ) -> str:
+        return (
+            f"{self.__class__.__name__}("
+            f"provider={self.get_provider_name()!r}, "
+            f"model={self.get_model_name()!r}"
+            f")"
+        )
+
+
+# ==========================================================
+# FastAPI Dependency
+# ==========================================================
 
 
 def get_llm_service() -> LLMService:
     """
-    Dependency helper for FastAPI.
-
-    Example:
-
-        llm = get_llm_service()
-
-    or
-
-        Depends(get_llm_service)
+    Return the shared LLM service.
     """
 
     return LLMService()

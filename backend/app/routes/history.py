@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import Annotated
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
@@ -6,17 +10,34 @@ from app.db.database import get_db
 from app.models.user import User
 from app.services.chat_history_service import ChatHistoryService
 
+
 router = APIRouter(
     prefix="/api/history",
     tags=["Chat History"],
 )
 
 
-@router.get("/")
+@router.get(
+    "/",
+    summary="Get chat history",
+    description=(
+        "Return chat history belonging to the authenticated user."
+    ),
+)
 def get_history(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+    db: Annotated[
+        Session,
+        Depends(get_db),
+    ],
+    current_user: Annotated[
+        User,
+        Depends(get_current_user),
+    ],
+) -> dict:
+    """
+    Retrieve chat history belonging to the current user.
+    """
+
     history = ChatHistoryService.get_chat_history(
         db=db,
         user_id=current_user.id,
@@ -38,27 +59,34 @@ def get_history(
     }
 
 
-@router.delete("/")
+@router.delete(
+    "/",
+    summary="Clear chat history",
+    description=(
+        "Delete all chat history belonging to the authenticated user."
+    ),
+)
 def clear_history(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    history = ChatHistoryService.get_chat_history(
+    db: Annotated[
+        Session,
+        Depends(get_db),
+    ],
+    current_user: Annotated[
+        User,
+        Depends(get_current_user),
+    ],
+) -> dict:
+    """
+    Delete all chat history belonging to the current user.
+    """
+
+    deleted_records = ChatHistoryService.delete_chat_history(
         db=db,
         user_id=current_user.id,
-        limit=100000,
     )
-
-    deleted = len(history)
-
-    for chat in history:
-        db.delete(chat)
-
-    db.commit()
 
     return {
         "status": "success",
         "message": "Chat history cleared successfully.",
-        "deleted_records": deleted,
+        "deleted_records": deleted_records,
     }
-    

@@ -1,20 +1,89 @@
+from __future__ import annotations
+
 import re
 
-def clean_text(text: str) -> str:
+from app.core.logger import logger
+
+
+def clean_text(
+    text: str,
+) -> str:
     """
-    Basic text cleaning for NLP.
+    Clean extracted document text while preserving semantic information.
+
+    The cleaner:
+    - Normalizes line endings.
+    - Removes null characters.
+    - Normalizes spaces and tabs.
+    - Removes unnecessary whitespace around line breaks.
+    - Limits excessive blank lines.
+    - Preserves punctuation, capitalization, numbers, symbols,
+      Unicode characters, and paragraph boundaries.
+
+    This behavior is suitable for document embeddings and RAG because
+    meaningful document content is not aggressively removed.
     """
 
-    # Convert to lowercase
-    text = text.lower()
+    if not isinstance(text, str):
+        raise TypeError(
+            "text must be a string."
+        )
 
-    # Remove extra spaces, tabs, and new lines
-    text = re.sub(r"\s+", " ", text)
+    if not text:
+        return ""
 
-    # Remove special characters (keep letters, numbers, and spaces)
-    text = re.sub(r"[^a-zA-Z0-9\s]", "", text)
+    original_length = len(text)
 
-    # Remove leading and trailing spaces
-    text = text.strip()
+    # Normalize Windows and old Mac line endings.
+    text = text.replace(
+        "\r\n",
+        "\n",
+    ).replace(
+        "\r",
+        "\n",
+    )
 
-    return text
+    # Null bytes can appear in malformed/extracted documents and may
+    # cause problems in downstream processing.
+    text = text.replace(
+        "\x00",
+        "",
+    )
+
+    # Normalize non-breaking spaces commonly found in PDFs/DOCX files.
+    text = text.replace(
+        "\u00a0",
+        " ",
+    )
+
+    # Collapse horizontal whitespace while preserving line breaks.
+    text = re.sub(
+        r"[^\S\n]+",
+        " ",
+        text,
+    )
+
+    # Remove spaces surrounding line breaks.
+    text = re.sub(
+        r" *\n *",
+        "\n",
+        text,
+    )
+
+    # Prevent excessive blank lines while preserving paragraphs.
+    text = re.sub(
+        r"\n{3,}",
+        "\n\n",
+        text,
+    )
+
+    cleaned_text = text.strip()
+
+    logger.debug(
+        "Text cleaning completed. "
+        "original_characters=%d cleaned_characters=%d.",
+        original_length,
+        len(cleaned_text),
+    )
+
+    return cleaned_text

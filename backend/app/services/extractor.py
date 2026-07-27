@@ -1,40 +1,53 @@
+from __future__ import annotations
+
+from collections.abc import Callable
 from pathlib import Path
 
 import fitz
 import pandas as pd
 from docx import Document
+from docx.table import Table
+from docx.text.paragraph import Paragraph
 
 from app.core.logger import logger
 
 
-def extract_pdf_pages(file_path: str) -> list[dict]:
+# ==========================================================
+# Types
+# ==========================================================
+
+Extractor = Callable[[str], str]
+
+
+# ==========================================================
+# PDF Extraction
+# ==========================================================
+
+
+def extract_pdf_pages(file_path: str) -> list[dict[str, int | str]]:
     """
-    Extract a PDF page by page.
+    Extract readable text from a PDF page by page.
 
     Returns:
-        [
-            {
-                "page": 1,
-                "text": "..."
-            },
-            ...
-        ]
+        A list of dictionaries containing page numbers and extracted text.
+
+    Raises:
+        FileNotFoundError: If the file does not exist.
+        Exception: If PDF extraction fails.
     """
+    path = _validate_file(file_path)
 
-    logger.info(f"Extracting PDF: {file_path}")
+    logger.info("Extracting PDF: %s", path)
 
-    pages = []
-
-    try:
-        document = fitz.open(file_path)
-    except Exception:
-        logger.exception(f"Failed to open PDF: {file_path}")
-        raise
+    document: fitz.Document | None = None
 
     try:
+        document = fitz.open(path)
+
+        pages: list[dict[str, int | str]] = []
+
         for page_number, page in enumerate(document, start=1):
-
-            text = page.get_text().strip()
+            text = page.get_text("text").strip()
 
             if text:
                 pages.append(
@@ -44,127 +57,308 @@ def extract_pdf_pages(file_path: str) -> list[dict]:
                     }
                 )
 
+        logger.info(
+            "PDF extraction completed: %s (%d readable pages)",
+            path,
+            len(pages),
+        )
+
+        return pages
+
     except Exception:
-        logger.exception(f"Failed to extract PDF pages: {file_path}")
+        logger.exception("Failed to extract PDF: %s", path)
         raise
 
     finally:
-        document.close()
-
-    return pages
+        if document is not None:
+            try:
+                document.close()
+            except Exception:
+                logger.exception("Failed to close PDF: %s", path)
 
 
 def extract_pdf_text(file_path: str) -> str:
     """
-    Backward-compatible PDF extraction.
-    """
+    Extract all readable text from a PDF.
 
+    Args:
+        file_path: Path to the PDF file.
+
+    Returns:
+        Extracted text from all readable pages.
+    """
     pages = extract_pdf_pages(file_path)
 
-    return "\n".join(page["text"] for page in pages)
+    return "\n\n".join(str(page["text"]) for page in pages)
+
+
+# ==========================================================
+# DOCX Extraction
+# ==========================================================
 
 
 def extract_docx_text(file_path: str) -> str:
     """
-    Extract text from a DOCX file.
-    """
+    Extract readable text from a DOCX file.
 
-    logger.info(f"Extracting DOCX: {file_path}")
+    Top-level paragraphs and tables are extracted while preserving
+    their order in the document.
+
+    Args:
+        file_path: Path to the DOCX file.
+
+    Returns:
+        Extracted document text.
+    """
+    path = _validate_file(file_path)
+
+    logger.info("Extracting DOCX: %s", path)
 
     try:
-        document = Document(file_path)
+        document = Document(path)
 
-        text = ""
+        sections: list[str] = []
 
-        for paragraph in document.paragraphs:
-            text += paragraph.text + "\n"
+        for child in document.element.body.iterchildren():
+            if child.tag.endswith("}p"):
+                paragraph = Paragraph(child, document)
+                text = paragraph.text.strip()
 
-        return text
+                if text:
+                    sections.append(text)
+
+            elif child.tag.endswith("}tbl"):
+                table = Table(child, document)
+
+                for row in table.rows:
+                    cells = [cell.text.strip() for cell in row.cells]
+
+                    if any(cells):
+                        sections.append("\t".join(cells))
+
+        logger.info("DOCX extraction completed: %s", path)
+
+        return "\n".join(sections)
 
     except Exception:
-        logger.exception(f"Failed to extract DOCX: {file_path}")
+        logger.exception("Failed to extract DOCX: %s", path)
         raise
+
+
+# ==========================================================
+# TXT Extraction
+# ==========================================================
 
 
 def extract_txt_text(file_path: str) -> str:
     """
-    Extract text from a plain TXT file.
-    """
+    Extract text from a UTF-8 plain-text file.
 
-    logger.info(f"Extracting TXT: {file_path}")
+    Args:
+        file_path: Path to the TXT file.
+
+    Returns:
+        File contents as text.
+    """
+    path = _validate_file(file_path)
+
+    logger.info("Extracting TXT: %s", path)
 
     try:
-        with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
-            return f.read()
+        text = path.read_text(
+            encoding="utf-8",
+            errors="replace",
+        )
 
-    except Exception:
-        logger.exception(f"Failed to extract TXT: {file_path}")
-        raise
-
-
-def extract_csv_text(file_path: str) -> str:
-    """
-    Extract text from a CSV file.
-    """
-
-    logger.info(f"Extracting CSV: {file_path}")
-
-    try:
-        df = pd.read_csv(file_path)
-        return df.to_string(index=False)
-
-    except Exception:
-        logger.exception(f"Failed to extract CSV: {file_path}")
-        raise
-
-
-def extract_excel_text(file_path: str) -> str:
-    """
-    Extract text from an Excel file, including all sheets.
-    """
-
-    logger.info(f"Extracting Excel: {file_path}")
-
-    try:
-        sheets = pd.read_excel(file_path, sheet_name=None)
-
-        text = ""
-
-        for name, df in sheets.items():
-            text += f"\n===== Sheet: {name} =====\n"
-            text += df.to_string(index=False)
-            text += "\n"
+        logger.info("TXT extraction completed: %s", path)
 
         return text
 
     except Exception:
-        logger.exception(f"Failed to extract Excel: {file_path}")
+        logger.exception("Failed to extract TXT: %s", path)
         raise
+
+
+# ==========================================================
+# CSV Extraction
+# ==========================================================
+
+
+def extract_csv_text(file_path: str) -> str:
+    """
+    Extract tabular content from a CSV file.
+
+    Args:
+        file_path: Path to the CSV file.
+
+    Returns:
+        Human-readable representation of the CSV data.
+    """
+    path = _validate_file(file_path)
+
+    logger.info("Extracting CSV: %s", path)
+
+    try:
+        dataframe = pd.read_csv(path)
+
+        text = dataframe.to_string(index=False)
+
+        logger.info(
+            "CSV extraction completed: %s (%d rows, %d columns)",
+            path,
+            len(dataframe),
+            len(dataframe.columns),
+        )
+
+        return text
+
+    except Exception:
+        logger.exception("Failed to extract CSV: %s", path)
+        raise
+
+
+# ==========================================================
+# Excel Extraction
+# ==========================================================
+
+
+def extract_excel_text(file_path: str) -> str:
+    """
+    Extract content from every sheet in an Excel workbook.
+
+    Args:
+        file_path: Path to the Excel file.
+
+    Returns:
+        Human-readable representation of all workbook sheets.
+    """
+    path = _validate_file(file_path)
+
+    logger.info("Extracting Excel workbook: %s", path)
+
+    try:
+        sheets = pd.read_excel(
+            path,
+            sheet_name=None,
+        )
+
+        sections: list[str] = []
+
+        for sheet_name, dataframe in sheets.items():
+            sections.append(f"===== Sheet: {sheet_name} =====")
+
+            if dataframe.empty:
+                sections.append("[Empty sheet]")
+            else:
+                sections.append(
+                    dataframe.to_string(index=False)
+                )
+
+        logger.info(
+            "Excel extraction completed: %s (%d sheets)",
+            path,
+            len(sheets),
+        )
+
+        return "\n\n".join(sections)
+
+    except Exception:
+        logger.exception(
+            "Failed to extract Excel workbook: %s",
+            path,
+        )
+        raise
+
+
+# ==========================================================
+# Generic Extraction
+# ==========================================================
+
+
+_EXTRACTORS: dict[str, Extractor] = {
+    ".pdf": extract_pdf_text,
+    ".docx": extract_docx_text,
+    ".txt": extract_txt_text,
+    ".csv": extract_csv_text,
+    ".xlsx": extract_excel_text,
+    ".xls": extract_excel_text,
+}
 
 
 def extract_text(file_path: str) -> str:
     """
-    Existing extraction function.
-    This remains unchanged so the current application keeps working.
+    Extract text from a supported document.
+
+    Supported formats:
+        - PDF
+        - DOCX
+        - TXT
+        - CSV
+        - XLSX
+        - XLS
+
+    Args:
+        file_path: Path to the document.
+
+    Returns:
+        Extracted document text.
+
+    Raises:
+        FileNotFoundError: If the file does not exist.
+        ValueError: If the path is invalid or the format is unsupported.
     """
+    path = _validate_file(file_path)
+    extension = path.suffix.lower()
 
-    extension = Path(file_path).suffix.lower()
+    extractor = _EXTRACTORS.get(extension)
 
-    if extension == ".pdf":
-        return extract_pdf_text(file_path)
+    if extractor is None:
+        logger.warning(
+            "Unsupported file type for extraction: %s",
+            extension or "<no extension>",
+        )
 
-    elif extension == ".docx":
-        return extract_docx_text(file_path)
+        raise ValueError(
+            f"Unsupported file type: {extension or '<no extension>'}"
+        )
 
-    elif extension == ".txt":
-        return extract_txt_text(file_path)
+    logger.debug(
+        "Selected extractor for %s: %s",
+        path,
+        extractor.__name__,
+    )
 
-    elif extension == ".csv":
-        return extract_csv_text(file_path)
+    return extractor(str(path))
 
-    elif extension in [".xlsx", ".xls"]:
-        return extract_excel_text(file_path)
 
-    else:
-        logger.warning(f"Unsupported file type for extraction: {extension}")
-        raise ValueError(f"Unsupported file type: {extension}")
+# ==========================================================
+# Internal Helpers
+# ==========================================================
+
+
+def _validate_file(file_path: str) -> Path:
+    """
+    Validate that a supplied path points to an existing regular file.
+
+    Args:
+        file_path: File path to validate.
+
+    Returns:
+        Validated Path object.
+
+    Raises:
+        ValueError: If the path is empty or does not point to a regular file.
+        FileNotFoundError: If the file does not exist.
+    """
+    if not file_path or not file_path.strip():
+        raise ValueError("File path cannot be empty.")
+
+    path = Path(file_path)
+
+    if not path.exists():
+        raise FileNotFoundError(f"File does not exist: {path}")
+
+    if not path.is_file():
+        raise ValueError(f"Path is not a file: {path}")
+
+    return path

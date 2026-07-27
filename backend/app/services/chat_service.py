@@ -9,16 +9,22 @@ from app.services.retriever import Retriever
 
 class ChatService:
     """
-    Orchestrates a chat turn: validates the question, retrieves
-    relevant document context, calls the LLM, and returns the
-    final response.
+    Orchestrate a single AI chat turn.
 
-    Keeps business logic out of this layer — retrieval logic lives
-    in Retriever, generation logic lives in LLMService. ChatService
-    only sequences the calls between them.
+    Responsibilities:
+    - Validate the user's question.
+    - Retrieve document context belonging to the authenticated user.
+    - Optionally restrict retrieval to one document.
+    - Build LLM-ready RAG context.
+    - Generate the final LLM response.
+    - Return source metadata with the answer.
+
+    Retrieval logic lives in Retriever.
+    Generation logic lives in LLMService.
     """
 
     DEFAULT_TOP_K = 5
+    MAX_TOP_K = 20
 
     def __init__(self) -> None:
         self.retriever = Retriever()
@@ -27,45 +33,116 @@ class ChatService:
     def ask(
         self,
         question: str,
+        user_id: int,
         top_k: int = DEFAULT_TOP_K,
+        document_id: int | None = None,
     ) -> dict[str, Any]:
         """
-        Handle a single chat turn.
+        Handle a single document-grounded chat turn.
+
+        Args:
+            question:
+                User's question.
+
+            user_id:
+                Authenticated user ID used to enforce vector
+                ownership during retrieval.
+
+            top_k:
+                Maximum number of relevant chunks to retrieve.
+
+            document_id:
+                Optional document ID. When supplied, retrieval is
+                restricted to that document.
 
         Returns:
-            {
-                "answer": str,
-                "sources": list[dict],  # metadata for cited chunks
-            }
+            A dictionary containing the generated answer and
+            metadata for the retrieved source chunks.
         """
 
-        if not question or not question.strip():
+        if not isinstance(question, str):
+            raise TypeError(
+                "question must be a string."
+            )
+
+        normalized_question = question.strip()
+
+        if not normalized_question:
             return {
                 "answer": "Please enter a question.",
                 "sources": [],
             }
 
+        if user_id <= 0:
+            raise ValueError(
+                "user_id must be greater than zero."
+            )
+
+        if document_id is not None and document_id <= 0:
+            raise ValueError(
+                "document_id must be greater than zero."
+            )
+
         if top_k <= 0:
             logger.warning(
-                "ask() called with non-positive top_k=%d; falling back to default.",
+                "Invalid top_k=%d. Using default=%d.",
                 top_k,
+                self.DEFAULT_TOP_K,
             )
+
             top_k = self.DEFAULT_TOP_K
 
+        safe_top_k = min(
+            top_k,
+            self.MAX_TOP_K,
+        )
+
         try:
+            logger.info(
+                "Processing chat turn. "
+                "user_id=%d document_id=%s "
+                "question_length=%d top_k=%d.",
+                user_id,
+                document_id,
+                len(normalized_question),
+                safe_top_k,
+            )
+
             chunks = self.retriever.retrieve(
-                query=question,
-                top_k=top_k,
+                query=normalized_question,
+                user_id=user_id,
+                top_k=safe_top_k,
+                document_id=document_id,
             )
 
-            context = self.retriever.build_context_from_chunks(chunks)
-
-            answer = self.llm_service.generate_response(
-                question=question,
-                context=context,
+            context = (
+                self.retriever.build_context_from_chunks(
+                    chunks=chunks,
+                    include_source_labels=True,
+                )
             )
 
-            sources = [chunk.get("metadata", {}) for chunk in chunks]
+            answer = (
+                self.llm_service.generate_response(
+                    question=normalized_question,
+                    context=context,
+                )
+            )
+
+            sources = [
+                self._build_source(
+                    chunk
+                )
+                for chunk in chunks
+            ]
+
+            logger.info(
+                "Chat turn completed. "
+                "user_id=%d document_id=%s sources=%d.",
+                user_id,
+                document_id,
+                len(sources),
+            )
 
             return {
                 "answer": answer,
@@ -74,7 +151,56 @@ class ChatService:
 
         except Exception:
             logger.exception(
-                "Chat turn failed (question_length=%d).",
-                len(question),
+                "Chat turn failed. "
+                "user_id=%d document_id=%s "
+                "question_length=%d.",
+                user_id,
+                document_id,
+                len(normalized_question),
             )
             raise
+
+    @staticmethod
+    def _build_source(
+        chunk: dict[str, Any],
+    ) -> dict[str, Any]:
+        """
+        Build safe source information from a retrieved chunk.
+        """
+
+        metadata = chunk.get(
+            "metadata"
+        )
+
+        if not isinstance(metadata, dict):
+            metadata = {}
+
+        source = dict(
+            metadata
+        )
+
+        score = chunk.get(
+            "score"
+        )
+
+        distance = chunk.get(
+            "distance"
+        )
+
+        if isinstance(
+            score,
+            (int, float),
+        ):
+            source["score"] = float(
+                score
+            )
+
+        if isinstance(
+            distance,
+            (int, float),
+        ):
+            source["distance"] = float(
+                distance
+            )
+
+        return source

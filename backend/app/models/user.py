@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from datetime import datetime
-
 from sqlalchemy import (
     Boolean,
     Column,
@@ -20,8 +18,10 @@ class User(Base):
     User model.
 
     Stores authentication and profile information for each user.
-    A user can upload multiple documents and have multiple chat
-    history records.
+
+    A user can:
+    - Upload multiple documents.
+    - Have multiple chat-history records.
     """
 
     __tablename__ = "users"
@@ -61,16 +61,14 @@ class User(Base):
     created_at = Column(
         DateTime(timezone=True),
         nullable=False,
-        default=datetime.utcnow,
         server_default=func.now(),
     )
 
     updated_at = Column(
         DateTime(timezone=True),
         nullable=False,
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow,
         server_default=func.now(),
+        onupdate=func.now(),
     )
 
     documents = relationship(
@@ -93,7 +91,7 @@ class User(Base):
         return (
             f"<User("
             f"id={self.id}, "
-            f"username='{self.username}', "
-            f"email='{self.email}'"
+            f"username={self.username!r}, "
+            f"email={self.email!r}"
             f")>"
         )

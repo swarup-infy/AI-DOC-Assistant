@@ -12,28 +12,18 @@ from fastapi import (
 )
 from sqlalchemy.orm import Session
 
-from app.core.config import settings
 from app.core.logger import logger
 from app.core.security import get_current_user
 from app.db.database import get_db
 from app.models.user import User
 from app.services.upload_service import save_uploaded_file
 
+
 router = APIRouter(
     prefix="/api/upload",
     tags=["Upload"],
 )
 
-# ==========================================================
-# Supported File Types
-# ==========================================================
-
-ALLOWED_CONTENT_TYPES = {
-    "application/pdf",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    "text/csv",
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-}
 
 # ==========================================================
 # Upload Document
@@ -43,57 +33,52 @@ ALLOWED_CONTENT_TYPES = {
 @router.post(
     "/file",
     status_code=status.HTTP_201_CREATED,
-    summary="Upload Document",
-    description="Upload a document for AI processing and semantic search.",
+    summary="Upload document",
+    description=(
+        "Upload a supported document for extraction, embedding, "
+        "semantic search, and AI chat."
+    ),
 )
-async def upload_file(
-    file: Annotated[UploadFile, File(...)],
-    db: Annotated[Session, Depends(get_db)],
-    current_user: Annotated[User, Depends(get_current_user)],
-):
-    """
-    Upload a supported document.
-
-    Supported file types:
-    - PDF
-    - DOCX
-    - CSV
-    - XLSX
-    """
-
-    if not file.filename:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Filename is missing.",
-        )
-
-    if file.content_type not in ALLOWED_CONTENT_TYPES:
-        raise HTTPException(
-            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-            detail=(
-                "Unsupported file type. "
-                "Only PDF, DOCX, CSV and XLSX files are allowed."
+def upload_file(
+    file: Annotated[
+        UploadFile,
+        File(
+            description=(
+                "Document to upload. Supported formats are "
+                "PDF, DOCX, TXT, CSV, XLSX, and XLS."
             ),
-        )
+        ),
+    ],
+    db: Annotated[
+        Session,
+        Depends(get_db),
+    ],
+    current_user: Annotated[
+        User,
+        Depends(get_current_user),
+    ],
+) -> dict:
+    """
+    Process an authenticated document upload.
 
-    contents = await file.read()
+    Validation, size enforcement, storage, extraction, chunking,
+    embedding generation, and ChromaDB persistence are delegated
+    to the upload service.
 
-    if not contents:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Uploaded file is empty.",
-        )
+    File extensions are validated by the service rather than
+    relying solely on the client-provided MIME type, which may be
+    missing or inaccurate.
+    """
 
-    if len(contents) > settings.MAX_UPLOAD_SIZE:
-        raise HTTPException(
-            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-            detail=(
-                f"Maximum file size is "
-                f"{settings.MAX_UPLOAD_SIZE // (1024 * 1024)} MB."
-            ),
-        )
+    filename = file.filename or "<unknown>"
 
-    await file.seek(0)
+    logger.info(
+        "Upload request received. "
+        "user_id=%d filename='%s' content_type='%s'.",
+        current_user.id,
+        filename,
+        file.content_type,
+    )
 
     try:
         result = save_uploaded_file(
@@ -103,9 +88,10 @@ async def upload_file(
         )
 
         logger.info(
-            "User %s uploaded document '%s'",
+            "Upload request completed successfully. "
+            "user_id=%d filename='%s'.",
             current_user.id,
-            file.filename,
+            filename,
         )
 
         return result
@@ -113,13 +99,15 @@ async def upload_file(
     except HTTPException:
         raise
 
-    except Exception:
+    except Exception as exc:
         logger.exception(
-            "Unexpected error while uploading '%s'.",
-            file.filename,
+            "Unexpected upload route failure. "
+            "user_id=%d filename='%s'.",
+            current_user.id,
+            filename,
         )
 
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error.",
-        )
+            detail="Unable to process uploaded document.",
+        ) from exc

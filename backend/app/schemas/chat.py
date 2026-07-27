@@ -11,13 +11,26 @@ from pydantic import (
 )
 
 
+ChatMode = Literal[
+    "document",
+    "groq",
+    "smart",
+]
+
+
 # ==========================================================
 # Chat Request
 # ==========================================================
 
+
 class ChatRequest(BaseModel):
     """
-    Chat request schema.
+    Request payload for AI chat.
+
+    Modes:
+    - document: Answer using uploaded document context.
+    - groq: Answer directly using the configured Groq LLM.
+    - smart: Use document context when relevant and Groq otherwise.
     """
 
     question: str = Field(
@@ -27,23 +40,30 @@ class ChatRequest(BaseModel):
         description="User question.",
     )
 
-    mode: Literal[
-        "document",
-        "gemini",
-        "smart",
-    ] = Field(
+    mode: ChatMode = Field(
         default="document",
-        description="Chat mode.",
+        description="Chat processing mode.",
     )
 
     document_id: int | None = Field(
         default=None,
-        description="Optional document ID for document-specific chat.",
+        gt=0,
+        description=(
+            "Optional document ID used to restrict chat "
+            "to a specific uploaded document."
+        ),
     )
 
     @field_validator("question")
     @classmethod
-    def validate_question(cls, value: str) -> str:
+    def validate_question(
+        cls,
+        value: str,
+    ) -> str:
+        """
+        Normalize and validate the user question.
+        """
+
         value = value.strip()
 
         if not value:
@@ -58,43 +78,87 @@ class ChatRequest(BaseModel):
 # Source Document
 # ==========================================================
 
+
 class SourceDocument(BaseModel):
     """
-    Source used to generate the answer.
+    Document source used to generate an AI response.
     """
 
-    document_id: int
+    document_id: int = Field(
+        ...,
+        gt=0,
+    )
 
-    filename: str
+    filename: str = Field(
+        ...,
+        min_length=1,
+        max_length=255,
+    )
 
-    page: int | None = None
+    page: int | None = Field(
+        default=None,
+        ge=1,
+    )
 
-    similarity: float | None = None
+    similarity: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+    )
+
+    @field_validator("filename")
+    @classmethod
+    def validate_filename(
+        cls,
+        value: str,
+    ) -> str:
+        """
+        Normalize and validate the source filename.
+        """
+
+        value = value.strip()
+
+        if not value:
+            raise ValueError(
+                "Filename cannot be empty."
+            )
+
+        return value
+
+    model_config = ConfigDict(
+        frozen=True,
+    )
 
 
 # ==========================================================
 # Chat Response
 # ==========================================================
 
+
 class ChatResponse(BaseModel):
     """
-    AI chat response.
+    Response returned by the AI chat endpoint.
     """
 
-    status: str
-
-    message: str
-
-    answer: str
-
-    mode: Literal[
-        "document",
-        "gemini",
-        "smart",
+    status: Literal[
+        "success",
+        "error",
     ]
 
+    message: str = Field(
+        ...,
+        min_length=1,
+    )
+
+    answer: str = Field(
+        ...,
+        min_length=1,
+    )
+
+    mode: ChatMode
+
     sources: list[SourceDocument] = Field(
-        default_factory=list
+        default_factory=list,
     )
 
     model_config = ConfigDict(
@@ -106,20 +170,36 @@ class ChatResponse(BaseModel):
 # Chat History
 # ==========================================================
 
+
 class ChatHistoryResponse(BaseModel):
     """
-    Stored chat history.
+    Stored chat history record.
     """
 
-    id: int
+    id: int = Field(
+        ...,
+        gt=0,
+    )
 
-    user_id: int
+    user_id: int = Field(
+        ...,
+        gt=0,
+    )
 
-    document_id: int | None = None
+    document_id: int | None = Field(
+        default=None,
+        gt=0,
+    )
 
-    question: str
+    question: str = Field(
+        ...,
+        min_length=1,
+    )
 
-    answer: str
+    answer: str = Field(
+        ...,
+        min_length=1,
+    )
 
     created_at: datetime
 
@@ -133,14 +213,20 @@ class ChatHistoryResponse(BaseModel):
 # Chat History List
 # ==========================================================
 
+
 class ChatHistoryListResponse(BaseModel):
     """
-    List of chat history records.
+    Collection of stored chat history records.
     """
 
-    history: list[ChatHistoryResponse]
+    history: list[ChatHistoryResponse] = Field(
+        default_factory=list,
+    )
 
-    total: int
+    total: int = Field(
+        ...,
+        ge=0,
+    )
 
     model_config = ConfigDict(
         frozen=True,

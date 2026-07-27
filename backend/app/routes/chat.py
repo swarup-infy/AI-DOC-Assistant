@@ -1,16 +1,26 @@
-from typing import Literal
+from __future__ import annotations
 
-from fastapi import APIRouter, Depends
-from pydantic import BaseModel
+from typing import Annotated, Any
+
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
+from app.core.logger import logger
 from app.core.security import get_current_user
 from app.db.database import get_db
 from app.models.user import User
+from app.schemas.chat import (
+    ChatRequest,
+    ChatResponse,
+    SourceDocument,
+)
 from app.services.chat_history_service import ChatHistoryService
+from app.services.document_service import DocumentService
 from app.services.embedding_service import EmbeddingService
 from app.services.llm_service import LLMService
 from app.vector_db.chroma_service import ChromaService
+
 
 router = APIRouter(
     prefix="/api/chat",
@@ -18,197 +28,757 @@ router = APIRouter(
 )
 
 
-class ChatRequest(BaseModel):
-    question: str
-    mode: Literal["document", "gemini", "smart"] = "document"
+# ==========================================================
+# Metadata Helpers
+# ==========================================================
 
 
-SIMILARITY_THRESHOLD = 1.20
+def _metadata_int(
+    value: Any,
+) -> int | None:
+    """
+    Convert ChromaDB metadata to a positive integer.
+    """
+
+    if value is None:
+        return None
+
+    try:
+        result = int(value)
+    except (TypeError, ValueError):
+        return None
+
+    if result <= 0:
+        return None
+
+    return result
 
 
-@router.post("/")
-async def chat(
-    request: ChatRequest,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    embedding_service = EmbeddingService()
-    chroma_service = ChromaService()
-    llm_service = LLMService()
+def _metadata_string(
+    value: Any,
+) -> str | None:
+    """
+    Convert ChromaDB metadata to a non-empty string.
+    """
 
-    # ============================================================
-    # GEMINI MODE
-    # ============================================================
-    if request.mode == "gemini":
+    if value is None:
+        return None
 
-        answer = llm_service.generate_response(
-            question=request.question,
-            context="",
-        )
+    result = str(value).strip()
 
-        ChatHistoryService.save_chat(
-            db=db,
-            user_id=current_user.id,
-            question=request.question,
-            answer=answer,
-        )
+    return result or None
 
-        return {
-            "status": "success",
-            "question": request.question,
-            "answer": answer,
-            "retrieved_chunks": [],
-            "sources": [],
-        }
 
-    # ============================================================
-    # CREATE QUERY EMBEDDING
-    # ============================================================
-    query_embedding = embedding_service.create_embeddings(
-        [request.question]
-    )[0]
+# ==========================================================
+# Similarity
+# ==========================================================
 
-    # ============================================================
-    # SEARCH CHROMADB
-    # ============================================================
-    search_results = chroma_service.search(
-        query_embedding=query_embedding,
-        n_results=3,
+
+def _cosine_distance_to_similarity(
+    distance: float,
+) -> float:
+    """
+    Convert Chroma cosine distance to normalized similarity.
+
+    For cosine distance:
+
+        distance = 1 - cosine_similarity
+
+    Negative cosine similarity is treated as zero for the API
+    response because SourceDocument exposes similarity in [0, 1].
+    """
+
+    similarity = 1.0 - distance
+
+    return max(
+        0.0,
+        min(
+            1.0,
+            similarity,
+        ),
     )
 
-    documents = search_results.get("documents", [])
-    distances = search_results.get("distances", [])
-    metadatas = search_results.get("metadatas", [])
 
-    relevant_documents = []
-    sources = []
-    seen_sources = set()
+# ==========================================================
+# Search Filter
+# ==========================================================
 
-    if documents and distances and metadatas:
 
-        for doc, distance, metadata in zip(
-            documents[0],
-            distances[0],
-            metadatas[0],
-        ):
+def _build_search_filter(
+    *,
+    user_id: int,
+    document_id: int | None,
+) -> dict[str, Any]:
+    """
+    Build a ChromaDB ownership filter.
 
-            print(f"Distance = {distance}")
+    Every retrieval is restricted to the authenticated user.
+    When document_id is supplied, retrieval is further restricted
+    to that specific document.
+    """
 
-            if distance > SIMILARITY_THRESHOLD:
-                continue
+    if document_id is None:
+        return {
+            "user_id": user_id,
+        }
 
-            relevant_documents.append(doc)
+    return {
+        "$and": [
+            {
+                "user_id": user_id,
+            },
+            {
+                "document_id": document_id,
+            },
+        ]
+    }
 
-            if metadata:
 
-                source = {
-                    "document_name": metadata.get("document_name"),
-                    "page": metadata.get("page"),
-                }
+# ==========================================================
+# Document Ownership
+# ==========================================================
 
-                source_key = (
-                    source["document_name"],
-                    source["page"],
-                )
 
-                if source_key not in seen_sources:
-                    seen_sources.add(source_key)
-                    sources.append(source)
+def _validate_document_access(
+    db: Session,
+    *,
+    user_id: int,
+    document_id: int | None,
+) -> None:
+    """
+    Verify that a requested document belongs to the current user.
 
-    # ============================================================
-    # NO RELEVANT DOCUMENT FOUND
-    # ============================================================
-    if len(relevant_documents) == 0:
+    A 404 response avoids exposing whether another user's document
+    exists.
+    """
 
-        # -----------------------
-        # SMART MODE
-        # -----------------------
-        if request.mode == "smart":
+    if document_id is None:
+        return
 
-            answer = llm_service.generate_response(
-                question=request.question,
-                context="",
+    document = DocumentService.get_document_by_id(
+        db=db,
+        document_id=document_id,
+        user_id=user_id,
+    )
+
+    if document is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Document not found.",
+        )
+
+
+# ==========================================================
+# Retrieval Processing
+# ==========================================================
+
+
+def _extract_relevant_results(
+    search_results: dict[str, Any],
+) -> tuple[
+    list[str],
+    list[SourceDocument],
+]:
+    """
+    Extract relevant chunks and source information from ChromaDB.
+
+    Results below RAG_MIN_SIMILARITY are discarded.
+
+    The returned document list contains only chunks that passed
+    the configured similarity threshold.
+    """
+
+    documents = (
+        search_results.get("documents")
+        or [[]]
+    )
+
+    distances = (
+        search_results.get("distances")
+        or [[]]
+    )
+
+    metadatas = (
+        search_results.get("metadatas")
+        or [[]]
+    )
+
+    document_values = (
+        documents[0]
+        if documents
+        else []
+    )
+
+    distance_values = (
+        distances[0]
+        if distances
+        else []
+    )
+
+    metadata_values = (
+        metadatas[0]
+        if metadatas
+        else []
+    )
+
+    relevant_documents: list[str] = []
+    sources: list[SourceDocument] = []
+
+    seen_sources: set[
+        tuple[int, str, int | None]
+    ] = set()
+
+    for index, document in enumerate(
+        document_values
+    ):
+        if not isinstance(document, str):
+            continue
+
+        document = document.strip()
+
+        if not document:
+            continue
+
+        if index >= len(distance_values):
+            continue
+
+        try:
+            distance = float(
+                distance_values[index]
+            )
+        except (TypeError, ValueError):
+            continue
+
+        similarity = (
+            _cosine_distance_to_similarity(
+                distance
+            )
+        )
+
+        logger.debug(
+            "RAG candidate evaluated. "
+            "distance=%.4f similarity=%.4f threshold=%.4f.",
+            distance,
+            similarity,
+            settings.RAG_MIN_SIMILARITY,
+        )
+
+        if similarity < settings.RAG_MIN_SIMILARITY:
+            continue
+
+        metadata: dict[str, Any] = {}
+
+        if index < len(metadata_values):
+            raw_metadata = metadata_values[index]
+
+            if isinstance(
+                raw_metadata,
+                dict,
+            ):
+                metadata = raw_metadata
+
+        document_id = _metadata_int(
+            metadata.get("document_id")
+        )
+
+        filename = _metadata_string(
+            metadata.get("document_name")
+        )
+
+        if filename is None:
+            filename = _metadata_string(
+                metadata.get("filename")
             )
 
-            ChatHistoryService.save_chat(
+        page = _metadata_int(
+            metadata.get("page")
+        )
+
+        if document_id is None or filename is None:
+            logger.warning(
+                "Skipping ChromaDB result with incomplete "
+                "metadata. document_id=%s filename=%s.",
+                document_id,
+                filename,
+            )
+            continue
+
+        relevant_documents.append(
+            document
+        )
+
+        source_key = (
+            document_id,
+            filename,
+            page,
+        )
+
+        if source_key in seen_sources:
+            continue
+
+        seen_sources.add(
+            source_key
+        )
+
+        sources.append(
+            SourceDocument(
+                document_id=document_id,
+                filename=filename,
+                page=page,
+                similarity=similarity,
+            )
+        )
+
+    return relevant_documents, sources
+
+
+# ==========================================================
+# Chat History
+# ==========================================================
+
+
+def _build_chat_history(
+    db: Session,
+    *,
+    user_id: int,
+    document_id: int | None,
+) -> str:
+    """
+    Build recent conversation history.
+
+    When a document is selected, history is restricted to that
+    document to prevent conversation context from leaking between
+    different documents.
+    """
+
+    if settings.CHAT_HISTORY_LIMIT == 0:
+        return ""
+
+    previous_chats = (
+        ChatHistoryService.get_chat_history(
+            db=db,
+            user_id=user_id,
+            limit=settings.CHAT_HISTORY_LIMIT,
+            document_id=document_id,
+        )
+    )
+
+    if not previous_chats:
+        return ""
+
+    history_parts: list[str] = []
+
+    for chat_item in previous_chats:
+        history_parts.append(
+            f"User: {chat_item.question}\n"
+            f"Assistant: {chat_item.answer}"
+        )
+
+    return "\n\n".join(
+        history_parts
+    )
+
+
+# ==========================================================
+# RAG Context
+# ==========================================================
+
+
+def _build_rag_context(
+    *,
+    history: str,
+    documents: list[str],
+) -> str:
+    """
+    Build grounded context for the LLM.
+
+    Retrieved evidence and previous conversation are explicitly
+    separated so conversation history is not presented as source
+    evidence.
+    """
+
+    document_context = "\n\n".join(
+        (
+            f"[Document Chunk {index}]\n"
+            f"{document}"
+        )
+        for index, document in enumerate(
+            documents,
+            start=1,
+        )
+    )
+
+    context_parts = [
+        (
+            "RETRIEVED DOCUMENT EVIDENCE\n"
+            "===========================\n"
+            f"{document_context}"
+        )
+    ]
+
+    if history:
+        context_parts.append(
+            (
+                "PREVIOUS CONVERSATION\n"
+                "=====================\n"
+                "Use this section only for conversational "
+                "continuity. Do not treat it as evidence from "
+                "the uploaded document.\n\n"
+                f"{history}"
+            )
+        )
+
+    return "\n\n".join(
+        context_parts
+    )
+
+
+# ==========================================================
+# Persistence
+# ==========================================================
+
+
+def _save_chat(
+    db: Session,
+    *,
+    user_id: int,
+    question: str,
+    answer: str,
+    document_id: int | None,
+) -> None:
+    """
+    Persist a completed chat interaction.
+    """
+
+    ChatHistoryService.save_chat(
+        db=db,
+        user_id=user_id,
+        question=question,
+        answer=answer,
+        document_id=document_id,
+    )
+
+
+# ==========================================================
+# Direct Groq Response
+# ==========================================================
+
+
+def _generate_direct_response(
+    *,
+    llm_service: LLMService,
+    question: str,
+) -> str:
+    """
+    Generate a direct Groq response without document context.
+    """
+
+    return llm_service.generate_response(
+        question=question,
+        context="",
+    )
+
+
+# ==========================================================
+# Chat Endpoint
+# ==========================================================
+
+
+@router.post(
+    "/",
+    response_model=ChatResponse,
+    summary="Chat with AI",
+    description=(
+        "Answer questions using uploaded documents, "
+        "Groq directly, or smart retrieval with Groq fallback."
+    ),
+)
+def chat(
+    request: ChatRequest,
+    db: Annotated[
+        Session,
+        Depends(get_db),
+    ],
+    current_user: Annotated[
+        User,
+        Depends(get_current_user),
+    ],
+) -> ChatResponse:
+    """
+    Process an authenticated AI chat request.
+
+    document:
+        Search the authenticated user's documents and answer only
+        when sufficiently relevant document evidence is found.
+
+    groq:
+        Generate a direct answer using the configured Groq model.
+
+    smart:
+        Search documents first. When sufficiently relevant evidence
+        exists, use RAG. Otherwise fall back to direct Groq.
+    """
+
+    logger.info(
+        "Processing chat request. "
+        "user_id=%d mode=%s document_id=%s.",
+        current_user.id,
+        request.mode,
+        request.document_id,
+    )
+
+    try:
+        # ======================================================
+        # Document Ownership
+        # ======================================================
+
+        _validate_document_access(
+            db=db,
+            user_id=current_user.id,
+            document_id=request.document_id,
+        )
+
+        llm_service = LLMService()
+
+        # ======================================================
+        # Groq Mode
+        # ======================================================
+
+        if request.mode == "groq":
+            answer = _generate_direct_response(
+                llm_service=llm_service,
+                question=request.question,
+            )
+
+            _save_chat(
                 db=db,
                 user_id=current_user.id,
                 question=request.question,
                 answer=answer,
+                document_id=request.document_id,
             )
 
-            return {
-                "status": "success",
-                "question": request.question,
-                "answer": answer,
-                "retrieved_chunks": [],
-                "sources": [],
-            }
+            return ChatResponse(
+                status="success",
+                message="Response generated successfully.",
+                answer=answer,
+                mode=request.mode,
+                sources=[],
+            )
 
-        # -----------------------
-        # DOCUMENT MODE
-        # -----------------------
-        return {
-            "status": "success",
-            "question": request.question,
-            "answer": "No relevant information found in the uploaded documents.",
-            "retrieved_chunks": [],
-            "sources": [],
-        }
+        # ======================================================
+        # Query Embedding
+        # ======================================================
 
-    # ============================================================
-    # LOAD CHAT HISTORY
-    # ============================================================
-    previous_chats = ChatHistoryService.get_chat_history(
-        db=db,
-        user_id=current_user.id,
-        limit=5,
-    )
-
-    history = ""
-
-    for chat in previous_chats:
-
-        history += (
-            f"User: {chat.question}\n"
-            f"Assistant: {chat.answer}\n\n"
+        embedding_service = (
+            EmbeddingService()
         )
 
-    # ============================================================
-    # BUILD CONTEXT
-    # ============================================================
-    context = (
-        "Previous Conversation:\n"
-        + history
-        + "\nRelevant Documents:\n\n"
-        + "\n\n".join(relevant_documents)
-    )
+        embeddings = (
+            embedding_service.create_embeddings(
+                [request.question]
+            )
+        )
 
-    # ============================================================
-    # ASK LLM
-    # ============================================================
-    answer = llm_service.generate_response(
-        question=request.question,
-        context=context,
-    )
+        if not embeddings:
+            raise RuntimeError(
+                "Embedding service returned no query embedding."
+            )
 
-    # ============================================================
-    # SAVE CHAT
-    # ============================================================
-    ChatHistoryService.save_chat(
-        db=db,
-        user_id=current_user.id,
-        question=request.question,
-        answer=answer,
-    )
+        query_embedding = (
+            embeddings[0]
+        )
 
-    # ============================================================
-    # RESPONSE
-    # ============================================================
-    return {
-        "status": "success",
-        "question": request.question,
-        "answer": answer,
-        "retrieved_chunks": relevant_documents,
-        "sources": sources,
-    }
+        # ======================================================
+        # ChromaDB Retrieval
+        # ======================================================
+
+        search_filter = (
+            _build_search_filter(
+                user_id=current_user.id,
+                document_id=request.document_id,
+            )
+        )
+
+        chroma_service = (
+            ChromaService()
+        )
+
+        search_results = (
+            chroma_service.search(
+                query_embedding=query_embedding,
+                n_results=settings.RAG_TOP_K,
+                where=search_filter,
+            )
+        )
+
+        (
+            relevant_documents,
+            sources,
+        ) = _extract_relevant_results(
+            search_results
+        )
+
+        logger.info(
+            "RAG retrieval completed. "
+            "user_id=%d document_id=%s "
+            "relevant_chunks=%d sources=%d.",
+            current_user.id,
+            request.document_id,
+            len(relevant_documents),
+            len(sources),
+        )
+
+        # ======================================================
+        # No Relevant Evidence
+        # ======================================================
+
+        if not relevant_documents:
+
+            # --------------------------------------------------
+            # Smart -> Groq Fallback
+            # --------------------------------------------------
+
+            if request.mode == "smart":
+                logger.info(
+                    "No sufficiently relevant document context "
+                    "found. Falling back to Groq. "
+                    "user_id=%d document_id=%s.",
+                    current_user.id,
+                    request.document_id,
+                )
+
+                answer = (
+                    _generate_direct_response(
+                        llm_service=llm_service,
+                        question=request.question,
+                    )
+                )
+
+                _save_chat(
+                    db=db,
+                    user_id=current_user.id,
+                    question=request.question,
+                    answer=answer,
+                    document_id=request.document_id,
+                )
+
+                return ChatResponse(
+                    status="success",
+                    message=(
+                        "No sufficiently relevant document "
+                        "context was found. Response generated "
+                        "using Groq."
+                    ),
+                    answer=answer,
+                    mode=request.mode,
+                    sources=[],
+                )
+
+            # --------------------------------------------------
+            # Document Mode
+            # --------------------------------------------------
+
+            answer = (
+                "I couldn't find sufficiently relevant "
+                "information in the uploaded documents "
+                "to answer that question."
+            )
+
+            _save_chat(
+                db=db,
+                user_id=current_user.id,
+                question=request.question,
+                answer=answer,
+                document_id=request.document_id,
+            )
+
+            return ChatResponse(
+                status="success",
+                message=(
+                    "No sufficiently relevant document "
+                    "context was found."
+                ),
+                answer=answer,
+                mode=request.mode,
+                sources=[],
+            )
+
+        # ======================================================
+        # Conversation History
+        # ======================================================
+
+        history = (
+            _build_chat_history(
+                db=db,
+                user_id=current_user.id,
+                document_id=request.document_id,
+            )
+        )
+
+        # ======================================================
+        # RAG Context
+        # ======================================================
+
+        context = (
+            _build_rag_context(
+                history=history,
+                documents=relevant_documents,
+            )
+        )
+
+        # ======================================================
+        # Grounded LLM Response
+        # ======================================================
+
+        answer = (
+            llm_service.generate_response(
+                question=request.question,
+                context=context,
+            )
+        )
+
+        # ======================================================
+        # Persistence
+        # ======================================================
+
+        _save_chat(
+            db=db,
+            user_id=current_user.id,
+            question=request.question,
+            answer=answer,
+            document_id=request.document_id,
+        )
+
+        # ======================================================
+        # Response
+        # ======================================================
+
+        return ChatResponse(
+            status="success",
+            message=(
+                "Response generated from document context."
+            ),
+            answer=answer,
+            mode=request.mode,
+            sources=sources,
+        )
+
+    except HTTPException:
+        raise
+
+    except Exception as exc:
+        logger.exception(
+            "Chat request failed. "
+            "user_id=%d mode=%s document_id=%s.",
+            current_user.id,
+            request.mode,
+            request.document_id,
+        )
+
+        raise HTTPException(
+            status_code=(
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            ),
+            detail="Unable to process chat request.",
+        ) from exc
