@@ -36,14 +36,12 @@ class User(Base):
         String(100),
         unique=True,
         nullable=False,
-        index=True,
     )
 
     email = Column(
         String(255),
         unique=True,
         nullable=False,
-        index=True,
     )
 
     hashed_password = Column(

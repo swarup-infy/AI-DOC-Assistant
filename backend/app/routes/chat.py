@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -10,12 +11,8 @@ from app.core.logger import logger
 from app.core.security import get_current_user
 from app.db.database import get_db
 from app.models.user import User
-from app.schemas.chat import (
-    ChatRequest,
-    ChatResponse,
-    SourceDocument,
-)
-from app.services.chat_history_service import ChatHistoryService
+from app.schemas.chat import ChatRequest, ChatResponse, SourceDocument
+from app.services.chat_history_service import ChatHistoryService, ChatMode
 from app.services.document_service import DocumentService
 from app.services.embedding_service import EmbeddingService
 from app.services.llm_service import LLMService
@@ -33,39 +30,27 @@ router = APIRouter(
 # ==========================================================
 
 
-def _metadata_int(
-    value: Any,
-) -> int | None:
-    """
-    Convert ChromaDB metadata to a positive integer.
-    """
+def _metadata_int(value: Any) -> int | None:
+    """Convert metadata to a positive integer when possible."""
 
-    if value is None:
+    if value is None or isinstance(value, bool):
         return None
 
     try:
         result = int(value)
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, OverflowError):
         return None
 
-    if result <= 0:
-        return None
-
-    return result
+    return result if result > 0 else None
 
 
-def _metadata_string(
-    value: Any,
-) -> str | None:
-    """
-    Convert ChromaDB metadata to a non-empty string.
-    """
+def _metadata_string(value: Any) -> str | None:
+    """Convert metadata to a non-empty normalized string."""
 
     if value is None:
         return None
 
     result = str(value).strip()
-
     return result or None
 
 
@@ -74,28 +59,22 @@ def _metadata_string(
 # ==========================================================
 
 
-def _cosine_distance_to_similarity(
-    distance: float,
-) -> float:
+def _cosine_distance_to_similarity(distance: float) -> float:
     """
-    Convert Chroma cosine distance to normalized similarity.
+    Convert cosine distance to normalized similarity.
 
-    For cosine distance:
+    Chroma cosine distance is typically:
 
         distance = 1 - cosine_similarity
 
-    Negative cosine similarity is treated as zero for the API
-    response because SourceDocument exposes similarity in [0, 1].
+    API similarity values are clamped to [0, 1].
     """
 
     similarity = 1.0 - distance
 
     return max(
         0.0,
-        min(
-            1.0,
-            similarity,
-        ),
+        min(1.0, similarity),
     )
 
 
@@ -110,11 +89,9 @@ def _build_search_filter(
     document_id: int | None,
 ) -> dict[str, Any]:
     """
-    Build a ChromaDB ownership filter.
+    Build a Chroma ownership filter.
 
-    Every retrieval is restricted to the authenticated user.
-    When document_id is supplied, retrieval is further restricted
-    to that specific document.
+    Retrieval is always restricted to the authenticated user.
     """
 
     if document_id is None:
@@ -124,12 +101,8 @@ def _build_search_filter(
 
     return {
         "$and": [
-            {
-                "user_id": user_id,
-            },
-            {
-                "document_id": document_id,
-            },
+            {"user_id": user_id},
+            {"document_id": document_id},
         ]
     }
 
@@ -146,10 +119,10 @@ def _validate_document_access(
     document_id: int | None,
 ) -> None:
     """
-    Verify that a requested document belongs to the current user.
+    Ensure the requested document belongs to the current user.
 
-    A 404 response avoids exposing whether another user's document
-    exists.
+    A 404 is intentionally returned for inaccessible documents to
+    avoid revealing whether another user's document exists.
     """
 
     if document_id is None:
@@ -175,66 +148,32 @@ def _validate_document_access(
 
 def _extract_relevant_results(
     search_results: dict[str, Any],
-) -> tuple[
-    list[str],
-    list[SourceDocument],
-]:
+) -> tuple[list[str], list[SourceDocument]]:
     """
-    Extract relevant chunks and source information from ChromaDB.
+    Extract usable document chunks and source metadata.
 
-    Results below RAG_MIN_SIMILARITY are discarded.
-
-    The returned document list contains only chunks that passed
-    the configured similarity threshold.
+    Results below the configured minimum similarity threshold are
+    discarded.
     """
 
-    documents = (
-        search_results.get("documents")
-        or [[]]
-    )
+    documents = search_results.get("documents") or [[]]
+    distances = search_results.get("distances") or [[]]
+    metadatas = search_results.get("metadatas") or [[]]
 
-    distances = (
-        search_results.get("distances")
-        or [[]]
-    )
-
-    metadatas = (
-        search_results.get("metadatas")
-        or [[]]
-    )
-
-    document_values = (
-        documents[0]
-        if documents
-        else []
-    )
-
-    distance_values = (
-        distances[0]
-        if distances
-        else []
-    )
-
-    metadata_values = (
-        metadatas[0]
-        if metadatas
-        else []
-    )
+    document_values = documents[0] if documents else []
+    distance_values = distances[0] if distances else []
+    metadata_values = metadatas[0] if metadatas else []
 
     relevant_documents: list[str] = []
     sources: list[SourceDocument] = []
 
-    seen_sources: set[
-        tuple[int, str, int | None]
-    ] = set()
+    seen_sources: set[tuple[int, str, int | None]] = set()
 
-    for index, document in enumerate(
-        document_values
-    ):
-        if not isinstance(document, str):
+    for index, raw_document in enumerate(document_values):
+        if not isinstance(raw_document, str):
             continue
 
-        document = document.strip()
+        document = raw_document.strip()
 
         if not document:
             continue
@@ -243,21 +182,15 @@ def _extract_relevant_results(
             continue
 
         try:
-            distance = float(
-                distance_values[index]
-            )
-        except (TypeError, ValueError):
+            distance = float(distance_values[index])
+        except (TypeError, ValueError, OverflowError):
             continue
 
-        similarity = (
-            _cosine_distance_to_similarity(
-                distance
-            )
-        )
+        similarity = _cosine_distance_to_similarity(distance)
 
         logger.debug(
             "RAG candidate evaluated. "
-            "distance=%.4f similarity=%.4f threshold=%.4f.",
+            "distance=%.4f similarity=%.4f threshold=%.4f",
             distance,
             similarity,
             settings.RAG_MIN_SIMILARITY,
@@ -271,24 +204,17 @@ def _extract_relevant_results(
         if index < len(metadata_values):
             raw_metadata = metadata_values[index]
 
-            if isinstance(
-                raw_metadata,
-                dict,
-            ):
+            if isinstance(raw_metadata, dict):
                 metadata = raw_metadata
 
         document_id = _metadata_int(
             metadata.get("document_id")
         )
 
-        filename = _metadata_string(
-            metadata.get("document_name")
+        filename = (
+            _metadata_string(metadata.get("document_name"))
+            or _metadata_string(metadata.get("filename"))
         )
-
-        if filename is None:
-            filename = _metadata_string(
-                metadata.get("filename")
-            )
 
         page = _metadata_int(
             metadata.get("page")
@@ -296,16 +222,14 @@ def _extract_relevant_results(
 
         if document_id is None or filename is None:
             logger.warning(
-                "Skipping ChromaDB result with incomplete "
-                "metadata. document_id=%s filename=%s.",
+                "Skipping RAG result with incomplete metadata. "
+                "document_id=%s filename=%s",
                 document_id,
                 filename,
             )
             continue
 
-        relevant_documents.append(
-            document
-        )
+        relevant_documents.append(document)
 
         source_key = (
             document_id,
@@ -316,9 +240,7 @@ def _extract_relevant_results(
         if source_key in seen_sources:
             continue
 
-        seen_sources.add(
-            source_key
-        )
+        seen_sources.add(source_key)
 
         sources.append(
             SourceDocument(
@@ -343,40 +265,30 @@ def _build_chat_history(
     user_id: int,
     document_id: int | None,
 ) -> str:
-    """
-    Build recent conversation history.
+    """Build recent conversation context for the LLM."""
 
-    When a document is selected, history is restricted to that
-    document to prevent conversation context from leaking between
-    different documents.
-    """
-
-    if settings.CHAT_HISTORY_LIMIT == 0:
+    if settings.CHAT_HISTORY_LIMIT <= 0:
         return ""
 
-    previous_chats = (
-        ChatHistoryService.get_chat_history(
-            db=db,
-            user_id=user_id,
-            limit=settings.CHAT_HISTORY_LIMIT,
-            document_id=document_id,
-        )
+    previous_chats = ChatHistoryService.get_chat_history(
+        db=db,
+        user_id=user_id,
+        limit=settings.CHAT_HISTORY_LIMIT,
+        document_id=document_id,
     )
 
     if not previous_chats:
         return ""
 
-    history_parts: list[str] = []
-
-    for chat_item in previous_chats:
-        history_parts.append(
+    history_parts = [
+        (
             f"User: {chat_item.question}\n"
             f"Assistant: {chat_item.answer}"
         )
+        for chat_item in previous_chats
+    ]
 
-    return "\n\n".join(
-        history_parts
-    )
+    return "\n\n".join(history_parts)
 
 
 # ==========================================================
@@ -389,13 +301,7 @@ def _build_rag_context(
     history: str,
     documents: list[str],
 ) -> str:
-    """
-    Build grounded context for the LLM.
-
-    Retrieved evidence and previous conversation are explicitly
-    separated so conversation history is not presented as source
-    evidence.
-    """
+    """Build grounded document context for the LLM."""
 
     document_context = "\n\n".join(
         (
@@ -421,16 +327,14 @@ def _build_rag_context(
             (
                 "PREVIOUS CONVERSATION\n"
                 "=====================\n"
-                "Use this section only for conversational "
-                "continuity. Do not treat it as evidence from "
-                "the uploaded document.\n\n"
+                "Use this section only for conversational continuity. "
+                "Do not treat it as evidence from the uploaded "
+                "document.\n\n"
                 f"{history}"
             )
         )
 
-    return "\n\n".join(
-        context_parts
-    )
+    return "\n\n".join(context_parts)
 
 
 # ==========================================================
@@ -444,23 +348,23 @@ def _save_chat(
     user_id: int,
     question: str,
     answer: str,
+    mode: ChatMode,
     document_id: int | None,
 ) -> None:
-    """
-    Persist a completed chat interaction.
-    """
+    """Persist a successfully completed chat interaction."""
 
     ChatHistoryService.save_chat(
         db=db,
         user_id=user_id,
         question=question,
         answer=answer,
+        mode=mode,
         document_id=document_id,
     )
 
 
 # ==========================================================
-# Direct Groq Response
+# Direct LLM Response
 # ==========================================================
 
 
@@ -469,9 +373,7 @@ def _generate_direct_response(
     llm_service: LLMService,
     question: str,
 ) -> str:
-    """
-    Generate a direct Groq response without document context.
-    """
+    """Generate a direct LLM response without document context."""
 
     return llm_service.generate_response(
         question=question,
@@ -487,6 +389,7 @@ def _generate_direct_response(
 @router.post(
     "/",
     response_model=ChatResponse,
+    status_code=status.HTTP_200_OK,
     summary="Chat with AI",
     description=(
         "Answer questions using uploaded documents, "
@@ -504,38 +407,25 @@ def chat(
         Depends(get_current_user),
     ],
 ) -> ChatResponse:
-    """
-    Process an authenticated AI chat request.
+    """Process an authenticated AI chat request."""
 
-    document:
-        Search the authenticated user's documents and answer only
-        when sufficiently relevant document evidence is found.
-
-    groq:
-        Generate a direct answer using the configured Groq model.
-
-    smart:
-        Search documents first. When sufficiently relevant evidence
-        exists, use RAG. Otherwise fall back to direct Groq.
-    """
+    user_id = current_user.id
+    document_id = request.document_id
+    mode = request.mode
 
     logger.info(
         "Processing chat request. "
-        "user_id=%d mode=%s document_id=%s.",
-        current_user.id,
-        request.mode,
-        request.document_id,
+        "user_id=%d mode=%s document_id=%s",
+        user_id,
+        mode,
+        document_id,
     )
 
     try:
-        # ======================================================
-        # Document Ownership
-        # ======================================================
-
         _validate_document_access(
             db=db,
-            user_id=current_user.id,
-            document_id=request.document_id,
+            user_id=user_id,
+            document_id=document_id,
         )
 
         llm_service = LLMService()
@@ -544,7 +434,7 @@ def chat(
         # Groq Mode
         # ======================================================
 
-        if request.mode == "groq":
+        if mode == "groq":
             answer = _generate_direct_response(
                 llm_service=llm_service,
                 question=request.question,
@@ -552,17 +442,18 @@ def chat(
 
             _save_chat(
                 db=db,
-                user_id=current_user.id,
+                user_id=user_id,
                 question=request.question,
                 answer=answer,
-                document_id=request.document_id,
+                mode=mode,
+                document_id=document_id,
             )
 
             return ChatResponse(
                 status="success",
                 message="Response generated successfully.",
                 answer=answer,
-                mode=request.mode,
+                mode=mode,
                 sources=[],
             )
 
@@ -570,14 +461,10 @@ def chat(
         # Query Embedding
         # ======================================================
 
-        embedding_service = (
-            EmbeddingService()
-        )
+        embedding_service = EmbeddingService()
 
-        embeddings = (
-            embedding_service.create_embeddings(
-                [request.question]
-            )
+        embeddings = embedding_service.create_embeddings(
+            [request.question]
         )
 
         if not embeddings:
@@ -585,46 +472,35 @@ def chat(
                 "Embedding service returned no query embedding."
             )
 
-        query_embedding = (
-            embeddings[0]
-        )
+        query_embedding = embeddings[0]
 
         # ======================================================
-        # ChromaDB Retrieval
+        # Vector Retrieval
         # ======================================================
 
-        search_filter = (
-            _build_search_filter(
-                user_id=current_user.id,
-                document_id=request.document_id,
-            )
+        search_filter = _build_search_filter(
+            user_id=user_id,
+            document_id=document_id,
         )
 
-        chroma_service = (
-            ChromaService()
+        chroma_service = ChromaService()
+
+        search_results = chroma_service.search(
+            query_embedding=query_embedding,
+            n_results=settings.RAG_TOP_K,
+            where=search_filter,
         )
 
-        search_results = (
-            chroma_service.search(
-                query_embedding=query_embedding,
-                n_results=settings.RAG_TOP_K,
-                where=search_filter,
-            )
-        )
-
-        (
-            relevant_documents,
-            sources,
-        ) = _extract_relevant_results(
+        relevant_documents, sources = _extract_relevant_results(
             search_results
         )
 
         logger.info(
             "RAG retrieval completed. "
             "user_id=%d document_id=%s "
-            "relevant_chunks=%d sources=%d.",
-            current_user.id,
-            request.document_id,
+            "relevant_chunks=%d sources=%d",
+            user_id,
+            document_id,
             len(relevant_documents),
             len(sources),
         )
@@ -634,73 +510,51 @@ def chat(
         # ======================================================
 
         if not relevant_documents:
-
-            # --------------------------------------------------
-            # Smart -> Groq Fallback
-            # --------------------------------------------------
-
-            if request.mode == "smart":
+            if mode == "smart":
                 logger.info(
-                    "No sufficiently relevant document context "
-                    "found. Falling back to Groq. "
-                    "user_id=%d document_id=%s.",
-                    current_user.id,
-                    request.document_id,
+                    "No relevant document context found; "
+                    "using direct LLM fallback. "
+                    "user_id=%d document_id=%s",
+                    user_id,
+                    document_id,
                 )
 
-                answer = (
-                    _generate_direct_response(
-                        llm_service=llm_service,
-                        question=request.question,
-                    )
-                )
-
-                _save_chat(
-                    db=db,
-                    user_id=current_user.id,
+                answer = _generate_direct_response(
+                    llm_service=llm_service,
                     question=request.question,
-                    answer=answer,
-                    document_id=request.document_id,
                 )
 
-                return ChatResponse(
-                    status="success",
-                    message=(
-                        "No sufficiently relevant document "
-                        "context was found. Response generated "
-                        "using Groq."
-                    ),
-                    answer=answer,
-                    mode=request.mode,
-                    sources=[],
+                message = (
+                    "No sufficiently relevant document context "
+                    "was found. Response generated using Groq."
                 )
 
-            # --------------------------------------------------
-            # Document Mode
-            # --------------------------------------------------
+            else:
+                answer = (
+                    "I couldn't find sufficiently relevant "
+                    "information in the uploaded documents "
+                    "to answer that question."
+                )
 
-            answer = (
-                "I couldn't find sufficiently relevant "
-                "information in the uploaded documents "
-                "to answer that question."
-            )
+                message = (
+                    "No sufficiently relevant document "
+                    "context was found."
+                )
 
             _save_chat(
                 db=db,
-                user_id=current_user.id,
+                user_id=user_id,
                 question=request.question,
                 answer=answer,
-                document_id=request.document_id,
+                mode=mode,
+                document_id=document_id,
             )
 
             return ChatResponse(
                 status="success",
-                message=(
-                    "No sufficiently relevant document "
-                    "context was found."
-                ),
+                message=message,
                 answer=answer,
-                mode=request.mode,
+                mode=mode,
                 sources=[],
             )
 
@@ -708,34 +562,28 @@ def chat(
         # Conversation History
         # ======================================================
 
-        history = (
-            _build_chat_history(
-                db=db,
-                user_id=current_user.id,
-                document_id=request.document_id,
-            )
+        history = _build_chat_history(
+            db=db,
+            user_id=user_id,
+            document_id=document_id,
         )
 
         # ======================================================
         # RAG Context
         # ======================================================
 
-        context = (
-            _build_rag_context(
-                history=history,
-                documents=relevant_documents,
-            )
+        context = _build_rag_context(
+            history=history,
+            documents=relevant_documents,
         )
 
         # ======================================================
         # Grounded LLM Response
         # ======================================================
 
-        answer = (
-            llm_service.generate_response(
-                question=request.question,
-                context=context,
-            )
+        answer = llm_service.generate_response(
+            question=request.question,
+            context=context,
         )
 
         # ======================================================
@@ -744,41 +592,48 @@ def chat(
 
         _save_chat(
             db=db,
-            user_id=current_user.id,
+            user_id=user_id,
             question=request.question,
             answer=answer,
-            document_id=request.document_id,
+            mode=mode,
+            document_id=document_id,
         )
-
-        # ======================================================
-        # Response
-        # ======================================================
 
         return ChatResponse(
             status="success",
-            message=(
-                "Response generated from document context."
-            ),
+            message="Response generated from document context.",
             answer=answer,
-            mode=request.mode,
+            mode=mode,
             sources=sources,
         )
 
     except HTTPException:
         raise
 
-    except Exception as exc:
+    except SQLAlchemyError as exc:
         logger.exception(
-            "Chat request failed. "
-            "user_id=%d mode=%s document_id=%s.",
-            current_user.id,
-            request.mode,
-            request.document_id,
+            "Database failure while processing chat request. "
+            "user_id=%d mode=%s document_id=%s",
+            user_id,
+            mode,
+            document_id,
         )
 
         raise HTTPException(
-            status_code=(
-                status.HTTP_500_INTERNAL_SERVER_ERROR
-            ),
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unable to process chat request.",
+        ) from exc
+
+    except Exception as exc:
+        logger.exception(
+            "Chat request failed. "
+            "user_id=%d mode=%s document_id=%s",
+            user_id,
+            mode,
+            document_id,
+        )
+
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Unable to process chat request.",
         ) from exc

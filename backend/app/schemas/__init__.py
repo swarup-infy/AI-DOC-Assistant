@@ -1,19 +1,9 @@
-"""
-Application Pydantic schemas.
+﻿"""
+Application Pydantic schema registry.
 
-This package exports all request and response schemas so they can
-be imported directly from ``app.schemas``.
-
-Example:
-    from app.schemas import (
-        UserCreate,
-        UserLogin,
-        UserResponse,
-        DocumentResponse,
-        UploadResponse,
-        ChatRequest,
-        ChatResponse,
-    )
+Exports the public request and response schemas used by the API.
+Application modules may import schemas either from their individual
+modules or directly from ``app.schemas``.
 """
 
 from .chat import (
@@ -21,7 +11,14 @@ from .chat import (
     ChatHistoryResponse,
     ChatRequest,
     ChatResponse,
+    ClearChatHistoryResponse,
     SourceDocument,
+)
+from .dashboard import (
+    DashboardLastUpload,
+    DashboardRecentChat,
+    DashboardResponse,
+    DashboardStatistics,
 )
 from .document import (
     DeleteDocumentResponse,
@@ -31,29 +28,40 @@ from .document import (
     UploadResponse,
 )
 from .user import (
-    Token,
+    RegisterResponse,
     TokenResponse,
     UserBase,
     UserCreate,
-    UserLogin,
     UserResponse,
 )
 
+
 __all__ = (
+    # User
     "UserBase",
     "UserCreate",
-    "UserLogin",
     "UserResponse",
-    "Token",
+    "RegisterResponse",
     "TokenResponse",
+
+    # Document
     "DocumentBase",
     "DocumentResponse",
     "DocumentListResponse",
     "UploadResponse",
     "DeleteDocumentResponse",
+
+    # Chat
     "ChatRequest",
     "ChatResponse",
     "SourceDocument",
     "ChatHistoryResponse",
     "ChatHistoryListResponse",
+    "ClearChatHistoryResponse",
+
+    # Dashboard
+    "DashboardStatistics",
+    "DashboardLastUpload",
+    "DashboardRecentChat",
+    "DashboardResponse",
 )

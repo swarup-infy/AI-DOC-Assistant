@@ -13,88 +13,95 @@ from pydantic import (
 
 
 # ==========================================================
-# Base Schemas
+# Base Schema
 # ==========================================================
+
 
 class UserBase(BaseModel):
     """
-    Common user fields.
+    Common public user fields shared across user schemas.
     """
 
     username: str = Field(
         ...,
         min_length=3,
         max_length=100,
-        description="Unique username",
+        description="Unique username.",
     )
 
     email: EmailStr = Field(
         ...,
-        description="User email address",
+        description="User email address.",
     )
 
-    @field_validator("username")
+    @field_validator("username", mode="before")
     @classmethod
-    def validate_username(cls, value: str) -> str:
-        value = value.strip()
+    def normalize_username(
+        cls,
+        value: object,
+    ) -> object:
+        """
+        Trim surrounding whitespace before normal validation.
+        """
 
-        if not value:
-            raise ValueError("Username cannot be empty.")
+        if isinstance(value, str):
+            return value.strip()
 
         return value
 
-    @field_validator("email")
+    @field_validator("email", mode="before")
     @classmethod
-    def normalize_email(cls, value: EmailStr) -> EmailStr:
-        return value.lower()
+    def normalize_email(
+        cls,
+        value: object,
+    ) -> object:
+        """
+        Normalize email casing and surrounding whitespace.
+
+        EmailStr performs the actual email-address validation.
+        """
+
+        if isinstance(value, str):
+            return value.strip().lower()
+
+        return value
 
 
 # ==========================================================
-# Authentication
+# Registration
 # ==========================================================
+
 
 class UserCreate(UserBase):
     """
-    User registration schema.
+    User registration request.
     """
 
     password: str = Field(
         ...,
         min_length=8,
         max_length=100,
-        description="Account password",
+        description="Account password.",
     )
-
-
-class UserLogin(BaseModel):
-    """
-    User login schema.
-    """
-
-    email: EmailStr
-
-    password: str = Field(
-        ...,
-        min_length=8,
-        max_length=100,
-    )
-
-    @field_validator("email")
-    @classmethod
-    def normalize_email(cls, value: EmailStr) -> EmailStr:
-        return value.lower()
 
 
 # ==========================================================
 # User Response
 # ==========================================================
 
+
 class UserResponse(UserBase):
     """
-    User response schema.
+    Public representation of a user account.
+
+    Sensitive authentication data such as hashed_password is
+    intentionally excluded.
     """
 
-    id: int
+    id: int = Field(
+        ...,
+        gt=0,
+    )
 
     is_active: bool
 
@@ -109,13 +116,45 @@ class UserResponse(UserBase):
 
 
 # ==========================================================
-# JWT Token
+# Registration Response
 # ==========================================================
 
-class Token(BaseModel):
+
+class RegisterResponse(BaseModel):
     """
-    JWT token.
+    Successful user-registration response.
     """
+
+    status: Literal["success"]
+
+    message: str = Field(
+        ...,
+        min_length=1,
+    )
+
+    user: UserResponse
+
+    model_config = ConfigDict(
+        frozen=True,
+    )
+
+
+# ==========================================================
+# Login Response
+# ==========================================================
+
+
+class TokenResponse(BaseModel):
+    """
+    Successful authentication response.
+    """
+
+    status: Literal["success"]
+
+    message: str = Field(
+        ...,
+        min_length=1,
+    )
 
     access_token: str = Field(
         ...,
@@ -124,22 +163,8 @@ class Token(BaseModel):
 
     token_type: Literal["bearer"]
 
-
-# ==========================================================
-# Login Response
-# ==========================================================
-
-class TokenResponse(BaseModel):
-    """
-    Authentication response.
-    """
-
-    status: str
-
-    message: str
-
-    access_token: str
-
-    token_type: Literal["bearer"]
-
     user: UserResponse
+
+    model_config = ConfigDict(
+        frozen=True,
+    )

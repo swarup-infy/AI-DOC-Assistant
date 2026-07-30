@@ -11,11 +11,7 @@ from pydantic import (
 )
 
 
-ChatMode = Literal[
-    "document",
-    "groq",
-    "smart",
-]
+ChatMode = Literal["document", "groq", "smart"]
 
 
 # ==========================================================
@@ -67,11 +63,13 @@ class ChatRequest(BaseModel):
         value = value.strip()
 
         if not value:
-            raise ValueError(
-                "Question cannot be empty."
-            )
+            raise ValueError("Question cannot be empty.")
 
         return value
+
+    model_config = ConfigDict(
+        frozen=True,
+    )
 
 
 # ==========================================================
@@ -119,9 +117,7 @@ class SourceDocument(BaseModel):
         value = value.strip()
 
         if not value:
-            raise ValueError(
-                "Filename cannot be empty."
-            )
+            raise ValueError("Filename cannot be empty.")
 
         return value
 
@@ -140,10 +136,7 @@ class ChatResponse(BaseModel):
     Response returned by the AI chat endpoint.
     """
 
-    status: Literal[
-        "success",
-        "error",
-    ]
+    status: Literal["success", "error"]
 
     message: str = Field(
         ...,
@@ -167,13 +160,13 @@ class ChatResponse(BaseModel):
 
 
 # ==========================================================
-# Chat History
+# Chat History Record
 # ==========================================================
 
 
 class ChatHistoryResponse(BaseModel):
     """
-    Stored chat history record.
+    Public representation of one stored chat interaction.
     """
 
     id: int = Field(
@@ -201,7 +194,11 @@ class ChatHistoryResponse(BaseModel):
         min_length=1,
     )
 
+    mode: ChatMode
+
     created_at: datetime
+
+    updated_at: datetime
 
     model_config = ConfigDict(
         from_attributes=True,
@@ -216,14 +213,43 @@ class ChatHistoryResponse(BaseModel):
 
 class ChatHistoryListResponse(BaseModel):
     """
-    Collection of stored chat history records.
+    Collection of stored chat-history records.
     """
+
+    status: Literal["success"] = "success"
+
+    total: int = Field(
+        ...,
+        ge=0,
+    )
 
     history: list[ChatHistoryResponse] = Field(
         default_factory=list,
     )
 
-    total: int = Field(
+    model_config = ConfigDict(
+        frozen=True,
+    )
+
+
+# ==========================================================
+# Clear Chat History Response
+# ==========================================================
+
+
+class ClearChatHistoryResponse(BaseModel):
+    """
+    Response returned after clearing chat history.
+    """
+
+    status: Literal["success"] = "success"
+
+    message: str = Field(
+        ...,
+        min_length=1,
+    )
+
+    deleted_records: int = Field(
         ...,
         ge=0,
     )

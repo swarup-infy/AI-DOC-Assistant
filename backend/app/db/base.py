@@ -1,17 +1,17 @@
 """
-Database model registry.
+SQLAlchemy model registry.
 
-This module imports the SQLAlchemy Base and all application models.
-It allows Alembic and other tools to discover every model by importing
-a single module.
+This module exposes the shared declarative Base together with every
+application ORM model.
+
+Importing this module guarantees that all mapped classes are registered
+with SQLAlchemy metadata, which is required by Alembic and other
+metadata-aware tooling.
 """
 
 from app.db.database import Base
+from app.models import ChatHistory, Document, User
 
-# Import all models here so they are registered with SQLAlchemy metadata.
-from app.models.chat_history import ChatHistory
-from app.models.document import Document
-from app.models.user import User
 
 __all__ = (
     "Base",

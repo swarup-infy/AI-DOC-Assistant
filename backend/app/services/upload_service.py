@@ -879,6 +879,8 @@ def save_uploaded_file(
                 "filename": document.filename,
                 "file_type": document.file_type,
                 "file_size": document.file_size,
+                "uploaded_at": document.uploaded_at,
+                "updated_at": document.updated_at,
             },
             "chunks": len(chunks),
         }

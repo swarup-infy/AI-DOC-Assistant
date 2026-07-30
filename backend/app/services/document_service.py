@@ -43,11 +43,36 @@ class DocumentService:
     """
 
     # ==========================================================
-    # Create
+    # Validation
     # ==========================================================
 
     @staticmethod
+    def _validate_positive_int(
+        value: int,
+        *,
+        field_name: str,
+    ) -> None:
+        """
+        Validate a positive integer value.
+        """
+
+        if isinstance(value, bool) or not isinstance(value, int):
+            raise TypeError(
+                f"{field_name} must be an integer."
+            )
+
+        if value <= 0:
+            raise ValueError(
+                f"{field_name} must be greater than zero."
+            )
+
+    # ==========================================================
+    # Create
+    # ==========================================================
+
+    @classmethod
     def create_document(
+        cls,
         db: Session,
         user_id: int,
         filename: str,
@@ -68,9 +93,29 @@ class DocumentService:
         attempt to create the same filename.
         """
 
-        if user_id <= 0:
-            raise ValueError(
-                "user_id must be greater than zero."
+        cls._validate_positive_int(
+            user_id,
+            field_name="user_id",
+        )
+
+        cls._validate_positive_int(
+            file_size,
+            field_name="file_size",
+        )
+
+        if not isinstance(filename, str):
+            raise TypeError(
+                "filename must be a string."
+            )
+
+        if not isinstance(file_path, str):
+            raise TypeError(
+                "file_path must be a string."
+            )
+
+        if not isinstance(file_type, str):
+            raise TypeError(
+                "file_type must be a string."
             )
 
         normalized_filename = filename.strip()
@@ -92,16 +137,18 @@ class DocumentService:
                 "file_type cannot be empty."
             )
 
-        if file_size <= 0:
-            raise ValueError(
-                "file_size must be greater than zero."
-            )
+        if chroma_collection is not None:
+            if not isinstance(chroma_collection, str):
+                raise TypeError(
+                    "chroma_collection must be a string."
+                )
 
-        collection_name = (
-            chroma_collection.strip()
-            if chroma_collection
-            else settings.CHROMA_COLLECTION_NAME
-        )
+            collection_name = chroma_collection.strip()
+
+        else:
+            collection_name = (
+                settings.CHROMA_COLLECTION_NAME.strip()
+            )
 
         if not collection_name:
             raise ValueError(
@@ -135,7 +182,7 @@ class DocumentService:
         except IntegrityError as exc:
             db.rollback()
 
-            if DocumentService._is_duplicate_filename_error(
+            if cls._is_duplicate_filename_error(
                 exc
             ):
                 logger.warning(
@@ -175,8 +222,9 @@ class DocumentService:
     # Retrieve All
     # ==========================================================
 
-    @staticmethod
+    @classmethod
     def get_documents(
+        cls,
         db: Session,
         user_id: int,
     ) -> list[Document]:
@@ -186,10 +234,10 @@ class DocumentService:
         Results are ordered newest first.
         """
 
-        if user_id <= 0:
-            raise ValueError(
-                "user_id must be greater than zero."
-            )
+        cls._validate_positive_int(
+            user_id,
+            field_name="user_id",
+        )
 
         try:
             return (
@@ -217,8 +265,9 @@ class DocumentService:
     # Retrieve by ID
     # ==========================================================
 
-    @staticmethod
+    @classmethod
     def get_document(
+        cls,
         db: Session,
         document_id: int,
     ) -> Document | None:
@@ -231,10 +280,10 @@ class DocumentService:
         API-facing code should normally use get_document_by_id().
         """
 
-        if document_id <= 0:
-            raise ValueError(
-                "document_id must be greater than zero."
-            )
+        cls._validate_positive_int(
+            document_id,
+            field_name="document_id",
+        )
 
         try:
             return (
@@ -257,8 +306,9 @@ class DocumentService:
     # Retrieve by ID and Owner
     # ==========================================================
 
-    @staticmethod
+    @classmethod
     def get_document_by_id(
+        cls,
         db: Session,
         document_id: int,
         user_id: int,
@@ -269,15 +319,15 @@ class DocumentService:
         This method should be preferred by authenticated API routes.
         """
 
-        if document_id <= 0:
-            raise ValueError(
-                "document_id must be greater than zero."
-            )
+        cls._validate_positive_int(
+            document_id,
+            field_name="document_id",
+        )
 
-        if user_id <= 0:
-            raise ValueError(
-                "user_id must be greater than zero."
-            )
+        cls._validate_positive_int(
+            user_id,
+            field_name="user_id",
+        )
 
         try:
             return (
@@ -303,8 +353,9 @@ class DocumentService:
     # Retrieve by Filename
     # ==========================================================
 
-    @staticmethod
+    @classmethod
     def get_document_by_filename(
+        cls,
         db: Session,
         user_id: int,
         filename: str,
@@ -318,9 +369,14 @@ class DocumentService:
         requests before storing a physical file.
         """
 
-        if user_id <= 0:
-            raise ValueError(
-                "user_id must be greater than zero."
+        cls._validate_positive_int(
+            user_id,
+            field_name="user_id",
+        )
+
+        if not isinstance(filename, str):
+            raise TypeError(
+                "filename must be a string."
             )
 
         normalized_filename = filename.strip()
@@ -355,8 +411,9 @@ class DocumentService:
     # Exists
     # ==========================================================
 
-    @staticmethod
+    @classmethod
     def document_exists(
+        cls,
         db: Session,
         user_id: int,
         filename: str,
@@ -367,7 +424,7 @@ class DocumentService:
         """
 
         return (
-            DocumentService.get_document_by_filename(
+            cls.get_document_by_filename(
                 db=db,
                 user_id=user_id,
                 filename=filename,
@@ -390,6 +447,11 @@ class DocumentService:
         Physical-file and vector-store cleanup belong to the
         higher-level document deletion workflow.
         """
+
+        if not isinstance(document, Document):
+            raise TypeError(
+                "document must be a Document instance."
+            )
 
         document_id = document.id
         user_id = document.user_id

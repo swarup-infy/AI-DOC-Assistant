@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from typing import Annotated
 
@@ -16,6 +16,7 @@ from app.core.logger import logger
 from app.core.security import get_current_user
 from app.db.database import get_db
 from app.models.user import User
+from app.schemas.document import UploadResponse
 from app.services.upload_service import save_uploaded_file
 
 
@@ -32,6 +33,7 @@ router = APIRouter(
 
 @router.post(
     "/file",
+    response_model=UploadResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Upload document",
     description=(
@@ -57,7 +59,7 @@ def upload_file(
         User,
         Depends(get_current_user),
     ],
-) -> dict:
+) -> UploadResponse:
     """
     Process an authenticated document upload.
 
@@ -66,8 +68,7 @@ def upload_file(
     to the upload service.
 
     File extensions are validated by the service rather than
-    relying solely on the client-provided MIME type, which may be
-    missing or inaccurate.
+    relying solely on the client-provided MIME type.
     """
 
     filename = file.filename or "<unknown>"
@@ -87,6 +88,8 @@ def upload_file(
             user_id=current_user.id,
         )
 
+        response = UploadResponse.model_validate(result)
+
         logger.info(
             "Upload request completed successfully. "
             "user_id=%d filename='%s'.",
@@ -94,7 +97,7 @@ def upload_file(
             filename,
         )
 
-        return result
+        return response
 
     except HTTPException:
         raise

@@ -4,6 +4,7 @@ from sqlalchemy import (
     Column,
     DateTime,
     ForeignKey,
+    Index,
     Integer,
     String,
     func,
@@ -25,6 +26,15 @@ class Document(Base):
     """
 
     __tablename__ = "documents"
+
+    __table_args__ = (
+        Index(
+            "uq_documents_user_id_filename_lower",
+            "user_id",
+            func.lower(Column("filename")),
+            unique=True,
+        ),
+    )
 
     id = Column(
         Integer,
@@ -101,7 +111,7 @@ class Document(Base):
         return (
             f"<Document("
             f"id={self.id}, "
-            f"filename='{self.filename}', "
+            f"filename={self.filename!r}, "
             f"user_id={self.user_id}"
             f")>"
         )

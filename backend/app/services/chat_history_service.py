@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from typing import Final, Literal, cast
+
+from sqlalchemy import delete, func, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
@@ -7,197 +10,298 @@ from app.core.logger import logger
 from app.models.chat_history import ChatHistory
 
 
-DEFAULT_HISTORY_LIMIT = 5
-MAX_HISTORY_LIMIT = 100
+ChatMode = Literal[
+    "document",
+    "groq",
+    "smart",
+]
+
+VALID_CHAT_MODES: Final[frozenset[str]] = frozenset(
+    {
+        "document",
+        "groq",
+        "smart",
+    }
+)
+
+DEFAULT_HISTORY_LIMIT: Final[int] = 5
+MAX_HISTORY_LIMIT: Final[int] = 100
 
 
 class ChatHistoryService:
     """
-    Service layer for chat-history persistence and retrieval.
+    Service responsible for chat-history persistence and retrieval.
 
-    Responsibilities:
-    - Store user conversations.
-    - Retrieve recent user conversations.
-    - Optionally scope history to a document.
-    - Delete user conversation history.
-    - Handle database transaction failures safely.
+    All operations are scoped to a user and can optionally be scoped
+    to a specific document.
+
+    The service performs input validation, database operations,
+    transaction rollback for failed writes, and structured logging.
     """
+
+    # ==========================================================
+    # Validation
+    # ==========================================================
+
+    @staticmethod
+    def _validate_positive_int(
+        value: int,
+        *,
+        field_name: str,
+    ) -> None:
+        if isinstance(value, bool) or not isinstance(value, int):
+            raise TypeError(
+                f"{field_name} must be an integer."
+            )
+
+        if value <= 0:
+            raise ValueError(
+                f"{field_name} must be greater than zero."
+            )
+
+    @classmethod
+    def _validate_user_id(
+        cls,
+        user_id: int,
+    ) -> None:
+        cls._validate_positive_int(
+            user_id,
+            field_name="user_id",
+        )
+
+    @classmethod
+    def _validate_document_id(
+        cls,
+        document_id: int | None,
+    ) -> None:
+        if document_id is None:
+            return
+
+        cls._validate_positive_int(
+            document_id,
+            field_name="document_id",
+        )
+
+    @classmethod
+    def _validate_limit(
+        cls,
+        limit: int,
+    ) -> int:
+        cls._validate_positive_int(
+            limit,
+            field_name="limit",
+        )
+
+        return min(
+            limit,
+            MAX_HISTORY_LIMIT,
+        )
+
+    @staticmethod
+    def _normalize_text(
+        value: str,
+        *,
+        field_name: str,
+    ) -> str:
+        if not isinstance(value, str):
+            raise TypeError(
+                f"{field_name} must be a string."
+            )
+
+        normalized = value.strip()
+
+        if not normalized:
+            raise ValueError(
+                f"{field_name} cannot be empty."
+            )
+
+        return normalized
+
+    @staticmethod
+    def _normalize_mode(
+        mode: str,
+    ) -> ChatMode:
+        if not isinstance(mode, str):
+            raise TypeError(
+                "mode must be a string."
+            )
+
+        normalized = mode.strip().lower()
+
+        if normalized not in VALID_CHAT_MODES:
+            allowed_modes = ", ".join(
+                sorted(VALID_CHAT_MODES)
+            )
+
+            raise ValueError(
+                f"mode must be one of: {allowed_modes}."
+            )
+
+        return cast(
+            ChatMode,
+            normalized,
+        )
 
     # ==========================================================
     # Save
     # ==========================================================
 
-    @staticmethod
+    @classmethod
     def save_chat(
+        cls,
         db: Session,
         user_id: int,
         question: str,
         answer: str,
+        mode: ChatMode,
         document_id: int | None = None,
     ) -> ChatHistory:
         """
         Persist a chat interaction.
 
-        Args:
-            db:
-                Active SQLAlchemy session.
-
-            user_id:
-                Owner of the chat record.
-
-            question:
-                User's question.
-
-            answer:
-                Generated assistant response.
-
-            document_id:
-                Optional document associated with the interaction.
-
         Returns:
-            The persisted ChatHistory model.
+            Persisted ChatHistory instance.
+
+        Raises:
+            TypeError:
+                When an argument has an invalid type.
+
+            ValueError:
+                When an argument has an invalid value.
+
+            SQLAlchemyError:
+                When the database operation fails.
         """
 
-        if user_id <= 0:
-            raise ValueError(
-                "user_id must be greater than zero."
-            )
+        cls._validate_user_id(user_id)
+        cls._validate_document_id(document_id)
 
-        if document_id is not None and document_id <= 0:
-            raise ValueError(
-                "document_id must be greater than zero."
-            )
+        normalized_question = cls._normalize_text(
+            question,
+            field_name="question",
+        )
 
-        normalized_question = question.strip()
-        normalized_answer = answer.strip()
+        normalized_answer = cls._normalize_text(
+            answer,
+            field_name="answer",
+        )
 
-        if not normalized_question:
-            raise ValueError(
-                "question cannot be empty."
-            )
+        normalized_mode = cls._normalize_mode(
+            mode
+        )
 
-        if not normalized_answer:
-            raise ValueError(
-                "answer cannot be empty."
-            )
+        chat = ChatHistory(
+            user_id=user_id,
+            document_id=document_id,
+            question=normalized_question,
+            answer=normalized_answer,
+            mode=normalized_mode,
+        )
 
         try:
-            chat = ChatHistory(
-                user_id=user_id,
-                document_id=document_id,
-                question=normalized_question,
-                answer=normalized_answer,
-            )
-
             db.add(chat)
             db.commit()
             db.refresh(chat)
-
-            logger.info(
-                "Chat history saved. "
-                "chat_id=%d user_id=%d document_id=%s.",
-                chat.id,
-                user_id,
-                document_id,
-            )
-
-            return chat
 
         except SQLAlchemyError:
             db.rollback()
 
             logger.exception(
-                "Database error while saving chat history "
-                "for user %d.",
+                "Failed to save chat history. "
+                "user_id=%d document_id=%s mode=%s",
                 user_id,
+                document_id,
+                normalized_mode,
             )
 
             raise
+
+        logger.info(
+            "Chat history saved. "
+            "chat_id=%d user_id=%d document_id=%s mode=%s",
+            chat.id,
+            user_id,
+            document_id,
+            normalized_mode,
+        )
+
+        return chat
 
     # ==========================================================
     # Retrieve
     # ==========================================================
 
-    @staticmethod
+    @classmethod
     def get_chat_history(
+        cls,
         db: Session,
         user_id: int,
         limit: int = DEFAULT_HISTORY_LIMIT,
         document_id: int | None = None,
     ) -> list[ChatHistory]:
         """
-        Return recent chat history belonging to a user.
+        Return the user's most recent chat history.
 
-        When document_id is supplied, only conversations associated
-        with that document are returned.
+        If document_id is supplied, only chats associated with that
+        document are returned.
 
-        Results are returned oldest-to-newest so they can be passed
-        directly into conversational LLM context.
+        Records are selected newest-first to correctly apply the
+        limit, then returned oldest-to-newest for conversational
+        context.
         """
 
-        if user_id <= 0:
-            raise ValueError(
-                "user_id must be greater than zero."
+        cls._validate_user_id(user_id)
+        cls._validate_document_id(document_id)
+
+        safe_limit = cls._validate_limit(
+            limit
+        )
+
+        statement = select(
+            ChatHistory
+        ).where(
+            ChatHistory.user_id == user_id
+        )
+
+        if document_id is not None:
+            statement = statement.where(
+                ChatHistory.document_id == document_id
             )
 
-        if document_id is not None and document_id <= 0:
-            raise ValueError(
-                "document_id must be greater than zero."
-            )
-
-        if limit <= 0:
-            raise ValueError(
-                "limit must be greater than zero."
-            )
-
-        safe_limit = min(
-            limit,
-            MAX_HISTORY_LIMIT,
+        statement = statement.order_by(
+            ChatHistory.created_at.desc(),
+            ChatHistory.id.desc(),
+        ).limit(
+            safe_limit
         )
 
         try:
-            query = (
-                db.query(ChatHistory)
-                .filter(
-                    ChatHistory.user_id == user_id
-                )
-            )
-
-            if document_id is not None:
-                query = query.filter(
-                    ChatHistory.document_id
-                    == document_id
-                )
-
-            chats = (
-                query
-                .order_by(
-                    ChatHistory.created_at.desc(),
-                    ChatHistory.id.desc(),
-                )
-                .limit(safe_limit)
-                .all()
-            )
-
-            return list(
-                reversed(chats)
+            chats = list(
+                db.scalars(statement).all()
             )
 
         except SQLAlchemyError:
             logger.exception(
-                "Database error while fetching chat history "
-                "for user %d.",
+                "Failed to retrieve chat history. "
+                "user_id=%d document_id=%s limit=%d",
                 user_id,
+                document_id,
+                safe_limit,
             )
 
             raise
+
+        chats.reverse()
+
+        return chats
 
     # ==========================================================
     # Delete
     # ==========================================================
 
-    @staticmethod
+    @classmethod
     def delete_chat_history(
+        cls,
         db: Session,
         user_id: int,
         document_id: int | None = None,
@@ -205,111 +309,105 @@ class ChatHistoryService:
         """
         Delete chat history belonging to a user.
 
-        When document_id is supplied, only history associated with
-        that document is deleted.
+        If document_id is supplied, only records associated with that
+        document are deleted.
 
         Returns:
             Number of deleted records.
         """
 
-        if user_id <= 0:
-            raise ValueError(
-                "user_id must be greater than zero."
-            )
+        cls._validate_user_id(user_id)
+        cls._validate_document_id(document_id)
 
-        if document_id is not None and document_id <= 0:
-            raise ValueError(
-                "document_id must be greater than zero."
+        statement = delete(
+            ChatHistory
+        ).where(
+            ChatHistory.user_id == user_id
+        )
+
+        if document_id is not None:
+            statement = statement.where(
+                ChatHistory.document_id == document_id
             )
 
         try:
-            query = (
-                db.query(ChatHistory)
-                .filter(
-                    ChatHistory.user_id == user_id
-                )
-            )
+            result = db.execute(statement)
 
-            if document_id is not None:
-                query = query.filter(
-                    ChatHistory.document_id
-                    == document_id
-                )
-
-            deleted_count = query.delete(
-                synchronize_session=False
+            deleted_count = (
+                result.rowcount
+                if result.rowcount is not None
+                else 0
             )
 
             db.commit()
-
-            logger.info(
-                "Deleted %d chat history records. "
-                "user_id=%d document_id=%s.",
-                deleted_count,
-                user_id,
-                document_id,
-            )
-
-            return deleted_count
 
         except SQLAlchemyError:
             db.rollback()
 
             logger.exception(
-                "Database error while deleting chat history "
-                "for user %d.",
+                "Failed to delete chat history. "
+                "user_id=%d document_id=%s",
                 user_id,
+                document_id,
             )
 
             raise
+
+        logger.info(
+            "Chat history deleted. "
+            "deleted_count=%d user_id=%d document_id=%s",
+            deleted_count,
+            user_id,
+            document_id,
+        )
+
+        return deleted_count
 
     # ==========================================================
     # Count
     # ==========================================================
 
-    @staticmethod
+    @classmethod
     def count_chat_history(
+        cls,
         db: Session,
         user_id: int,
         document_id: int | None = None,
     ) -> int:
         """
-        Count chat records belonging to a user.
+        Count chat-history records belonging to a user.
 
-        Optionally restrict the count to one document.
+        If document_id is supplied, only records associated with that
+        document are counted.
         """
 
-        if user_id <= 0:
-            raise ValueError(
-                "user_id must be greater than zero."
-            )
+        cls._validate_user_id(user_id)
+        cls._validate_document_id(document_id)
 
-        if document_id is not None and document_id <= 0:
-            raise ValueError(
-                "document_id must be greater than zero."
+        statement = select(
+            func.count(ChatHistory.id)
+        ).where(
+            ChatHistory.user_id == user_id
+        )
+
+        if document_id is not None:
+            statement = statement.where(
+                ChatHistory.document_id == document_id
             )
 
         try:
-            query = (
-                db.query(ChatHistory)
-                .filter(
-                    ChatHistory.user_id == user_id
-                )
-            )
-
-            if document_id is not None:
-                query = query.filter(
-                    ChatHistory.document_id
-                    == document_id
-                )
-
-            return query.count()
+            count = db.scalar(statement)
 
         except SQLAlchemyError:
             logger.exception(
-                "Database error while counting chat history "
-                "for user %d.",
+                "Failed to count chat history. "
+                "user_id=%d document_id=%s",
                 user_id,
+                document_id,
             )
 
             raise
+
+        return int(
+            count or 0
+        )

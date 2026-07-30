@@ -1,25 +1,28 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.core.logger import logger
-from app.core.security import (
-    create_access_token,
-    get_current_user,
-    hash_password,
-    verify_password,
-)
+from app.core.security import create_access_token, get_current_user
 from app.db.database import get_db
 from app.models.user import User
 from app.schemas.user import (
+    RegisterResponse,
     TokenResponse,
     UserCreate,
     UserResponse,
+)
+from app.services.auth_service import (
+    AuthService,
+    DuplicateEmailError,
+    DuplicateUsernameError,
+    InactiveUserError,
+    InvalidCredentialsError,
 )
 
 
@@ -39,7 +42,7 @@ router = APIRouter(
     summary="Authentication health check",
     description="Confirm that the authentication routes are available.",
 )
-def auth_home() -> dict:
+def auth_home() -> dict[str, str]:
     """
     Return a simple authentication-route health response.
     """
@@ -57,6 +60,7 @@ def auth_home() -> dict:
 
 @router.post(
     "/register",
+    response_model=RegisterResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Register user",
     description="Create a new user account.",
@@ -67,100 +71,42 @@ def register(
         Session,
         Depends(get_db),
     ],
-) -> dict:
+) -> RegisterResponse:
     """
-    Register a new user.
-
-    Username and email uniqueness are checked before insertion,
-    while database unique constraints provide final protection
-    against concurrent registration attempts.
+    Register a new user account.
     """
-
-    username = user.username.strip()
-    email = str(user.email).lower().strip()
 
     try:
-        existing_username = (
-            db.query(User)
-            .filter(
-                User.username == username
-            )
-            .first()
+        new_user = AuthService.register_user(
+            db=db,
+            username=user.username,
+            email=str(user.email),
+            password=user.password,
         )
 
-        if existing_username is not None:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Username already exists.",
-            )
-
-        existing_email = (
-            db.query(User)
-            .filter(
-                User.email == email
-            )
-            .first()
-        )
-
-        if existing_email is not None:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Email already registered.",
-            )
-
-        new_user = User(
-            username=username,
-            email=email,
-            hashed_password=hash_password(
-                user.password
+        return RegisterResponse(
+            status="success",
+            message="User registered successfully.",
+            user=UserResponse.model_validate(
+                new_user
             ),
         )
 
-        db.add(new_user)
-        db.commit()
-        db.refresh(new_user)
-
-        logger.info(
-            "User registered successfully. user_id=%d.",
-            new_user.id,
-        )
-
-        return {
-            "status": "success",
-            "message": "User registered successfully.",
-            "user": {
-                "id": new_user.id,
-                "username": new_user.username,
-                "email": new_user.email,
-                "is_active": new_user.is_active,
-                "created_at": new_user.created_at,
-                "updated_at": new_user.updated_at,
-            },
-        }
-
-    except HTTPException:
-        raise
-
-    except IntegrityError as exc:
-        db.rollback()
-
-        logger.warning(
-            "Registration failed because of a database "
-            "uniqueness conflict for username='%s'.",
-            username,
-        )
-
+    except DuplicateUsernameError as exc:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Username or email is already registered.",
+            detail="Username already exists.",
+        ) from exc
+
+    except DuplicateEmailError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Email already registered.",
         ) from exc
 
     except SQLAlchemyError as exc:
-        db.rollback()
-
         logger.exception(
-            "Database error while registering username='%s'.",
-            username,
+            "Database error while processing registration."
         )
 
         raise HTTPException(
@@ -169,11 +115,8 @@ def register(
         ) from exc
 
     except Exception as exc:
-        db.rollback()
-
         logger.exception(
-            "Unexpected error while registering username='%s'.",
-            username,
+            "Unexpected error while processing registration."
         )
 
         raise HTTPException(
@@ -207,62 +150,53 @@ def login(
     ],
 ) -> TokenResponse:
     """
-    Authenticate a user and issue an access token.
+    Authenticate an active user and issue an access token.
 
     OAuth2PasswordRequestForm uses the field name `username`.
     For this application that field contains the user's email.
     """
 
-    email = form_data.username.lower().strip()
-
-    db_user = (
-        db.query(User)
-        .filter(
-            User.email == email
-        )
-        .first()
-    )
-
-    if (
-        db_user is None
-        or not verify_password(
-            form_data.password,
-            db_user.hashed_password,
-        )
-    ):
-        logger.warning(
-            "Failed login attempt for email='%s'.",
-            email,
+    try:
+        user = AuthService.authenticate_user(
+            db=db,
+            email=form_data.username,
+            password=form_data.password,
         )
 
+    except InvalidCredentialsError as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password.",
             headers={
                 "WWW-Authenticate": "Bearer",
             },
-        )
+        ) from exc
 
-    if not db_user.is_active:
-        logger.warning(
-            "Login rejected for inactive user_id=%d.",
-            db_user.id,
-        )
-
+    except InactiveUserError as exc:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="User account is inactive.",
+        ) from exc
+
+    except SQLAlchemyError as exc:
+        logger.exception(
+            "Database error while processing login."
         )
+
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unable to authenticate user.",
+        ) from exc
 
     access_token = create_access_token(
         data={
-            "sub": db_user.email,
+            "sub": user.email,
         }
     )
 
     logger.info(
         "User logged in successfully. user_id=%d.",
-        db_user.id,
+        user.id,
     )
 
     return TokenResponse(
@@ -271,7 +205,7 @@ def login(
         access_token=access_token,
         token_type="bearer",
         user=UserResponse.model_validate(
-            db_user
+            user
         ),
     )
 

@@ -1,15 +1,22 @@
 """
-SQLAlchemy ORM models package.
+Application SQLAlchemy ORM model registry.
 
-Individual models should be imported directly from their modules.
+Importing ``app.models`` registers every ORM model with the shared
+SQLAlchemy declarative registry. This allows string-based relationship
+targets such as ``"Document"`` and ``"ChatHistory"`` to be resolved
+reliably during mapper configuration.
 
-Examples:
-    from app.models.user import User
-    from app.models.document import Document
-    from app.models.chat_history import ChatHistory
-
-Model registration for SQLAlchemy metadata and Alembic is handled by
-``app.db.base``.
+Alembic and application startup may import this package when complete
+model registration is required.
 """
 
-__all__: tuple[str, ...] = ()
+from app.models.chat_history import ChatHistory
+from app.models.document import Document
+from app.models.user import User
+
+
+__all__ = (
+    "User",
+    "Document",
+    "ChatHistory",
+)

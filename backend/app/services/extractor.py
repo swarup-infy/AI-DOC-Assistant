@@ -166,7 +166,7 @@ def extract_txt_text(file_path: str) -> str:
 
     try:
         text = path.read_text(
-            encoding="utf-8",
+            encoding="utf-8-sig",
             errors="replace",
         )
 
