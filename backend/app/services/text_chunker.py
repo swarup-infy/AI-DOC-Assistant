@@ -2,37 +2,28 @@ from __future__ import annotations
 
 import re
 
+from app.core.config import settings
 from app.core.logger import logger
-
-
-DEFAULT_CHUNK_SIZE = 1000
-DEFAULT_CHUNK_OVERLAP = 150
 
 
 def chunk_text(
     text: str,
-    chunk_size: int = DEFAULT_CHUNK_SIZE,
-    chunk_overlap: int = DEFAULT_CHUNK_OVERLAP,
+    chunk_size: int | None = None,
+    chunk_overlap: int | None = None,
 ) -> list[str]:
     """
-    Split text into overlapping chunks while attempting to preserve
-    natural text boundaries.
+    Split text into overlapping chunks while preserving natural
+    text boundaries where possible.
 
-    The chunker prefers paragraph, sentence, and whitespace boundaries
-    instead of blindly cutting text at an exact character position.
+    When chunk_size or chunk_overlap is not explicitly supplied,
+    the application configuration is used.
 
-    Args:
-        text:
-            Text to split.
-
-        chunk_size:
-            Maximum target size of each chunk in characters.
-
-        chunk_overlap:
-            Number of characters to retain between consecutive chunks.
-
-    Returns:
-        A list of non-empty text chunks.
+    Boundary preference:
+    1. Paragraph boundary
+    2. Sentence boundary
+    3. Line boundary
+    4. Whitespace
+    5. Exact character position
     """
 
     if not isinstance(text, str):
@@ -40,44 +31,81 @@ def chunk_text(
             "text must be a string."
         )
 
-    if chunk_size <= 0:
+    resolved_chunk_size = (
+        settings.CHUNK_SIZE
+        if chunk_size is None
+        else chunk_size
+    )
+
+    resolved_chunk_overlap = (
+        settings.CHUNK_OVERLAP
+        if chunk_overlap is None
+        else chunk_overlap
+    )
+
+    if (
+        isinstance(resolved_chunk_size, bool)
+        or not isinstance(resolved_chunk_size, int)
+    ):
+        raise TypeError(
+            "chunk_size must be an integer."
+        )
+
+    if (
+        isinstance(resolved_chunk_overlap, bool)
+        or not isinstance(resolved_chunk_overlap, int)
+    ):
+        raise TypeError(
+            "chunk_overlap must be an integer."
+        )
+
+    if resolved_chunk_size <= 0:
         raise ValueError(
             "chunk_size must be greater than zero."
         )
 
-    if chunk_overlap < 0:
+    if resolved_chunk_overlap < 0:
         raise ValueError(
             "chunk_overlap cannot be negative."
         )
 
-    if chunk_overlap >= chunk_size:
+    if resolved_chunk_overlap >= resolved_chunk_size:
         raise ValueError(
             "chunk_overlap must be smaller than chunk_size."
         )
 
-    normalized_text = _normalize_text(text)
+    normalized_text = _normalize_text(
+        text
+    )
 
     if not normalized_text:
         return []
 
-    if len(normalized_text) <= chunk_size:
-        return [normalized_text]
+    if len(normalized_text) <= resolved_chunk_size:
+        return [
+            normalized_text
+        ]
 
     chunks: list[str] = []
+
     start = 0
     text_length = len(normalized_text)
 
     while start < text_length:
         target_end = min(
-            start + chunk_size,
+            start + resolved_chunk_size,
             text_length,
         )
 
         if target_end >= text_length:
-            chunk = normalized_text[start:].strip()
+            chunk = normalized_text[
+                start:
+            ].strip()
 
             if chunk:
-                chunks.append(chunk)
+                chunks.append(
+                    chunk
+                )
 
             break
 
@@ -95,10 +123,12 @@ def chunk_text(
         ].strip()
 
         if chunk:
-            chunks.append(chunk)
+            chunks.append(
+                chunk
+            )
 
         next_start = max(
-            end - chunk_overlap,
+            end - resolved_chunk_overlap,
             start + 1,
         )
 
@@ -118,8 +148,8 @@ def chunk_text(
         "characters=%d chunks=%d chunk_size=%d overlap=%d.",
         text_length,
         len(chunks),
-        chunk_size,
-        chunk_overlap,
+        resolved_chunk_size,
+        resolved_chunk_overlap,
     )
 
     return chunks
@@ -130,6 +160,10 @@ def _normalize_text(
 ) -> str:
     """
     Normalize whitespace while preserving paragraph boundaries.
+
+    The main preprocessing layer normally performs equivalent
+    normalization before chunking. Keeping lightweight normalization
+    here makes chunk_text safe for independent use as well.
     """
 
     text = text.replace(
@@ -140,8 +174,18 @@ def _normalize_text(
         "\n",
     )
 
+    text = text.replace(
+        "\x00",
+        "",
+    )
+
+    text = text.replace(
+        "\u00a0",
+        " ",
+    )
+
     text = re.sub(
-        r"[ \t]+",
+        r"[^\S\n]+",
         " ",
         text,
     )
@@ -167,14 +211,10 @@ def _find_split_position(
     target_end: int,
 ) -> int:
     """
-    Find a natural split position near the target chunk boundary.
+    Find a natural split position near the target boundary.
 
-    Preference:
-    1. Paragraph boundary
-    2. Sentence boundary
-    3. Newline
-    4. Whitespace
-    5. Exact target position
+    Only the latter half of the target chunk is searched so chunks
+    do not become unnecessarily small.
     """
 
     search_start = start + (
@@ -198,8 +238,9 @@ def _find_split_position(
         )
 
         if position != -1:
-            return position + len(
-                boundary
+            return (
+                position
+                + len(boundary)
             )
 
     return target_end
@@ -211,7 +252,9 @@ def _move_to_word_boundary(
     upper_bound: int,
 ) -> int:
     """
-    Move an overlap starting position forward to a word boundary.
+    Move an overlap start forward to the nearest word boundary.
+
+    The position never moves beyond the end of the preceding chunk.
     """
 
     if position <= 0:
