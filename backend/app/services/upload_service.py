@@ -349,9 +349,7 @@ def save_file_to_disk(
     try:
         file.file.seek(0)
 
-        with file_path.open(
-            "wb"
-        ) as destination:
+        with file_path.open("wb") as destination:
             while True:
                 data = file.file.read(
                     FILE_COPY_BUFFER_SIZE
@@ -360,37 +358,25 @@ def save_file_to_disk(
                 if not data:
                     break
 
-                bytes_written += len(
-                    data
-                )
+                bytes_written += len(data)
 
                 if bytes_written > MAX_FILE_SIZE:
                     raise HTTPException(
-                        status_code=(
-                            status.HTTP_413_REQUEST_ENTITY_TOO_LARGE
-                        ),
+                        status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
                         detail=(
-                            "File size exceeds the maximum "
-                            "allowed size of "
+                            "File size exceeds the maximum allowed size of "
                             f"{get_max_upload_size_mb():g} MB."
                         ),
                     )
 
-                destination.write(
-                    data
-                )
+                destination.write(data)
 
     except HTTPException:
-        _delete_file_with_retry(
-            file_path
-        )
-
+        _delete_file_with_retry(file_path)
         raise
 
     except Exception as exc:
-        _delete_file_with_retry(
-            file_path
-        )
+        _delete_file_with_retry(file_path)
 
         logger.exception(
             "Failed to save uploaded file '%s'.",
@@ -402,10 +388,18 @@ def save_file_to_disk(
             detail="Failed to store uploaded file.",
         ) from exc
 
+    finally:
+        try:
+            file.file.close()
+        except Exception:
+            logger.warning(
+                "Failed to close upload stream for '%s'.",
+                safe_name,
+                exc_info=True,
+            )
+
     if bytes_written == 0:
-        _delete_file_with_retry(
-            file_path
-        )
+        _delete_file_with_retry(file_path)
 
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -431,6 +425,10 @@ def process_pdf(
 ]:
     """
     Extract, clean, and chunk PDF text page by page.
+
+    chunk_index is a running counter across the entire document
+    (not reset per page) so it stays aligned with the flat
+    document_{id}_chunk_{index} IDs used in ChromaDB.
     """
 
     chunks: list[str] = []
@@ -439,6 +437,8 @@ def process_pdf(
     pages = extract_pdf_pages(
         str(file_path)
     )
+
+    global_chunk_index = 0
 
     for page in pages:
         raw_text = page.get(
@@ -475,9 +475,7 @@ def process_pdf(
             cleaned_text
         )
 
-        for chunk_index, chunk in enumerate(
-            page_chunks
-        ):
+        for chunk in page_chunks:
             normalized_chunk = (
                 chunk.strip()
             )
@@ -495,9 +493,11 @@ def process_pdf(
                     "document_id": document_id,
                     "document_name": filename,
                     "page": page_number,
-                    "chunk_index": chunk_index,
+                    "chunk_index": global_chunk_index,
                 }
             )
+
+            global_chunk_index += 1
 
     return chunks, metadata
 
@@ -682,15 +682,20 @@ def save_uploaded_file(
     1. Validate user and upload.
     2. Normalize the original filename.
     3. Reject normal duplicate filenames before persistence.
-    4. Stream the file to disk.
-    5. Create the PostgreSQL document record.
-    6. Handle database-level duplicate race conditions.
-    7. Extract, clean, and chunk document text.
-    8. Generate embeddings.
-    9. Store vectors and ownership metadata in ChromaDB.
+    4. Initialize upload services (embedding + vector store).
+    5. Stream the file to disk.
+    6. Create the PostgreSQL document record.
+    7. Handle database-level duplicate race conditions.
+    8. Extract, clean, and chunk document text.
+    9. Generate embeddings.
+    10. Store vectors and ownership metadata in ChromaDB.
 
-    Any failure after persistence begins triggers best-effort
-    cleanup of created resources.
+    Service initialization failures (step 4) happen before any
+    resource is created, so they are converted directly to an
+    HTTP 500 with no cleanup required.
+
+    Any failure after that point triggers best-effort cleanup of
+    created resources.
     """
 
     if user_id <= 0:
@@ -712,13 +717,28 @@ def save_uploaded_file(
         filename=original_filename,
     )
 
-    embedding_service = (
-        EmbeddingService()
-    )
+    # ==========================================================
+    # Service Initialization
+    # ==========================================================
+    #
+    # Isolated in its own try/except: at this point no file,
+    # database record, or vector has been created yet, so a
+    # construction failure needs no cleanup — just a clean 500.
 
-    chroma_service = (
-        ChromaService()
-    )
+    try:
+        embedding_service = EmbeddingService()
+        chroma_service = ChromaService()
+
+    except Exception as exc:
+        logger.exception(
+            "Failed to initialize upload services for user %d.",
+            user_id,
+        )
+
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to initialize upload services.",
+        ) from exc
 
     file_path: Path | None = None
     document: Document | None = None
