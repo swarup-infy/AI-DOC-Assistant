@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   LogOut,
   Menu,
@@ -8,6 +8,7 @@ import {
   UserCircle,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
 
 interface NavbarProps {
   onMenuClick: () => void;
@@ -17,118 +18,123 @@ export default function Navbar({
   onMenuClick,
 }: NavbarProps) {
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
 
   const [search, setSearch] = useState("");
   const [darkMode, setDarkMode] = useState(false);
 
   useEffect(() => {
-    const savedTheme =
-      localStorage.getItem("theme") ||
+    const theme =
+      localStorage.getItem("theme") ??
       (window.matchMedia("(prefers-color-scheme: dark)").matches
         ? "dark"
         : "light");
 
     document.documentElement.setAttribute(
       "data-theme",
-      savedTheme
+      theme
     );
 
-    setDarkMode(savedTheme === "dark");
+    setDarkMode(theme === "dark");
   }, []);
 
-  function toggleTheme() {
-    const nextTheme = darkMode ? "light" : "dark";
+  const toggleTheme = useCallback(() => {
+    setDarkMode((prev) => {
+      const next = !prev;
+      const theme = next ? "dark" : "light";
 
-    setDarkMode(!darkMode);
+      document.documentElement.setAttribute(
+        "data-theme",
+        theme
+      );
 
-    document.documentElement.setAttribute(
-      "data-theme",
-      nextTheme
+      localStorage.setItem("theme", theme);
+
+      return next;
+    });
+  }, []);
+
+  const handleLogout = useCallback(() => {
+    const confirmed = window.confirm(
+      "Are you sure you want to logout?"
     );
 
-    localStorage.setItem("theme", nextTheme);
-  }
+    if (!confirmed) return;
 
-  function logout() {
-    if (!window.confirm("Are you sure you want to logout?")) {
-      return;
-    }
+    logout();
 
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("user");
-
-    navigate("/login", { replace: true });
-  }
+    navigate("/login", {
+      replace: true,
+    });
+  }, [logout, navigate]);
 
   return (
-    <header className="flex h-20 items-center justify-between px-8">
+    <header className="flex h-20 items-center justify-between gap-4 px-5 sm:px-8">
       {/* Left */}
-      <div className="flex items-center gap-5">
+      <div className="flex items-center gap-4">
         <button
+          type="button"
           onClick={onMenuClick}
+          aria-label="Open navigation menu"
           className="rounded-xl p-3 transition hover:bg-accent lg:hidden"
-          aria-label="Open menu"
         >
           <Menu size={22} />
         </button>
 
-        <div>
+        <div className="min-w-0">
           <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">
             Workspace
           </p>
 
-          <h1
-            className="text-3xl font-light leading-none text-foreground"
-            style={{
-              fontFamily:
-                '"Cormorant Garamond","Playfair Display",serif',
-            }}
-          >
+          <h1 className="font-display truncate text-2xl font-light leading-none text-foreground sm:text-3xl">
             AI Document Assistant
           </h1>
         </div>
       </div>
 
-      {/* Search */}
-      <div className="hidden flex-1 justify-center px-10 lg:flex">
-        <div className="relative w-full max-w-xl">
+      {/* Desktop Search */}
+      <div
+        className="hidden flex-1 justify-center px-8 lg:flex"
+        role="search"
+      >
+        <div className="flex w-full max-w-xl items-center gap-3 rounded-full border border-border bg-card px-5 py-3 transition-all focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/15">
           <Search
             size={18}
-            className="absolute left-6 top-1/2 -translate-y-1/2 text-muted-foreground"
+            className="flex-shrink-0 text-muted-foreground"
           />
 
           <input
-            type="text"
+            type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search documents, chats, PDFs..."
-            className="
-              w-full
-              rounded-full
-              border
-              border-border
-              bg-card
-              py-3
-              pl-16
-              pr-5
-              text-sm
-              text-foreground
-              outline-none
-              transition-all
-              focus:border-primary
-              focus:ring-4
-              focus:ring-primary/15
-            "
+            aria-label="Search documents"
+            className="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
           />
         </div>
       </div>
 
       {/* Right */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3">
+        {/* Mobile Search */}
         <button
+          type="button"
+          aria-label="Search"
+          className="rounded-2xl border border-border p-3 transition hover:bg-accent lg:hidden"
+        >
+          <Search size={18} />
+        </button>
+
+        {/* Theme */}
+        <button
+          type="button"
           onClick={toggleTheme}
-          className="rounded-2xl border border-border p-3 transition hover:bg-accent"
-          aria-label="Toggle Theme"
+          aria-label={
+            darkMode
+              ? "Switch to light mode"
+              : "Switch to dark mode"
+          }
+          className="will-change-transform rounded-2xl border border-border p-3 transition hover:bg-accent"
         >
           {darkMode ? (
             <Sun size={19} />
@@ -137,8 +143,11 @@ export default function Navbar({
           )}
         </button>
 
+        {/* Profile */}
         <button
+          type="button"
           onClick={() => navigate("/profile")}
+          aria-label="Open profile"
           className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3 transition hover:border-primary/30 hover:bg-accent"
         >
           <UserCircle size={22} />
@@ -149,14 +158,19 @@ export default function Navbar({
             </p>
 
             <p className="text-sm font-medium text-foreground">
-              Profile
+              {user?.full_name ??
+                user?.username ??
+                "Profile"}
             </p>
           </div>
         </button>
 
+        {/* Logout */}
         <button
-          onClick={logout}
-          className="flex items-center gap-2 rounded-2xl bg-primary px-5 py-3 text-primary-foreground transition-all hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/25"
+          type="button"
+          onClick={handleLogout}
+          aria-label="Logout"
+          className="will-change-transform flex items-center gap-2 rounded-2xl bg-primary px-5 py-3 text-primary-foreground transition-all hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/25"
         >
           <LogOut size={18} />
 

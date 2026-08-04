@@ -1,35 +1,16 @@
-import { useMemo } from "react";
+import { useDebugValue } from "react";
 
 import { useAuthContext } from "../context/AuthContext";
-
-import {
-  getAccessToken,
-  getCurrentUser,
-  isAuthenticated,
-  logout,
-} from "../services/authService";
 
 export function useAuth() {
   const auth = useAuthContext();
 
-  return useMemo(
-    () => ({
-      ...auth,
-
-      token: getAccessToken(),
-
-      user:
-        auth.user ??
-        getCurrentUser(),
-
-      isAuthenticated:
-        auth.isAuthenticated ??
-        isAuthenticated(),
-
-      logout,
-    }),
-    [auth]
+  // Shows auth status in React DevTools
+  useDebugValue(
+    auth.isAuthenticated ? "Authenticated" : "Unauthenticated"
   );
+
+  return auth;
 }
 
 export default useAuth;

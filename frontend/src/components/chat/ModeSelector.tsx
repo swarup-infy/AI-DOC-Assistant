@@ -20,7 +20,7 @@ export default function ModeSelector({
       hoverClass: "hover:border-blue-400",
     },
     {
-      id: "gemini",
+      id: "groq",
       icon: "✨",
       title: "AI Assistant",
       description: "Ask anything using AI.",

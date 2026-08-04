@@ -45,9 +45,9 @@ const menuItems: SidebarItem[] = [
 
 export default function Sidebar() {
   return (
-    <aside className="flex h-full flex-col bg-card">
+    <aside className="flex h-full flex-col overflow-y-auto bg-card">
       {/* Brand */}
-      <div className="border-b border-border/60 px-8 py-8">
+      <div className="sticky top-0 z-10 flex-shrink-0 border-b border-border/60 bg-card px-8 py-8">
         <div className="flex items-start gap-4">
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/20">
             <Sparkles
@@ -57,13 +57,7 @@ export default function Sidebar() {
           </div>
 
           <div>
-            <h1
-              className="leading-none tracking-tight text-4xl font-light text-foreground"
-              style={{
-                fontFamily:
-                  '"Cormorant Garamond", "Playfair Display", serif',
-              }}
-            >
+            <h1 className="font-display text-4xl font-light leading-none tracking-tight text-foreground">
               AIDoc
             </h1>
 
@@ -85,6 +79,7 @@ export default function Sidebar() {
               <NavLink
                 to={path}
                 end
+                title={name}
                 className={({ isActive }) =>
                   `group flex items-center gap-4 rounded-2xl px-5 py-4 transition-all duration-300 ${
                     isActive
@@ -108,7 +103,7 @@ export default function Sidebar() {
       </nav>
 
       {/* Footer */}
-      <footer className="border-t border-border/60 p-6">
+      <footer className="flex-shrink-0 border-t border-border/60 p-6">
         <div className="rounded-2xl border border-border/60 bg-muted/40 p-5">
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10">

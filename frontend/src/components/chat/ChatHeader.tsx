@@ -23,11 +23,11 @@ export default function ChatHeader({
         "bg-blue-500/10 text-blue-500 border-blue-500/20",
     },
 
-    gemini: {
+    groq: {
       icon: <Sparkles size={16} />,
-      title: "Gemini AI",
+      title: "Groq AI",
       description:
-        "General conversations powered by Gemini.",
+        "General conversations powered by Groq.",
       color:
         "bg-violet-500/10 text-violet-500 border-violet-500/20",
     },

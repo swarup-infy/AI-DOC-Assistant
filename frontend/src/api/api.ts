@@ -18,15 +18,13 @@ api.interceptors.request.use(
     const token = localStorage.getItem("access_token");
 
     if (token) {
-      if (!config.headers) {
-        config.headers = new AxiosHeaders();
-      }
+      const headers =
+        config.headers instanceof AxiosHeaders
+          ? config.headers
+          : new AxiosHeaders(config.headers);
 
-      if (config.headers instanceof AxiosHeaders) {
-        config.headers.set("Authorization", `Bearer ${token}`);
-      } else {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
+      headers.set("Authorization", `Bearer ${token}`);
+      config.headers = headers;
     }
 
     return config;

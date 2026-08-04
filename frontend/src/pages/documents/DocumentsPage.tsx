@@ -33,7 +33,7 @@ export default function DocumentsPage() {
   async function loadDocuments() {
     try {
       const response = await getDocuments();
-      setDocuments(response.documents ?? response);
+      setDocuments(response);
     } catch (error) {
       console.error(error);
     }

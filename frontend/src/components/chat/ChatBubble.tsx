@@ -27,8 +27,8 @@ export default function ChatBubble({
     switch (mode) {
       case "document":
         return "Document AI";
-      case "gemini":
-        return "Gemini AI";
+      case "groq":
+        return "Groq AI";
       case "smart":
         return "Smart AI";
       default:
@@ -70,8 +70,6 @@ export default function ChatBubble({
 
           <BubbleHeader
             title={getModeLabel()}
-            copied={false}
-            onCopy={() => {}}
           />
         </div>
 

@@ -47,8 +47,10 @@ export function AuthProvider({
 
   const [loading, setLoading] = useState(true);
 
-  const isAuthenticated =
-    !!getAccessToken() && !!user;
+  const isAuthenticated = useMemo(
+    () => !!getAccessToken() && !!user,
+    [user]
+  );
 
   const updateUser = useCallback(
     (updatedUser: User) => {
@@ -63,7 +65,6 @@ export function AuthProvider({
       const profile = await getProfile();
 
       saveUser(profile);
-
       setUser(profile);
     } catch {
       logoutService();
@@ -75,7 +76,14 @@ export function AuthProvider({
     async (token: string) => {
       saveAccessToken(token);
 
-      await refreshUser();
+      try {
+        await refreshUser();
+      } catch {
+        logoutService();
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
     },
     [refreshUser]
   );
@@ -99,7 +107,7 @@ export function AuthProvider({
       }
     }
 
-    initialize();
+    void initialize();
   }, [refreshUser]);
 
   const value = useMemo<AuthContextType>(
@@ -107,10 +115,8 @@ export function AuthProvider({
       user,
       loading,
       isAuthenticated,
-
       login,
       logout,
-
       refreshUser,
       updateUser,
     }),

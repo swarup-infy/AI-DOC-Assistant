@@ -2,7 +2,7 @@ import api from "../api/api";
 
 export type ChatMode =
   | "document"
-  | "gemini"
+  | "groq"
   | "smart";
 
 export interface ChatRequest {

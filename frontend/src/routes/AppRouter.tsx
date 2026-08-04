@@ -4,6 +4,7 @@ import {
   type ReactNode,
 } from "react";
 import {
+  Link,
   Navigate,
   Route,
   Routes,
@@ -16,37 +17,14 @@ import { getAccessToken } from "../services/authService";
 // Lazy Pages
 //
 
-const LoginPage = lazy(
-  () => import("../pages/auth/LoginPage")
-);
-
-const RegisterPage = lazy(
-  () => import("../pages/auth/RegisterPage")
-);
-
-const DashboardPage = lazy(
-  () => import("../pages/dashboard/DashboardPage")
-);
-
-const DocumentsPage = lazy(
-  () => import("../pages/documents/DocumentsPage")
-);
-
-const ChatPage = lazy(
-  () => import("../pages/chat/ChatPage")
-);
-
-const SearchPage = lazy(
-  () => import("../pages/search/SearchPage")
-);
-
-const HistoryPage = lazy(
-  () => import("../pages/history/HistoryPage")
-);
-
-const ProfilePage = lazy(
-  () => import("../pages/profile/ProfilePage")
-);
+const LoginPage = lazy(() => import("../pages/auth/LoginPage"));
+const RegisterPage = lazy(() => import("../pages/auth/RegisterPage"));
+const DashboardPage = lazy(() => import("../pages/dashboard/DashboardPage"));
+const DocumentsPage = lazy(() => import("../pages/documents/DocumentsPage"));
+const ChatPage = lazy(() => import("../pages/chat/ChatPage"));
+const SearchPage = lazy(() => import("../pages/search/SearchPage"));
+const HistoryPage = lazy(() => import("../pages/history/HistoryPage"));
+const ProfilePage = lazy(() => import("../pages/profile/ProfilePage"));
 
 //
 // Route Configuration
@@ -55,19 +33,16 @@ const ProfilePage = lazy(
 interface AppRoute {
   path: string;
   element: ReactNode;
-  title: string;
 }
 
 const publicRoutes: AppRoute[] = [
   {
     path: "/login",
     element: <LoginPage />,
-    title: "Login",
   },
   {
     path: "/register",
     element: <RegisterPage />,
-    title: "Register",
   },
 ];
 
@@ -75,32 +50,26 @@ const protectedRoutes: AppRoute[] = [
   {
     path: "/dashboard",
     element: <DashboardPage />,
-    title: "Dashboard",
   },
   {
     path: "/documents",
     element: <DocumentsPage />,
-    title: "Documents",
   },
   {
     path: "/chat",
     element: <ChatPage />,
-    title: "AI Chat",
   },
   {
     path: "/search",
     element: <SearchPage />,
-    title: "Search",
   },
   {
     path: "/history",
     element: <HistoryPage />,
-    title: "History",
   },
   {
     path: "/profile",
     element: <ProfilePage />,
-    title: "Profile",
   },
 ];
 
@@ -115,9 +84,7 @@ function PageLoader() {
         <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
 
         <div className="space-y-1 text-center">
-          <h2 className="font-semibold">
-            Loading
-          </h2>
+          <h2 className="font-semibold">Loading</h2>
 
           <p className="text-sm text-muted-foreground">
             Please wait while we prepare your page...
@@ -136,23 +103,22 @@ function NotFoundPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-6">
       <div className="max-w-lg text-center">
-        <h1 className="text-7xl font-bold text-primary">
-          404
-        </h1>
+        <h1 className="text-7xl font-bold text-primary">404</h1>
 
         <h2 className="mt-4 text-2xl font-semibold">
           Page Not Found
         </h2>
 
         <p className="mt-3 text-muted-foreground">
-          The page you are looking for doesn't exist or has
-          been moved.
+          The page you are looking for doesn't exist or has been moved.
         </p>
 
-        <Navigate
+        <Link
           to="/dashboard"
-          replace
-        />
+          className="mt-6 inline-flex rounded-lg bg-primary px-5 py-2 text-sm font-medium text-primary-foreground transition hover:opacity-90"
+        >
+          Go to Dashboard
+        </Link>
       </div>
     </div>
   );
@@ -168,11 +134,7 @@ function RootRedirect() {
   return (
     <Navigate
       replace
-      to={
-        authenticated
-          ? "/dashboard"
-          : "/login"
-      }
+      to={authenticated ? "/dashboard" : "/login"}
     />
   );
 }
