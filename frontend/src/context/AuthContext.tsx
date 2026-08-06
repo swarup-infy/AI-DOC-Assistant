@@ -30,9 +30,10 @@ interface AuthContextType {
   updateUser: (user: User) => void;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(
-  undefined
-);
+const AuthContext =
+  createContext<AuthContextType | null>(
+    null
+  );
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -41,51 +42,23 @@ interface AuthProviderProps {
 export function AuthProvider({
   children,
 }: AuthProviderProps) {
-  const [user, setUser] = useState<User | null>(
-    getCurrentUser()
-  );
+  const [user, setUser] =
+    useState<User | null>(
+      getCurrentUser()
+    );
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] =
+    useState(true);
 
-  const isAuthenticated = useMemo(
-    () => !!getAccessToken() && !!user,
-    [user]
-  );
+  const isAuthenticated =
+    !!user && !!getAccessToken();
 
   const updateUser = useCallback(
-    (updatedUser: User) => {
-      saveUser(updatedUser);
-      setUser(updatedUser);
+    (nextUser: User) => {
+      saveUser(nextUser);
+      setUser(nextUser);
     },
     []
-  );
-
-  const refreshUser = useCallback(async () => {
-    try {
-      const profile = await getProfile();
-
-      saveUser(profile);
-      setUser(profile);
-    } catch {
-      logoutService();
-      setUser(null);
-    }
-  }, []);
-
-  const login = useCallback(
-    async (token: string) => {
-      saveAccessToken(token);
-
-      try {
-        await refreshUser();
-      } catch {
-        logoutService();
-        setUser(null);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [refreshUser]
   );
 
   const logout = useCallback(() => {
@@ -93,24 +66,58 @@ export function AuthProvider({
     setUser(null);
   }, []);
 
+  const refreshUser = useCallback(async () => {
+    try {
+      const profile =
+        await getProfile();
+
+      saveUser(profile);
+      setUser(profile);
+    } catch {
+      logout();
+      throw new Error(
+        "Failed to refresh user."
+      );
+    }
+  }, [logout]);
+
+  const login = useCallback(
+    async (token: string) => {
+      saveAccessToken(token);
+
+      await refreshUser();
+    },
+    [refreshUser]
+  );
+
   useEffect(() => {
+    let mounted = true;
+
     async function initialize() {
       if (!getAccessToken()) {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
         return;
       }
 
       try {
         await refreshUser();
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     }
 
     void initialize();
+
+    return () => {
+      mounted = false;
+    };
   }, [refreshUser]);
 
-  const value = useMemo<AuthContextType>(
+  const value = useMemo(
     () => ({
       user,
       loading,
@@ -139,11 +146,12 @@ export function AuthProvider({
 }
 
 export function useAuthContext() {
-  const context = useContext(AuthContext);
+  const context =
+    useContext(AuthContext);
 
   if (!context) {
     throw new Error(
-      "useAuthContext must be used inside AuthProvider."
+      "useAuthContext must be used within AuthProvider."
     );
   }
 

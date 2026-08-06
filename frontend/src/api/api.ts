@@ -1,21 +1,31 @@
 import axios, {
   AxiosError,
   AxiosHeaders,
+  type AxiosInstance,
+  type InternalAxiosRequestConfig,
 } from "axios";
 
-const api = axios.create({
-  baseURL:
-    import.meta.env.VITE_API_URL ??
-    "http://127.0.0.1:8000/api",
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL ??
+  "http://127.0.0.1:8000/api";
+
+const AUTH_TOKEN_KEY = "access_token";
+const USER_KEY = "user";
+
+const api: AxiosInstance = axios.create({
+  baseURL: API_BASE_URL,
   timeout: 30000,
+  withCredentials: false,
   headers: {
+    Accept: "application/json",
     "Content-Type": "application/json",
   },
 });
 
 api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("access_token");
+  (config: InternalAxiosRequestConfig) => {
+    const token =
+      localStorage.getItem(AUTH_TOKEN_KEY);
 
     if (token) {
       const headers =
@@ -23,49 +33,55 @@ api.interceptors.request.use(
           ? config.headers
           : new AxiosHeaders(config.headers);
 
-      headers.set("Authorization", `Bearer ${token}`);
+      headers.set(
+        "Authorization",
+        `Bearer ${token}`
+      );
+
       config.headers = headers;
     }
 
     return config;
-  },
-  (error: AxiosError) => Promise.reject(error)
+  }
 );
 
 api.interceptors.response.use(
   (response) => response,
 
-  async (error: AxiosError) => {
-    const status = error.response?.status;
+  (error: AxiosError) => {
+    if (axios.isCancel(error)) {
+      return Promise.reject(error);
+    }
 
-    switch (status) {
-      case 401:
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("user");
+    const status =
+      error.response?.status;
 
-        if (window.location.pathname !== "/login") {
-          window.location.href = "/login";
-        }
-        break;
+    if (status === 401) {
+      localStorage.removeItem(
+        AUTH_TOKEN_KEY
+      );
+      localStorage.removeItem(
+        USER_KEY
+      );
 
-      case 403:
-        console.error("Access denied.");
-        break;
+      const isAuthPage =
+        ["/login", "/register"].includes(
+          window.location.pathname
+        );
 
-      case 404:
-        console.error("Resource not found.");
-        break;
-
-      case 500:
-        console.error("Internal server error.");
-        break;
-
-      default:
-        break;
+      if (!isAuthPage) {
+        window.location.assign("/login");
+      }
     }
 
     return Promise.reject(error);
   }
 );
+
+export const apiGet = api.get.bind(api);
+export const apiPost = api.post.bind(api);
+export const apiPut = api.put.bind(api);
+export const apiPatch = api.patch.bind(api);
+export const apiDelete = api.delete.bind(api);
 
 export default api;

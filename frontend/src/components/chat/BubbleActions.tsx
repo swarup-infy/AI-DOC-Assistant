@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Check,
   Copy,
@@ -8,32 +8,59 @@ import {
 
 interface BubbleActionsProps {
   message: string;
+  onLike?: () => void;
+  onDislike?: () => void;
 }
 
 export default function BubbleActions({
   message,
+  onLike,
+  onDislike,
 }: BubbleActionsProps) {
   const [copied, setCopied] = useState(false);
+  const timeoutRef = useRef<number | null>(null);
 
-  async function copyMessage() {
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        window.clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
+  const copyMessage = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(message);
 
       setCopied(true);
 
-      setTimeout(() => {
+      if (timeoutRef.current) {
+        window.clearTimeout(timeoutRef.current);
+      }
+
+      timeoutRef.current = window.setTimeout(() => {
         setCopied(false);
       }, 2000);
-    } catch (error) {
-      console.error(error);
+    } catch (err) {
+      console.error("Failed to copy message:", err);
     }
-  }
+  }, [message]);
+
+  const buttonClass =
+    "inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium transition-colors hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-50";
 
   return (
-    <div className="mt-4 flex flex-wrap items-center gap-2">
+    <div
+      className="mt-4 flex flex-wrap items-center gap-2"
+      role="group"
+      aria-label="Message actions"
+    >
       <button
+        type="button"
         onClick={copyMessage}
-        className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm transition hover:bg-accent"
+        className={buttonClass}
+        aria-label="Copy message"
+        title="Copy message"
       >
         {copied ? (
           <>
@@ -49,14 +76,22 @@ export default function BubbleActions({
       </button>
 
       <button
-        className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm transition hover:bg-accent"
+        type="button"
+        onClick={onLike}
+        className={buttonClass}
+        aria-label="Like response"
+        title="Like response"
       >
         <ThumbsUp size={16} />
         Like
       </button>
 
       <button
-        className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm transition hover:bg-accent"
+        type="button"
+        onClick={onDislike}
+        className={buttonClass}
+        aria-label="Dislike response"
+        title="Dislike response"
       >
         <ThumbsDown size={16} />
         Dislike

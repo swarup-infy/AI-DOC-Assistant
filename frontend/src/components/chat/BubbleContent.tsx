@@ -1,3 +1,4 @@
+import { memo } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -5,20 +6,15 @@ interface BubbleContentProps {
   message: string;
 }
 
-export default function BubbleContent({
-  message,
-}: BubbleContentProps) {
+function BubbleContent({ message }: BubbleContentProps) {
   return (
-    <div
+    <article
       className="
         animate-in fade-in duration-300
-
         rounded-3xl
-        border
-        border-border/60
+        border border-border/60
         bg-card
-        px-7
-        py-6
+        px-7 py-6
         shadow-sm
 
         prose
@@ -99,9 +95,40 @@ export default function BubbleContent({
         prose-img:border-border
       "
     >
-      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          a: ({ node, ...props }) => (
+            <a
+              {...props}
+              target="_blank"
+              rel="noopener noreferrer"
+            />
+          ),
+
+          code: ({ className, children, ...props }) => (
+            <code
+              className={className}
+              {...props}
+            >
+              {children}
+            </code>
+          ),
+
+          img: ({ node, ...props }) => (
+            <img
+              loading="lazy"
+              decoding="async"
+              alt={props.alt ?? ""}
+              {...props}
+            />
+          ),
+        }}
+      >
         {message}
       </ReactMarkdown>
-    </div>
+    </article>
   );
 }
+
+export default memo(BubbleContent);

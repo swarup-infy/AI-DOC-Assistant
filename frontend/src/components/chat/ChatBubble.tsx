@@ -1,3 +1,4 @@
+import { memo, useMemo } from "react";
 import { Bot, User } from "lucide-react";
 
 import type {
@@ -17,50 +18,56 @@ interface ChatBubbleProps {
   sources?: Source[];
 }
 
-export default function ChatBubble({
+const MODE_LABELS: Record<ChatMode, string> = {
+  smart: "Smart AI",
+  document: "Document AI",
+  groq: "Groq AI",
+};
+
+function ChatBubble({
   role,
   message,
   mode,
   sources = [],
 }: ChatBubbleProps) {
-  function getModeLabel() {
-    switch (mode) {
-      case "document":
-        return "Document AI";
-      case "groq":
-        return "Groq AI";
-      case "smart":
-        return "Smart AI";
-      default:
-        return "AI Assistant";
-    }
-  }
+  const title = useMemo(() => {
+    if (!mode) return "AI Assistant";
+    return MODE_LABELS[mode] ?? "AI Assistant";
+  }, [mode]);
 
-  if (role === "user") {
+  const isUser = role === "user";
+
+  if (isUser) {
     return (
-      <div className="mb-6 flex justify-end">
+      <article
+        className="mb-6 flex justify-end"
+        aria-label="User message"
+      >
         <div className="max-w-[80%]">
-          <div className="mb-2 flex justify-end">
-            <div className="flex items-center gap-2 rounded-full bg-primary px-3 py-1 text-sm font-medium text-primary-foreground">
+          <header className="mb-2 flex justify-end">
+            <div className="inline-flex items-center gap-2 rounded-full bg-primary px-3 py-1 text-sm font-medium text-primary-foreground">
               <User size={16} />
-              You
+              <span>You</span>
             </div>
-          </div>
+          </header>
 
           <div className="rounded-2xl rounded-tr-md bg-primary px-5 py-4 text-primary-foreground shadow-sm">
-            <p className="whitespace-pre-wrap leading-7">
+            <p className="whitespace-pre-wrap break-words leading-7">
               {message}
             </p>
           </div>
         </div>
-      </div>
+      </article>
     );
   }
 
   return (
-    <div className="mb-6 flex justify-start">
+    <article
+      className="mb-6 flex justify-start"
+      aria-label="Assistant message"
+    >
       <div className="w-full max-w-[90%] space-y-3">
-        <div className="flex items-center gap-2">
+        <header className="flex items-center gap-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10">
             <Bot
               size={18}
@@ -68,25 +75,19 @@ export default function ChatBubble({
             />
           </div>
 
-          <BubbleHeader
-            title={getModeLabel()}
-          />
-        </div>
+          <BubbleHeader title={title} />
+        </header>
 
-        <BubbleContent
-          message={message}
-        />
+        <BubbleContent message={message} />
 
         {sources.length > 0 && (
-          <SourcesCard
-            sources={sources}
-          />
+          <SourcesCard sources={sources} />
         )}
 
-        <BubbleActions
-          message={message}
-        />
+        <BubbleActions message={message} />
       </div>
-    </div>
+    </article>
   );
 }
+
+export default memo(ChatBubble);

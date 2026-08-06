@@ -1,33 +1,80 @@
-import { useEffect, useState } from "react";
+import {
+  memo,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 interface TypingTextProps {
   text: string;
   speed?: number;
+  enabled?: boolean;
 }
 
-export default function TypingText({
+function TypingText({
   text,
-  speed = 8,
+  speed = 15,
+  enabled = true,
 }: TypingTextProps) {
-  const [displayText, setDisplayText] = useState("");
+  const [displayText, setDisplayText] = useState(
+    enabled ? "" : text
+  );
+
+  const timeoutRef = useRef<number>();
 
   useEffect(() => {
-    setDisplayText("");
+    if (!enabled) {
+      setDisplayText(text);
+      return;
+    }
 
+    if (!text) {
+      setDisplayText("");
+      return;
+    }
+
+    let cancelled = false;
     let index = 0;
 
-    const interval = setInterval(() => {
+    setDisplayText("");
+
+    const type = () => {
+      if (cancelled) return;
+
       index++;
 
       setDisplayText(text.slice(0, index));
 
-      if (index >= text.length) {
-        clearInterval(interval);
+      if (index < text.length) {
+        timeoutRef.current = window.setTimeout(
+          type,
+          speed
+        );
       }
-    }, speed);
+    };
 
-    return () => clearInterval(interval);
-  }, [text, speed]);
+    timeoutRef.current = window.setTimeout(
+      type,
+      speed
+    );
 
-  return <>{displayText}</>;
+    return () => {
+      cancelled = true;
+
+      if (timeoutRef.current) {
+        window.clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [text, speed, enabled]);
+
+  return (
+    <span
+      aria-live="polite"
+      aria-atomic="true"
+    >
+      {displayText}
+    </span>
+  );
 }
+
+export default memo(TypingText);

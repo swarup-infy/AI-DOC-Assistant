@@ -5,10 +5,15 @@ import { useAuthContext } from "../context/AuthContext";
 export function useAuth() {
   const auth = useAuthContext();
 
-  // Shows auth status in React DevTools
-  useDebugValue(
-    auth.isAuthenticated ? "Authenticated" : "Unauthenticated"
-  );
+  useDebugValue(() => {
+    if (auth.loading) {
+      return "Loading";
+    }
+
+    return auth.isAuthenticated
+      ? `Authenticated (${auth.user?.username ?? "User"})`
+      : "Unauthenticated";
+  });
 
   return auth;
 }

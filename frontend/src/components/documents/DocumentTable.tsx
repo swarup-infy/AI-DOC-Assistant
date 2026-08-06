@@ -1,7 +1,5 @@
-import {
-  FileText,
-  Trash2,
-} from "lucide-react";
+import { memo, useCallback } from "react";
+import { FileText, Trash2 } from "lucide-react";
 
 interface Document {
   id: number;
@@ -11,17 +9,53 @@ interface Document {
   uploaded_at: string;
 }
 
-interface Props {
-  documents: Document[];
+interface DocumentTableProps {
+  documents: ReadonlyArray<Document>;
   onDelete: (id: number) => void;
 }
 
-export default function DocumentTable({
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+
+  const units = ["KB", "MB", "GB", "TB"];
+  let size = bytes / 1024;
+  let unit = 0;
+
+  while (size >= 1024 && unit < units.length - 1) {
+    size /= 1024;
+    unit++;
+  }
+
+  return `${size.toFixed(2)} ${units[unit]}`;
+}
+
+function formatDate(date: string): string {
+  return new Intl.DateTimeFormat(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  }).format(new Date(date));
+}
+
+function DocumentTable({
   documents,
   onDelete,
-}: Props) {
+}: DocumentTableProps) {
+  const handleDelete = useCallback(
+    (id: number) => {
+      const confirmed = window.confirm(
+        "Delete this document permanently?"
+      );
+
+      if (!confirmed) return;
+
+      onDelete(id);
+    },
+    [onDelete]
+  );
+
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+    <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
       <div className="overflow-x-auto">
         <table className="min-w-full">
           <thead className="border-b border-border bg-muted">
@@ -53,16 +87,16 @@ export default function DocumentTable({
               <tr>
                 <td
                   colSpan={5}
-                  className="py-12 text-center text-muted-foreground"
+                  className="py-16 text-center text-muted-foreground"
                 >
-                  No documents uploaded.
+                  No documents uploaded yet.
                 </td>
               </tr>
             ) : (
               documents.map((doc) => (
                 <tr
                   key={doc.id}
-                  className="border-b border-border transition hover:bg-muted/50"
+                  className="border-b border-border transition-colors hover:bg-muted/50"
                 >
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
@@ -70,11 +104,15 @@ export default function DocumentTable({
                         <FileText
                           size={18}
                           className="text-primary"
+                          aria-hidden="true"
                         />
                       </div>
 
-                      <div>
-                        <p className="font-medium text-foreground">
+                      <div className="min-w-0">
+                        <p
+                          className="truncate font-medium text-foreground"
+                          title={doc.filename}
+                        >
                           {doc.filename}
                         </p>
                       </div>
@@ -86,19 +124,38 @@ export default function DocumentTable({
                   </td>
 
                   <td className="px-6 py-4 text-muted-foreground">
-                    {(doc.file_size / 1024).toFixed(2)} KB
+                    {formatFileSize(doc.file_size)}
                   </td>
 
                   <td className="px-6 py-4 text-muted-foreground">
-                    {new Date(
-                      doc.uploaded_at
-                    ).toLocaleDateString()}
+                    <time dateTime={doc.uploaded_at}>
+                      {formatDate(doc.uploaded_at)}
+                    </time>
                   </td>
 
                   <td className="px-6 py-4 text-center">
                     <button
-                      onClick={() => onDelete(doc.id)}
-                      className="inline-flex items-center gap-2 rounded-lg border border-red-500 px-3 py-2 text-red-500 transition hover:bg-red-500 hover:text-white"
+                      type="button"
+                      onClick={() => handleDelete(doc.id)}
+                      aria-label={`Delete ${doc.filename}`}
+                      className="
+                        inline-flex
+                        items-center
+                        gap-2
+                        rounded-lg
+                        border
+                        border-red-500
+                        px-3
+                        py-2
+                        text-red-500
+                        transition-colors
+                        hover:bg-red-500
+                        hover:text-white
+                        focus:outline-none
+                        focus:ring-2
+                        focus:ring-red-500
+                        focus:ring-offset-2
+                      "
                     >
                       <Trash2 size={16} />
                       Delete
@@ -110,6 +167,8 @@ export default function DocumentTable({
           </tbody>
         </table>
       </div>
-    </div>
+    </section>
   );
 }
+
+export default memo(DocumentTable);

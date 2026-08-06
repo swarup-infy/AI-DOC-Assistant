@@ -33,7 +33,7 @@ export interface LoginResponse {
 
 //
 // =========================
-// Local Storage Keys
+// Storage Keys
 // =========================
 //
 
@@ -46,47 +46,93 @@ const USER_KEY = "user";
 // =========================
 //
 
-export function saveAccessToken(token: string) {
-  localStorage.setItem(ACCESS_TOKEN_KEY, token);
+const hasStorage =
+  typeof window !== "undefined";
+
+function setStorage(
+  key: string,
+  value: string
+) {
+  if (!hasStorage) return;
+  localStorage.setItem(key, value);
 }
 
-export function getAccessToken() {
-  return localStorage.getItem(ACCESS_TOKEN_KEY);
+function getStorage(
+  key: string
+): string | null {
+  if (!hasStorage) return null;
+  return localStorage.getItem(key);
 }
 
-export function removeAccessToken() {
-  localStorage.removeItem(ACCESS_TOKEN_KEY);
+function removeStorage(key: string) {
+  if (!hasStorage) return;
+  localStorage.removeItem(key);
 }
 
-export function saveUser(user: User) {
-  localStorage.setItem(USER_KEY, JSON.stringify(user));
+//
+// =========================
+// Token
+// =========================
+//
+
+export function saveAccessToken(
+  token: string
+): void {
+  setStorage(ACCESS_TOKEN_KEY, token);
+}
+
+export function getAccessToken(): string | null {
+  return getStorage(ACCESS_TOKEN_KEY);
+}
+
+export function removeAccessToken(): void {
+  removeStorage(ACCESS_TOKEN_KEY);
+}
+
+//
+// =========================
+// User
+// =========================
+//
+
+export function saveUser(
+  user: User
+): void {
+  setStorage(USER_KEY, JSON.stringify(user));
 }
 
 export function getCurrentUser(): User | null {
-  const value = localStorage.getItem(USER_KEY);
+  const raw = getStorage(USER_KEY);
 
-  if (!value) {
+  if (!raw) {
     return null;
   }
 
   try {
-    return JSON.parse(value);
+    return JSON.parse(raw) as User;
   } catch {
+    removeCurrentUser();
     return null;
   }
 }
 
-export function removeCurrentUser() {
-  localStorage.removeItem(USER_KEY);
+export function removeCurrentUser(): void {
+  removeStorage(USER_KEY);
 }
 
-export function logout() {
+//
+// =========================
+// Auth
+// =========================
+//
+
+export function logout(): void {
   removeAccessToken();
   removeCurrentUser();
 }
 
-export function isAuthenticated() {
-  return !!getAccessToken();
+export function isAuthenticated(): boolean {
+  return Boolean(getAccessToken());
 }
 
 //
@@ -98,15 +144,15 @@ export function isAuthenticated() {
 export async function loginUser(
   credentials: LoginRequest
 ): Promise<LoginResponse> {
-  const formData = new URLSearchParams();
-
-  formData.append("username", credentials.email);
-  formData.append("password", credentials.password);
+  const body = new URLSearchParams({
+    username: credentials.email,
+    password: credentials.password,
+  });
 
   const { data } =
     await api.post<LoginResponse>(
       "/auth/login",
-      formData,
+      body,
       {
         headers: {
           "Content-Type":
@@ -115,13 +161,8 @@ export async function loginUser(
       }
     );
 
-  if (data.access_token) {
-    saveAccessToken(data.access_token);
-  }
-
-  if (data.user) {
-    saveUser(data.user);
-  }
+  // AuthContext is responsible for
+  // persisting auth state.
 
   return data;
 }
@@ -133,11 +174,11 @@ export async function loginUser(
 //
 
 export async function registerUser(
-  user: RegisterRequest
+  payload: RegisterRequest
 ) {
   const { data } = await api.post(
     "/auth/register",
-    user
+    payload
   );
 
   return data;
@@ -149,25 +190,23 @@ export async function registerUser(
 // =========================
 //
 
-export async function getProfile() {
-  const { data } = await api.get<User>(
-    "/auth/me"
-  );
+export async function getProfile(): Promise<User> {
+  const { data } =
+    await api.get<User>("/auth/me");
 
   return data;
 }
 
 export async function updateProfile(
   payload: Partial<User>
-) {
-  const { data } = await api.put(
-    "/auth/me",
-    payload
-  );
+): Promise<User> {
+  const { data } =
+    await api.put<User>(
+      "/auth/me",
+      payload
+    );
 
-  if (data.user) {
-    saveUser(data.user);
-  }
+  saveUser(data);
 
   return data;
 }
@@ -198,16 +237,17 @@ export async function changePassword(
 // Refresh Token
 // =========================
 //
-// Keep this function for future JWT refresh implementation.
-//
 
-export async function refreshAccessToken() {
-  const { data } = await api.post(
-    "/auth/refresh"
-  );
+export async function refreshAccessToken(): Promise<LoginResponse> {
+  const { data } =
+    await api.post<LoginResponse>(
+      "/auth/refresh"
+    );
 
   if (data.access_token) {
-    saveAccessToken(data.access_token);
+    saveAccessToken(
+      data.access_token
+    );
   }
 
   return data;
