@@ -56,7 +56,8 @@ class Settings(BaseSettings):
 
     LLM_PROVIDER: Literal["groq"] = "groq"
     GROQ_API_KEY: SecretStr
-    GROQ_MODEL: str = "llama-3.3-70b-versatile"
+    # Current production Groq model. Environment variables can override this.
+    GROQ_MODEL: str = "openai/gpt-oss-120b"
     GROQ_TEMPERATURE: float = Field(default=0.3, ge=0.0, le=2.0)
     GROQ_MAX_OUTPUT_TOKENS: int = Field(default=1024, gt=0, le=32768)
     GROQ_TOP_P: float = Field(default=0.95, gt=0.0, le=1.0)
