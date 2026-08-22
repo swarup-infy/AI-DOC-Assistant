@@ -1,10 +1,8 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
 
-from alembic import command
-from alembic.config import Config
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -33,9 +31,11 @@ async def lifespan(
     """
     Manage application startup and shutdown.
 
-    Run pending Alembic migrations before accepting requests.
-    This keeps the deployed database schema synchronized with
-    the application models.
+    Database migrations are intentionally NOT executed here.
+    Render already runs ``alembic upgrade head`` before starting
+    Uvicorn. Running migrations again from the application process
+    can cause duplicate migration execution, database-lock waits,
+    and repeated container restarts.
     """
 
     logger.info(
@@ -44,27 +44,8 @@ async def lifespan(
         settings.VERSION,
     )
 
-    try:
-        logger.info("Running database migrations...")
-
-        alembic_config = Config("alembic.ini")
-        command.upgrade(
-            alembic_config,
-            "head",
-        )
-
-        logger.info(
-            "Database migrations completed successfully."
-        )
-
-    except Exception:
-        logger.exception(
-            "Database migration failed during application startup."
-        )
-        raise
-
     logger.info(
-        "Application started successfully."
+        "Application startup completed successfully."
     )
 
     try:
