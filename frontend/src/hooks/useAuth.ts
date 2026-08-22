@@ -11,7 +11,7 @@ export function useAuth() {
     }
 
     return auth.isAuthenticated
-      ? `Authenticated (${auth.user?.username ?? "User"})`
+      ? `Authenticated (${auth.user?.name ?? "User"})`
       : "Unauthenticated";
   });
 
