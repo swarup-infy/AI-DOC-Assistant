@@ -7,7 +7,9 @@ import axios, {
 
 const API_BASE_URL =
   import.meta.env.VITE_API_URL ??
-  "http://127.0.0.1:8000/api";
+  (import.meta.env.PROD
+    ? "https://ai-doc-assistant-aw9f.onrender.com/api"
+    : "http://127.0.0.1:8000/api");
 
 const AUTH_TOKEN_KEY = "access_token";
 const USER_KEY = "user";
@@ -24,8 +26,7 @@ const api: AxiosInstance = axios.create({
 
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token =
-      localStorage.getItem(AUTH_TOKEN_KEY);
+    const token = localStorage.getItem(AUTH_TOKEN_KEY);
 
     if (token) {
       const headers =
@@ -33,11 +34,7 @@ api.interceptors.request.use(
           ? config.headers
           : new AxiosHeaders(config.headers);
 
-      headers.set(
-        "Authorization",
-        `Bearer ${token}`
-      );
-
+      headers.set("Authorization", `Bearer ${token}`);
       config.headers = headers;
     }
 
@@ -47,27 +44,20 @@ api.interceptors.request.use(
 
 api.interceptors.response.use(
   (response) => response,
-
   (error: AxiosError) => {
     if (axios.isCancel(error)) {
       return Promise.reject(error);
     }
 
-    const status =
-      error.response?.status;
+    const status = error.response?.status;
 
     if (status === 401) {
-      localStorage.removeItem(
-        AUTH_TOKEN_KEY
-      );
-      localStorage.removeItem(
-        USER_KEY
-      );
+      localStorage.removeItem(AUTH_TOKEN_KEY);
+      localStorage.removeItem(USER_KEY);
 
-      const isAuthPage =
-        ["/login", "/register"].includes(
-          window.location.pathname
-        );
+      const isAuthPage = ["/login", "/register"].includes(
+        window.location.pathname
+      );
 
       if (!isAuthPage) {
         window.location.assign("/login");
