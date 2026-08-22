@@ -50,7 +50,6 @@ export async function uploadDocument(
   file: File
 ): Promise<UploadResponse> {
   const formData = new FormData();
-
   formData.append("file", file);
 
   const { data } = await API.post<UploadResponse>(
@@ -66,25 +65,43 @@ export async function uploadDocument(
   return data;
 }
 
-export async function getDocuments(): Promise<Document[]> {
-  const { data } = await API.get("/documents");
+function normalizeDocuments(value: unknown): Document[] {
+  if (Array.isArray(value)) {
+    return value as Document[];
+  }
 
-  return data.documents ?? data;
+  if (
+    value &&
+    typeof value === "object" &&
+    "documents" in value
+  ) {
+    const documents = (value as { documents?: unknown }).documents;
+
+    return Array.isArray(documents)
+      ? (documents as Document[])
+      : [];
+  }
+
+  return [];
+}
+
+export async function getDocuments(): Promise<Document[]> {
+  const { data } = await API.get<unknown>("/documents");
+
+  return normalizeDocuments(data);
 }
 
 export async function getDocument(
   id: number
 ): Promise<Document> {
-  const { data } = await API.get(
+  const { data } = await API.get<Document>(
     `/documents/${id}`
   );
 
   return data;
 }
 
-export async function deleteDocument(
-  id: number
-) {
+export async function deleteDocument(id: number) {
   const { data } = await API.delete(
     `/documents/${id}`
   );
@@ -98,17 +115,13 @@ export async function renameDocument(
 ) {
   const { data } = await API.put(
     `/documents/${id}`,
-    {
-      filename,
-    }
+    { filename }
   );
 
   return data;
 }
 
-export async function downloadDocument(
-  id: number
-) {
+export async function downloadDocument(id: number) {
   const { data } = await API.get(
     `/documents/${id}/download`,
     {
