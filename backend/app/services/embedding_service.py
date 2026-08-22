@@ -4,22 +4,33 @@ import gc
 import time
 import threading
 
-from sentence_transformers import SentenceTransformer
+from fastembed import TextEmbedding
 
 from app.core.config import settings
 from app.core.logger import logger
 
 
+# The old SentenceTransformers model is kept as a compatibility alias so
+# an existing Render environment variable does not accidentally bring the
+# heavyweight PyTorch stack back into production.
+_LEGACY_MODEL_ALIASES = {
+    "sentence-transformers/all-MiniLM-L6-v2": "BAAI/bge-small-en-v1.5",
+}
+
+
 class EmbeddingService:
     """
-    Service responsible for generating sentence embeddings.
+    Lightweight embedding service for production deployments.
 
-    The model is loaded once per application process and shared by
-    all EmbeddingService instances. Loading is protected by a lock
-    because uploads can arrive concurrently.
+    FastEmbed uses quantized ONNX models instead of PyTorch and
+    SentenceTransformers, which dramatically reduces RAM usage on
+    small instances such as Render's 512 MB free tier.
+
+    The model is initialized once per application process and shared
+    by all service instances.
     """
 
-    _model: SentenceTransformer | None = None
+    _model: TextEmbedding | None = None
     _model_name: str | None = None
     _lock = threading.Lock()
 
@@ -31,6 +42,14 @@ class EmbeddingService:
             raise RuntimeError("Embedding model failed to initialize.")
 
     @classmethod
+    def _resolve_model_name(cls) -> str:
+        configured_name = settings.EMBEDDING_MODEL.strip()
+        return _LEGACY_MODEL_ALIASES.get(
+            configured_name,
+            configured_name,
+        )
+
+    @classmethod
     def _ensure_model_loaded(cls) -> None:
         if cls._model is not None:
             return
@@ -39,65 +58,72 @@ class EmbeddingService:
             if cls._model is not None:
                 return
 
-            model_name = settings.EMBEDDING_MODEL
+            model_name = cls._resolve_model_name()
             attempts = settings.EMBEDDING_LOAD_RETRIES
             last_error: Exception | None = None
 
             for attempt in range(1, attempts + 1):
                 try:
                     logger.info(
-                        "Loading embedding model '%s' on %s (attempt %d/%d).",
+                        "Loading lightweight embedding model '%s' "
+                        "with FastEmbed (attempt %d/%d).",
                         model_name,
-                        settings.EMBEDDING_DEVICE,
                         attempt,
                         attempts,
                     )
 
-                    model = SentenceTransformer(
-                        model_name,
-                        device=settings.EMBEDDING_DEVICE,
+                    model = TextEmbedding(
+                        model_name=model_name,
+                        threads=1,
+                        lazy_load=True,
                     )
 
                     cls._model = model
                     cls._model_name = model_name
 
                     logger.info(
-                        "Embedding model loaded successfully. dimension=%d.",
-                        model.get_embedding_dimension(),
+                        "FastEmbed model initialized successfully. "
+                        "dimension=%d.",
+                        model.embedding_size,
                     )
                     return
 
                 except Exception as exc:
                     last_error = exc
+                    cls._model = None
+                    cls._model_name = None
+
                     logger.exception(
-                        "Embedding model load attempt %d/%d failed.",
+                        "FastEmbed model initialization attempt %d/%d failed.",
                         attempt,
                         attempts,
                     )
 
-                    cls._model = None
-                    cls._model_name = None
                     gc.collect()
 
                     if attempt < attempts:
-                        time.sleep(min(2**attempt, 8))
+                        time.sleep(min(2**attempt, 6))
 
             raise RuntimeError(
                 f"Unable to load embedding model '{model_name}' after "
                 f"{attempts} attempts."
             ) from last_error
 
-    def create_embeddings(self, chunks: list[str]) -> list[list[float]]:
-        """Generate embeddings for multiple text chunks."""
-
-        if not chunks:
-            return []
-
-        cleaned_chunks = [
+    @staticmethod
+    def _clean_chunks(chunks: list[str]) -> list[str]:
+        return [
             chunk.strip()
             for chunk in chunks
             if chunk and chunk.strip()
         ]
+
+    def create_embeddings(self, chunks: list[str]) -> list[list[float]]:
+        """Generate passage embeddings for document chunks."""
+
+        if not chunks:
+            return []
+
+        cleaned_chunks = self._clean_chunks(chunks)
 
         if not cleaned_chunks:
             return []
@@ -113,47 +139,59 @@ class EmbeddingService:
 
         try:
             logger.info(
-                "Generating embeddings for %d chunks.",
+                "Generating FastEmbed passage embeddings for %d chunks.",
                 len(cleaned_chunks),
             )
 
-            embeddings = self.model.encode(
+            vectors = self.model.passage_embed(
                 cleaned_chunks,
                 batch_size=settings.EMBEDDING_BATCH_SIZE,
-                show_progress_bar=False,
-                convert_to_numpy=True,
-                normalize_embeddings=True,
+                parallel=None,
             )
 
-            return embeddings.tolist()
+            return [
+                vector.tolist()
+                for vector in vectors
+            ]
 
         except Exception:
-            logger.exception("Failed to generate embeddings.")
+            logger.exception("Failed to generate FastEmbed embeddings.")
             raise
 
     def create_embedding(self, text: str) -> list[float]:
-        """Generate an embedding for a single piece of text."""
+        """Generate a query embedding for one search/chat query."""
 
         if not text or not text.strip():
             return []
 
-        embeddings = self.create_embeddings([text])
-        return embeddings[0] if embeddings else []
+        if self.model is None:
+            raise RuntimeError("Embedding model is not initialized.")
+
+        try:
+            vectors = self.model.query_embed(
+                text.strip(),
+            )
+            vector = next(iter(vectors), None)
+
+            if vector is None:
+                return []
+
+            return vector.tolist()
+
+        except Exception:
+            logger.exception("Failed to generate FastEmbed query embedding.")
+            raise
 
     @property
     def dimension(self) -> int:
         if self.model is None:
             raise RuntimeError("Embedding model is not initialized.")
 
-        dimension = self.model.get_embedding_dimension()
-        if dimension is None:
-            raise RuntimeError("Unable to determine embedding dimension.")
-
-        return dimension
+        return self.model.embedding_size
 
     @property
     def model_name(self) -> str:
-        return EmbeddingService._model_name or settings.EMBEDDING_MODEL
+        return EmbeddingService._model_name or self._resolve_model_name()
 
     @property
     def is_loaded(self) -> bool:
@@ -164,6 +202,7 @@ class EmbeddingService:
             EmbeddingService._model = None
             EmbeddingService._model_name = None
 
+        gc.collect()
         self._ensure_model_loaded()
         self.model = EmbeddingService._model
 
