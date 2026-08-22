@@ -53,7 +53,7 @@ function Sidebar() {
       </header>
 
       <nav className="flex-1 px-3 py-5" aria-label="Primary navigation">
-        <p className="px-3 pb-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-fg-dim">
+        <p className="px-3 pb-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
           Workspace
         </p>
 
