@@ -3,6 +3,8 @@
 from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
 
+from alembic import command
+from alembic.config import Config
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -31,9 +33,9 @@ async def lifespan(
     """
     Manage application startup and shutdown.
 
-    Database schema migrations are managed externally through
-    Alembic and are not executed automatically at application
-    startup.
+    Run pending Alembic migrations before accepting requests.
+    This keeps the deployed database schema synchronized with
+    the application models.
     """
 
     logger.info(
@@ -41,6 +43,25 @@ async def lifespan(
         settings.PROJECT_NAME,
         settings.VERSION,
     )
+
+    try:
+        logger.info("Running database migrations...")
+
+        alembic_config = Config("alembic.ini")
+        command.upgrade(
+            alembic_config,
+            "head",
+        )
+
+        logger.info(
+            "Database migrations completed successfully."
+        )
+
+    except Exception:
+        logger.exception(
+            "Database migration failed during application startup."
+        )
+        raise
 
     logger.info(
         "Application started successfully."
