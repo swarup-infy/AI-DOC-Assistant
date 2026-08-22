@@ -333,14 +333,12 @@ def _answer_from_explicit_document(
     document_id: int | None,
 ) -> tuple[str, SourceDocument] | None:
     """
-    Read an explicitly named document before semantic retrieval.
+    Read an explicitly selected or named document before semantic retrieval.
 
-    This is important for commands such as:
-    'Extract the text from Paro_CV.pdf'.
-
-    Such a request is an exact document-access request, not a semantic
-    search query. Running it through the similarity threshold first can
-    incorrectly reject the document even though the user named it.
+    A selected document from the chat attachment is always treated as an
+    explicit document request. This allows every AI mode to work from the
+    same uploaded file while keeping Groq AI capable of normal chat when no
+    document is attached.
     """
 
     if document_id is not None:
@@ -402,11 +400,12 @@ def _answer_from_explicit_document(
     )
 
     logger.info(
-        "Answered chat directly from explicitly named document. "
-        "user_id=%d document_id=%d filename='%s'.",
+        "Answered chat directly from explicitly selected document. "
+        "user_id=%d document_id=%d filename='%s' mode=%s.",
         user_id,
         document.id,
         document.filename,
+        "selected-document",
     )
 
     return answer, source
@@ -447,32 +446,9 @@ def chat(
 
         llm_service = LLMService()
 
-        if mode == "groq":
-            answer = _generate_direct_response(
-                llm_service=llm_service,
-                question=request.question,
-            )
-
-            _save_chat(
-                db=db,
-                user_id=user_id,
-                question=request.question,
-                answer=answer,
-                mode=mode,
-                document_id=document_id,
-            )
-
-            return ChatResponse(
-                status="success",
-                message="Response generated successfully.",
-                answer=answer,
-                mode=mode,
-                sources=[],
-            )
-
-        # Exact filename/document requests bypass semantic retrieval.
-        # This prevents RAG_MIN_SIMILARITY from rejecting valid requests
-        # such as 'Extract the text from Paro_CV.pdf'.
+        # A document selected in the chat composer always takes priority.
+        # This happens before the Groq-only branch so Groq AI can also answer
+        # questions using the attached document as context.
         explicit_document_answer = _answer_from_explicit_document(
             db,
             llm_service=llm_service,
@@ -496,10 +472,35 @@ def chat(
 
             return ChatResponse(
                 status="success",
-                message="Response generated directly from the requested uploaded document.",
+                message="Response generated from the selected uploaded document.",
                 answer=answer,
                 mode=mode,
                 sources=[source],
+            )
+
+        # Without an attached or explicitly named document, Groq AI remains
+        # a normal general-purpose assistant.
+        if mode == "groq":
+            answer = _generate_direct_response(
+                llm_service=llm_service,
+                question=request.question,
+            )
+
+            _save_chat(
+                db=db,
+                user_id=user_id,
+                question=request.question,
+                answer=answer,
+                mode=mode,
+                document_id=document_id,
+            )
+
+            return ChatResponse(
+                status="success",
+                message="Response generated successfully.",
+                answer=answer,
+                mode=mode,
+                sources=[],
             )
 
         # Semantic retrieval is used when the question does not name a
