@@ -17,7 +17,6 @@ from app.core.security import get_current_user
 from app.db.database import get_db
 from app.models.user import User
 from app.schemas.document import UploadResponse
-from app.services.upload_service import save_uploaded_file
 
 
 router = APIRouter(
@@ -63,12 +62,8 @@ def upload_file(
     """
     Process an authenticated document upload.
 
-    Validation, size enforcement, storage, extraction, chunking,
-    embedding generation, and ChromaDB persistence are delegated
-    to the upload service.
-
-    File extensions are validated by the service rather than
-    relying solely on the client-provided MIME type.
+    Heavy document-processing dependencies are imported lazily so
+    the lightweight API can start within constrained environments.
     """
 
     filename = file.filename or "<unknown>"
@@ -82,6 +77,8 @@ def upload_file(
     )
 
     try:
+        from app.services.upload_service import save_uploaded_file
+
         result = save_uploaded_file(
             file=file,
             db=db,
