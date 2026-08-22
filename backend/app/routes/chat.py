@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import re
 from pathlib import Path
 from typing import Annotated, Any
 
@@ -26,11 +25,6 @@ router = APIRouter(
     prefix="/api/chat",
     tags=["AI Chat"],
 )
-
-
-# ==========================================================
-# Chroma / RAG Helpers
-# ==========================================================
 
 
 def _metadata_int(value: Any) -> int | None:
@@ -117,7 +111,6 @@ def _extract_relevant_results(
             continue
 
         similarity = _cosine_distance_to_similarity(distance)
-
         if similarity < settings.RAG_MIN_SIMILARITY:
             continue
 
@@ -152,24 +145,13 @@ def _extract_relevant_results(
     return relevant_documents, sources
 
 
-# ==========================================================
-# Direct Document Fallback
-# ==========================================================
-
-
 def _find_document_mentioned_in_question(
     db: Session,
     *,
     user_id: int,
     question: str,
 ):
-    """
-    Find one of the authenticated user's documents when the user
-    explicitly mentions its filename in the question.
-
-    This is a safe fallback for cases where a document exists in
-    PostgreSQL but its vector index is temporarily unavailable.
-    """
+    """Return the user's document whose filename is explicitly mentioned."""
 
     documents = DocumentService.get_documents(
         db=db,
@@ -178,34 +160,24 @@ def _find_document_mentioned_in_question(
 
     normalized_question = question.casefold()
 
-    matching_documents = [
+    matches = [
         document
         for document in documents
         if document.filename.casefold() in normalized_question
     ]
 
-    if not matching_documents:
+    if not matches:
         return None
 
-    # Prefer the longest filename when multiple names overlap.
-    return max(
-        matching_documents,
-        key=lambda document: len(document.filename),
-    )
+    return max(matches, key=lambda document: len(document.filename))
 
 
-def _extract_document_chunks_for_fallback(
+def _extract_document_chunks(
     *,
     file_path: str,
     file_type: str,
 ) -> list[str]:
-    """
-    Extract and chunk a document directly when vector retrieval
-    cannot provide context.
-
-    This fallback is intentionally bounded so a large document does
-    not create an unexpectedly huge LLM request.
-    """
+    """Extract and chunk the stored document directly."""
 
     path = Path(file_path).expanduser()
 
@@ -216,32 +188,25 @@ def _extract_document_chunks_for_fallback(
 
     if file_type.lower() == "pdf":
         pages = extract_pdf_pages(str(path))
-        page_chunks: list[str] = []
+        chunks: list[str] = []
 
         for page in pages:
-            raw_text = page.get("text", "")
-            cleaned = clean_text(str(raw_text)).strip()
-
+            cleaned = clean_text(str(page.get("text", ""))).strip()
             if not cleaned:
                 continue
 
             page_number = page.get("page", 1)
-            chunks = chunk_text(cleaned)
 
-            for chunk in chunks:
+            for chunk in chunk_text(cleaned):
                 normalized = chunk.strip()
-                if not normalized:
-                    continue
-                page_chunks.append(
-                    f"[Page {page_number}]\n{normalized}"
-                )
+                if normalized:
+                    chunks.append(
+                        f"[Page {page_number}]\n{normalized}"
+                    )
 
-        return page_chunks
+        return chunks
 
-    text = clean_text(
-        extract_text(str(path))
-    ).strip()
-
+    text = clean_text(extract_text(str(path))).strip()
     if not text:
         return []
 
@@ -256,7 +221,7 @@ def _build_direct_document_context(
     *,
     document_chunks: list[str],
 ) -> str:
-    """Build bounded context for direct document extraction."""
+    """Build bounded LLM context from directly extracted document text."""
 
     max_context_chars = 30000
     selected: list[str] = []
@@ -278,68 +243,6 @@ def _build_direct_document_context(
         "===========================\n"
         + "\n\n".join(selected)
     )
-
-
-def _try_direct_document_fallback(
-    db: Session,
-    *,
-    user_id: int,
-    question: str,
-    document_id: int | None,
-) -> tuple[str | None, SourceDocument | None]:
-    """
-    Return direct document context when the question names a file.
-    """
-
-    if document_id is not None:
-        document = DocumentService.get_document_by_id(
-            db=db,
-            document_id=document_id,
-            user_id=user_id,
-        )
-    else:
-        document = _find_document_mentioned_in_question(
-            db,
-            user_id=user_id,
-            question=question,
-        )
-
-    if document is None:
-        return None, None
-
-    chunks = _extract_document_chunks_for_fallback(
-        file_path=document.file_path,
-        file_type=document.file_type,
-    )
-
-    if not chunks:
-        return None, None
-
-    context = _build_direct_document_context(
-        document_chunks=chunks,
-    )
-
-    source = SourceDocument(
-        document_id=document.id,
-        filename=document.filename,
-        page=None,
-        similarity=None,
-    )
-
-    logger.warning(
-        "Using direct document extraction fallback. "
-        "user_id=%d document_id=%d filename='%s'.",
-        user_id,
-        document.id,
-        document.filename,
-    )
-
-    return context, source
-
-
-# ==========================================================
-# Chat History / Prompt Context
-# ==========================================================
 
 
 def _build_chat_history(
@@ -373,14 +276,14 @@ def _build_rag_context(*, history: str, documents: list[str]) -> str:
         for index, document in enumerate(documents, start=1)
     )
 
-    context_parts = [
+    parts = [
         "RETRIEVED DOCUMENT EVIDENCE\n"
         "===========================\n"
         f"{document_context}"
     ]
 
     if history:
-        context_parts.append(
+        parts.append(
             "PREVIOUS CONVERSATION\n"
             "=====================\n"
             "Use this section only for conversational continuity. "
@@ -388,7 +291,7 @@ def _build_rag_context(*, history: str, documents: list[str]) -> str:
             f"{history}"
         )
 
-    return "\n\n".join(context_parts)
+    return "\n\n".join(parts)
 
 
 def _save_chat(
@@ -410,8 +313,103 @@ def _save_chat(
     )
 
 
-def _generate_direct_response(*, llm_service: LLMService, question: str) -> str:
-    return llm_service.generate_response(question=question, context="")
+def _generate_direct_response(
+    *,
+    llm_service: LLMService,
+    question: str,
+) -> str:
+    return llm_service.generate_response(
+        question=question,
+        context="",
+    )
+
+
+def _answer_from_explicit_document(
+    db: Session,
+    *,
+    llm_service: LLMService,
+    user_id: int,
+    question: str,
+    document_id: int | None,
+) -> tuple[str, SourceDocument] | None:
+    """
+    Read an explicitly named document before semantic retrieval.
+
+    This is important for commands such as:
+    'Extract the text from Paro_CV.pdf'.
+
+    Such a request is an exact document-access request, not a semantic
+    search query. Running it through the similarity threshold first can
+    incorrectly reject the document even though the user named it.
+    """
+
+    if document_id is not None:
+        document = DocumentService.get_document_by_id(
+            db=db,
+            document_id=document_id,
+            user_id=user_id,
+        )
+    else:
+        document = _find_document_mentioned_in_question(
+            db,
+            user_id=user_id,
+            question=question,
+        )
+
+    if document is None:
+        return None
+
+    chunks = _extract_document_chunks(
+        file_path=document.file_path,
+        file_type=document.file_type,
+    )
+
+    if not chunks:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="The uploaded document contains no readable text.",
+        )
+
+    context = _build_direct_document_context(
+        document_chunks=chunks,
+    )
+
+    history = _build_chat_history(
+        db=db,
+        user_id=user_id,
+        document_id=document.id,
+    )
+
+    if history:
+        context = (
+            f"{context}\n\n"
+            "PREVIOUS CONVERSATION\n"
+            "=====================\n"
+            "Use this only for conversational continuity.\n\n"
+            f"{history}"
+        )
+
+    answer = llm_service.generate_response(
+        question=question,
+        context=context,
+    )
+
+    source = SourceDocument(
+        document_id=document.id,
+        filename=document.filename,
+        page=None,
+        similarity=None,
+    )
+
+    logger.info(
+        "Answered chat directly from explicitly named document. "
+        "user_id=%d document_id=%d filename='%s'.",
+        user_id,
+        document.id,
+        document.filename,
+    )
+
+    return answer, source
 
 
 @router.post(
@@ -454,6 +452,7 @@ def chat(
                 llm_service=llm_service,
                 question=request.question,
             )
+
             _save_chat(
                 db=db,
                 user_id=user_id,
@@ -462,6 +461,7 @@ def chat(
                 mode=mode,
                 document_id=document_id,
             )
+
             return ChatResponse(
                 status="success",
                 message="Response generated successfully.",
@@ -470,10 +470,40 @@ def chat(
                 sources=[],
             )
 
-        # Heavy vector/embedding dependencies are imported only for
-        # document-aware modes. If the vector index is unavailable,
-        # the explicit filename fallback below can still answer from
-        # the stored document itself.
+        # Exact filename/document requests bypass semantic retrieval.
+        # This prevents RAG_MIN_SIMILARITY from rejecting valid requests
+        # such as 'Extract the text from Paro_CV.pdf'.
+        explicit_document_answer = _answer_from_explicit_document(
+            db,
+            llm_service=llm_service,
+            user_id=user_id,
+            question=request.question,
+            document_id=document_id,
+        )
+
+        if explicit_document_answer is not None:
+            answer, source = explicit_document_answer
+            resolved_document_id = document_id or source.document_id
+
+            _save_chat(
+                db=db,
+                user_id=user_id,
+                question=request.question,
+                answer=answer,
+                mode=mode,
+                document_id=resolved_document_id,
+            )
+
+            return ChatResponse(
+                status="success",
+                message="Response generated directly from the requested uploaded document.",
+                answer=answer,
+                mode=mode,
+                sources=[source],
+            )
+
+        # Semantic retrieval is used when the question does not name a
+        # particular uploaded document.
         from app.services.embedding_service import EmbeddingService
         from app.vector_db.chroma_service import ChromaService
 
@@ -483,81 +513,19 @@ def chat(
         if not embeddings:
             raise RuntimeError("Embedding service returned no query embedding.")
 
-        search_filter = _build_search_filter(
-            user_id=user_id,
-            document_id=document_id,
-        )
-
         chroma_service = ChromaService()
         search_results = chroma_service.search(
             query_embedding=embeddings[0],
             n_results=settings.RAG_TOP_K,
-            where=search_filter,
+            where=_build_search_filter(
+                user_id=user_id,
+                document_id=document_id,
+            ),
         )
 
         relevant_documents, sources = _extract_relevant_results(search_results)
 
         if not relevant_documents:
-            # If the user explicitly named an uploaded file, read that
-            # file directly instead of pretending that the assistant
-            # cannot access it. This also makes Smart AI resilient to a
-            # temporarily missing/stale Chroma index.
-            fallback_context, fallback_source = _try_direct_document_fallback(
-                db,
-                user_id=user_id,
-                question=request.question,
-                document_id=document_id,
-            )
-
-            if fallback_context:
-                history = _build_chat_history(
-                    db=db,
-                    user_id=user_id,
-                    document_id=(
-                        document_id
-                        or (fallback_source.document_id if fallback_source else None)
-                    ),
-                )
-
-                if history:
-                    fallback_context = (
-                        f"{fallback_context}\n\n"
-                        "PREVIOUS CONVERSATION\n"
-                        "=====================\n"
-                        "Use this only for conversational continuity.\n\n"
-                        f"{history}"
-                    )
-
-                answer = llm_service.generate_response(
-                    question=request.question,
-                    context=fallback_context,
-                )
-
-                if fallback_source is not None:
-                    sources = [fallback_source]
-
-                resolved_document_id = (
-                    document_id
-                    or (fallback_source.document_id if fallback_source else None)
-                )
-
-                _save_chat(
-                    db=db,
-                    user_id=user_id,
-                    question=request.question,
-                    answer=answer,
-                    mode=mode,
-                    document_id=resolved_document_id,
-                )
-
-                return ChatResponse(
-                    status="success",
-                    message="Response generated directly from the uploaded document.",
-                    answer=answer,
-                    mode=mode,
-                    sources=sources,
-                )
-
             if mode == "smart":
                 answer = _generate_direct_response(
                     llm_service=llm_service,
@@ -582,6 +550,7 @@ def chat(
                 mode=mode,
                 document_id=document_id,
             )
+
             return ChatResponse(
                 status="success",
                 message=message,
