@@ -41,92 +41,60 @@ const getInitialTheme = (): Theme => {
     return saved;
   }
 
-  return window.matchMedia(
-    "(prefers-color-scheme: dark)"
-  ).matches
+  return window.matchMedia("(prefers-color-scheme: dark)").matches
     ? "dark"
     : "light";
 };
 
 const applyTheme = (theme: Theme) => {
-  document.documentElement.setAttribute(
-    "data-theme",
-    theme
-  );
+  document.documentElement.setAttribute("data-theme", theme);
 };
 
 const iconButtonClass =
   "rounded-2xl border border-border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2";
 
-function Navbar({
-  onMenuClick,
-}: NavbarProps) {
+function Navbar({ onMenuClick }: NavbarProps) {
   const navigate = useNavigate();
-
   const { user, logout } = useAuth();
 
   const [search, setSearch] = useState("");
-
-  const [theme, setTheme] =
-    useState<Theme>(getInitialTheme);
-
+  const [theme, setTheme] = useState<Theme>(getInitialTheme);
   const darkMode = theme === "dark";
 
-  // Apply the theme attribute on mount (covers SSR/hydration case
-  // where getInitialTheme() couldn't touch the DOM).
   useEffect(() => {
     applyTheme(theme);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [theme]);
 
   useEffect(() => {
-    const media = window.matchMedia(
-      "(prefers-color-scheme: dark)"
-    );
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
 
-    const handleSystemTheme = (
-      event: MediaQueryListEvent
-    ) => {
-      if (
-        localStorage.getItem(STORAGE_KEY)
-      ) {
+    const handleSystemTheme = (event: MediaQueryListEvent) => {
+      if (localStorage.getItem(STORAGE_KEY)) {
         return;
       }
 
-      const nextTheme: Theme =
-        event.matches ? "dark" : "light";
-
+      const nextTheme: Theme = event.matches ? "dark" : "light";
       setTheme(nextTheme);
       applyTheme(nextTheme);
     };
 
-    const handleStorage = (
-      event: StorageEvent
-    ) => {
-      if (
-        event.key !== STORAGE_KEY ||
-        !isTheme(event.newValue)
-      ) {
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key !== STORAGE_KEY || !isTheme(event.newValue)) {
         return;
       }
 
       const nextTheme = event.newValue;
-
       setTheme(nextTheme);
       applyTheme(nextTheme);
     };
 
-    // Safari < 14 fallback (no addEventListener on MediaQueryList)
     if (media.addEventListener) {
       media.addEventListener("change", handleSystemTheme);
     } else {
       media.addListener(handleSystemTheme);
     }
 
-    window.addEventListener(
-      "storage",
-      handleStorage
-    );
+    window.addEventListener("storage", handleStorage);
 
     return () => {
       if (media.removeEventListener) {
@@ -135,77 +103,43 @@ function Navbar({
         media.removeListener(handleSystemTheme);
       }
 
-      window.removeEventListener(
-        "storage",
-        handleStorage
-      );
+      window.removeEventListener("storage", handleStorage);
     };
   }, []);
 
   const toggleTheme = useCallback(() => {
     setTheme((current) => {
-      const next: Theme =
-        current === "dark"
-          ? "light"
-          : "dark";
-
+      const next: Theme = current === "dark" ? "light" : "dark";
       applyTheme(next);
-
-      localStorage.setItem(
-        STORAGE_KEY,
-        next
-      );
-
+      localStorage.setItem(STORAGE_KEY, next);
       return next;
     });
   }, []);
 
-  const handleSearchChange =
-    useCallback(
-      (
-        event: ChangeEvent<HTMLInputElement>
-      ) => {
-        setSearch(event.target.value);
-      },
-      []
-    );
+  const handleSearchChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      setSearch(event.target.value);
+    },
+    []
+  );
 
-  const handleProfile =
-    useCallback(() => {
-      navigate("/profile");
-    }, [navigate]);
+  const handleProfile = useCallback(() => {
+    navigate("/profile");
+  }, [navigate]);
 
   const handleLogout = useCallback(() => {
-    if (
-      !window.confirm(
-        "Are you sure you want to logout?"
-      )
-    ) {
+    if (!window.confirm("Are you sure you want to logout?")) {
       return;
     }
 
     logout();
+    navigate("/login", { replace: true });
+  }, [logout, navigate]);
 
-    navigate("/login", {
-      replace: true,
-    });
-  }, [
-    logout,
-    navigate,
-  ]);
-
-  const displayName = useMemo(
-    () =>
-      user?.full_name ??
-      user?.username ??
-      "Profile",
-    [user]
-  );
+  const displayName = useMemo(() => user?.name ?? "Profile", [user]);
 
   return (
     <header className="flex h-20 items-center justify-between gap-4 px-5 sm:px-8">
-      {/* Left */}
-
       <div className="flex items-center gap-4">
         <button
           type="button"
@@ -220,31 +154,19 @@ function Navbar({
           <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">
             Workspace
           </p>
-
           <h1 className="font-display truncate text-2xl font-light leading-none text-foreground sm:text-3xl">
             AI Document Assistant
           </h1>
         </div>
       </div>
 
-      {/* Desktop Search */}
-
-      <div
-        role="search"
-        className="hidden flex-1 justify-center px-8 lg:flex"
-      >
+      <div role="search" className="hidden flex-1 justify-center px-8 lg:flex">
         <div className="flex w-full max-w-xl items-center gap-3 rounded-full border border-border bg-card px-5 py-3 transition-all focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/15">
-          <Search
-            size={18}
-            className="shrink-0 text-muted-foreground"
-          />
-
+          <Search size={18} className="shrink-0 text-muted-foreground" />
           <input
             type="search"
             value={search}
-            onChange={
-              handleSearchChange
-            }
+            onChange={handleSearchChange}
             placeholder="Search documents, chats, PDFs..."
             aria-label="Search documents"
             autoComplete="off"
@@ -257,11 +179,7 @@ function Navbar({
         </div>
       </div>
 
-      {/* Right */}
-
       <div className="flex items-center gap-2 sm:gap-3">
-        {/* Mobile Search */}
-
         <button
           type="button"
           aria-label="Search"
@@ -270,31 +188,15 @@ function Navbar({
           <Search size={18} />
         </button>
 
-        {/* Theme Toggle */}
-
         <button
           type="button"
           onClick={toggleTheme}
-          aria-label={
-            darkMode
-              ? "Switch to light mode"
-              : "Switch to dark mode"
-          }
-          title={
-            darkMode
-              ? "Light mode"
-              : "Dark mode"
-          }
+          aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+          title={darkMode ? "Light mode" : "Dark mode"}
           className={`${iconButtonClass} p-3 hover:bg-accent`}
         >
-          {darkMode ? (
-            <Sun size={19} />
-          ) : (
-            <Moon size={19} />
-          )}
+          {darkMode ? <Sun size={19} /> : <Moon size={19} />}
         </button>
-
-        {/* Profile */}
 
         <button
           type="button"
@@ -303,16 +205,9 @@ function Navbar({
           title="Profile"
           className={`${iconButtonClass} flex items-center gap-3 bg-card px-4 py-3 hover:border-primary/30 hover:bg-accent`}
         >
-          <UserCircle
-            size={22}
-            className="shrink-0"
-          />
-
+          <UserCircle size={22} className="shrink-0" />
           <div className="hidden text-left lg:block">
-            <p className="text-xs text-muted-foreground">
-              Welcome
-            </p>
-
+            <p className="text-xs text-muted-foreground">Welcome</p>
             <p
               className="max-w-[180px] truncate text-sm font-medium text-foreground"
               title={displayName}
@@ -322,42 +217,15 @@ function Navbar({
           </div>
         </button>
 
-        {/* Logout */}
-
         <button
           type="button"
           onClick={handleLogout}
           aria-label="Logout"
           title="Logout"
-          className="
-            flex
-            items-center
-            gap-2
-            rounded-2xl
-            bg-primary
-            px-5
-            py-3
-            text-primary-foreground
-            transition-all
-            duration-200
-            hover:scale-[1.02]
-            hover:shadow-lg
-            hover:shadow-primary/25
-            active:scale-[0.98]
-            focus:outline-none
-            focus:ring-2
-            focus:ring-primary
-            focus:ring-offset-2
-          "
+          className="flex items-center gap-2 rounded-2xl bg-primary px-5 py-3 text-primary-foreground transition-all duration-200 hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/25 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
         >
-          <LogOut
-            size={18}
-            className="shrink-0"
-          />
-
-          <span className="hidden md:inline">
-            Logout
-          </span>
+          <LogOut size={18} className="shrink-0" />
+          <span className="hidden md:inline">Logout</span>
         </button>
       </div>
     </header>
