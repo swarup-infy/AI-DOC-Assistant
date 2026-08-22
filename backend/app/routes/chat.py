@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+from pathlib import Path
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -14,13 +16,21 @@ from app.models.user import User
 from app.schemas.chat import ChatRequest, ChatResponse, SourceDocument
 from app.services.chat_history_service import ChatHistoryService, ChatMode
 from app.services.document_service import DocumentService
+from app.services.extractor import extract_pdf_pages, extract_text
 from app.services.llm_service import LLMService
+from app.services.text_chunker import chunk_text
+from app.services.text_preprocessor import clean_text
 
 
 router = APIRouter(
     prefix="/api/chat",
     tags=["AI Chat"],
 )
+
+
+# ==========================================================
+# Chroma / RAG Helpers
+# ==========================================================
 
 
 def _metadata_int(value: Any) -> int | None:
@@ -140,6 +150,196 @@ def _extract_relevant_results(
             )
 
     return relevant_documents, sources
+
+
+# ==========================================================
+# Direct Document Fallback
+# ==========================================================
+
+
+def _find_document_mentioned_in_question(
+    db: Session,
+    *,
+    user_id: int,
+    question: str,
+):
+    """
+    Find one of the authenticated user's documents when the user
+    explicitly mentions its filename in the question.
+
+    This is a safe fallback for cases where a document exists in
+    PostgreSQL but its vector index is temporarily unavailable.
+    """
+
+    documents = DocumentService.get_documents(
+        db=db,
+        user_id=user_id,
+    )
+
+    normalized_question = question.casefold()
+
+    matching_documents = [
+        document
+        for document in documents
+        if document.filename.casefold() in normalized_question
+    ]
+
+    if not matching_documents:
+        return None
+
+    # Prefer the longest filename when multiple names overlap.
+    return max(
+        matching_documents,
+        key=lambda document: len(document.filename),
+    )
+
+
+def _extract_document_chunks_for_fallback(
+    *,
+    file_path: str,
+    file_type: str,
+) -> list[str]:
+    """
+    Extract and chunk a document directly when vector retrieval
+    cannot provide context.
+
+    This fallback is intentionally bounded so a large document does
+    not create an unexpectedly huge LLM request.
+    """
+
+    path = Path(file_path).expanduser()
+
+    if not path.is_file():
+        raise FileNotFoundError(
+            f"Stored document file does not exist: {path}"
+        )
+
+    if file_type.lower() == "pdf":
+        pages = extract_pdf_pages(str(path))
+        page_chunks: list[str] = []
+
+        for page in pages:
+            raw_text = page.get("text", "")
+            cleaned = clean_text(str(raw_text)).strip()
+
+            if not cleaned:
+                continue
+
+            page_number = page.get("page", 1)
+            chunks = chunk_text(cleaned)
+
+            for chunk in chunks:
+                normalized = chunk.strip()
+                if not normalized:
+                    continue
+                page_chunks.append(
+                    f"[Page {page_number}]\n{normalized}"
+                )
+
+        return page_chunks
+
+    text = clean_text(
+        extract_text(str(path))
+    ).strip()
+
+    if not text:
+        return []
+
+    return [
+        chunk.strip()
+        for chunk in chunk_text(text)
+        if chunk and chunk.strip()
+    ]
+
+
+def _build_direct_document_context(
+    *,
+    document_chunks: list[str],
+) -> str:
+    """Build bounded context for direct document extraction."""
+
+    max_context_chars = 30000
+    selected: list[str] = []
+    total_chars = 0
+
+    for index, chunk in enumerate(document_chunks, start=1):
+        remaining = max_context_chars - total_chars
+        if remaining <= 0:
+            break
+
+        bounded_chunk = chunk[:remaining]
+        selected.append(
+            f"[Document Chunk {index}]\n{bounded_chunk}"
+        )
+        total_chars += len(bounded_chunk)
+
+    return (
+        "RETRIEVED DOCUMENT EVIDENCE\n"
+        "===========================\n"
+        + "\n\n".join(selected)
+    )
+
+
+def _try_direct_document_fallback(
+    db: Session,
+    *,
+    user_id: int,
+    question: str,
+    document_id: int | None,
+) -> tuple[str | None, SourceDocument | None]:
+    """
+    Return direct document context when the question names a file.
+    """
+
+    if document_id is not None:
+        document = DocumentService.get_document_by_id(
+            db=db,
+            document_id=document_id,
+            user_id=user_id,
+        )
+    else:
+        document = _find_document_mentioned_in_question(
+            db,
+            user_id=user_id,
+            question=question,
+        )
+
+    if document is None:
+        return None, None
+
+    chunks = _extract_document_chunks_for_fallback(
+        file_path=document.file_path,
+        file_type=document.file_type,
+    )
+
+    if not chunks:
+        return None, None
+
+    context = _build_direct_document_context(
+        document_chunks=chunks,
+    )
+
+    source = SourceDocument(
+        document_id=document.id,
+        filename=document.filename,
+        page=None,
+        similarity=None,
+    )
+
+    logger.warning(
+        "Using direct document extraction fallback. "
+        "user_id=%d document_id=%d filename='%s'.",
+        user_id,
+        document.id,
+        document.filename,
+    )
+
+    return context, source
+
+
+# ==========================================================
+# Chat History / Prompt Context
+# ==========================================================
 
 
 def _build_chat_history(
@@ -270,7 +470,10 @@ def chat(
                 sources=[],
             )
 
-        # Heavy ML/vector dependencies are imported only when RAG is requested.
+        # Heavy vector/embedding dependencies are imported only for
+        # document-aware modes. If the vector index is unavailable,
+        # the explicit filename fallback below can still answer from
+        # the stored document itself.
         from app.services.embedding_service import EmbeddingService
         from app.vector_db.chroma_service import ChromaService
 
@@ -295,6 +498,66 @@ def chat(
         relevant_documents, sources = _extract_relevant_results(search_results)
 
         if not relevant_documents:
+            # If the user explicitly named an uploaded file, read that
+            # file directly instead of pretending that the assistant
+            # cannot access it. This also makes Smart AI resilient to a
+            # temporarily missing/stale Chroma index.
+            fallback_context, fallback_source = _try_direct_document_fallback(
+                db,
+                user_id=user_id,
+                question=request.question,
+                document_id=document_id,
+            )
+
+            if fallback_context:
+                history = _build_chat_history(
+                    db=db,
+                    user_id=user_id,
+                    document_id=(
+                        document_id
+                        or (fallback_source.document_id if fallback_source else None)
+                    ),
+                )
+
+                if history:
+                    fallback_context = (
+                        f"{fallback_context}\n\n"
+                        "PREVIOUS CONVERSATION\n"
+                        "=====================\n"
+                        "Use this only for conversational continuity.\n\n"
+                        f"{history}"
+                    )
+
+                answer = llm_service.generate_response(
+                    question=request.question,
+                    context=fallback_context,
+                )
+
+                if fallback_source is not None:
+                    sources = [fallback_source]
+
+                resolved_document_id = (
+                    document_id
+                    or (fallback_source.document_id if fallback_source else None)
+                )
+
+                _save_chat(
+                    db=db,
+                    user_id=user_id,
+                    question=request.question,
+                    answer=answer,
+                    mode=mode,
+                    document_id=resolved_document_id,
+                )
+
+                return ChatResponse(
+                    status="success",
+                    message="Response generated directly from the uploaded document.",
+                    answer=answer,
+                    mode=mode,
+                    sources=sources,
+                )
+
             if mode == "smart":
                 answer = _generate_direct_response(
                     llm_service=llm_service,
@@ -371,6 +634,21 @@ def chat(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Unable to process chat request.",
+        ) from exc
+    except FileNotFoundError as exc:
+        logger.exception(
+            "Uploaded document file is unavailable during chat. "
+            "user_id=%d mode=%s document_id=%s",
+            user_id,
+            mode,
+            document_id,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=(
+                "The uploaded document is no longer available on the server. "
+                "Please upload the document again."
+            ),
         ) from exc
     except Exception as exc:
         logger.exception(
