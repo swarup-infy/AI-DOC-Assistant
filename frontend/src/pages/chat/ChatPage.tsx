@@ -1,13 +1,7 @@
 import { useState } from "react";
-
 import DashboardLayout from "../../layouts/DashboardLayout";
-
 import { askAI } from "../../services/chatService";
-import type {
-  ChatMode,
-  Source,
-} from "../../services/chatService";
-
+import type { ChatMode, Source } from "../../services/chatService";
 import ChatHeader from "../../components/chat/ChatHeader";
 import ModeSelector from "../../components/chat/ModeSelector";
 import ChatWindow from "../../components/chat/ChatWindow";
@@ -28,43 +22,23 @@ export default function ChatPage() {
 
   async function handleAsk() {
     if (!question.trim() || loading) return;
-
     const currentQuestion = question.trim();
 
-    setMessages((prev) => [
-      ...prev,
-      {
-        role: "user",
-        content: currentQuestion,
-      },
-    ]);
-
+    setMessages((previous) => [...previous, { role: "user", content: currentQuestion }]);
     setQuestion("");
     setLoading(true);
 
     try {
       const response = await askAI(currentQuestion, mode);
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: response.answer,
-          mode,
-          sources: response.sources ?? [],
-        },
+      setMessages((previous) => [
+        ...previous,
+        { role: "assistant", content: response.answer, mode, sources: response.sources ?? [] },
       ]);
     } catch (error) {
       console.error(error);
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: "Unable to get AI response. Please try again.",
-          mode,
-          sources: [],
-        },
+      setMessages((previous) => [
+        ...previous,
+        { role: "assistant", content: "I couldn't complete that request. Please try again.", mode, sources: [] },
       ]);
     } finally {
       setLoading(false);
@@ -73,27 +47,14 @@ export default function ChatPage() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-5 pb-8 fade-in">
         <ChatHeader mode={mode} />
+        <ModeSelector mode={mode} setMode={setMode} />
 
-        <ModeSelector
-          mode={mode}
-          setMode={setMode}
-        />
-
-        <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-          <ChatWindow
-            messages={messages}
-            loading={loading}
-          />
-
-          <ChatInput
-            question={question}
-            setQuestion={setQuestion}
-            loading={loading}
-            onSend={handleAsk}
-          />
-        </div>
+        <section className="surface overflow-hidden rounded-2xl">
+          <ChatWindow messages={messages} loading={loading} />
+          <ChatInput question={question} setQuestion={setQuestion} loading={loading} onSend={handleAsk} />
+        </section>
       </div>
     </DashboardLayout>
   );
