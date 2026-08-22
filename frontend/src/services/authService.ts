@@ -49,17 +49,12 @@ const USER_KEY = "user";
 const hasStorage =
   typeof window !== "undefined";
 
-function setStorage(
-  key: string,
-  value: string
-) {
+function setStorage(key: string, value: string) {
   if (!hasStorage) return;
   localStorage.setItem(key, value);
 }
 
-function getStorage(
-  key: string
-): string | null {
+function getStorage(key: string): string | null {
   if (!hasStorage) return null;
   return localStorage.getItem(key);
 }
@@ -75,9 +70,7 @@ function removeStorage(key: string) {
 // =========================
 //
 
-export function saveAccessToken(
-  token: string
-): void {
+export function saveAccessToken(token: string): void {
   setStorage(ACCESS_TOKEN_KEY, token);
 }
 
@@ -95,9 +88,7 @@ export function removeAccessToken(): void {
 // =========================
 //
 
-export function saveUser(
-  user: User
-): void {
+export function saveUser(user: User): void {
   setStorage(USER_KEY, JSON.stringify(user));
 }
 
@@ -149,20 +140,15 @@ export async function loginUser(
     password: credentials.password,
   });
 
-  const { data } =
-    await api.post<LoginResponse>(
-      "/auth/login",
-      body,
-      {
-        headers: {
-          "Content-Type":
-            "application/x-www-form-urlencoded",
-        },
-      }
-    );
-
-  // AuthContext is responsible for
-  // persisting auth state.
+  const { data } = await api.post<LoginResponse>(
+    "/auth/login",
+    body,
+    {
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+    }
+  );
 
   return data;
 }
@@ -173,13 +159,16 @@ export async function loginUser(
 // =========================
 //
 
-export async function registerUser(
-  payload: RegisterRequest
-) {
-  const { data } = await api.post(
-    "/auth/register",
-    payload
-  );
+export async function registerUser(payload: RegisterRequest) {
+  // The registration form uses `name`, while the backend
+  // UserCreate schema expects the field to be called `username`.
+  const body = {
+    username: payload.name.trim(),
+    email: payload.email.trim().toLowerCase(),
+    password: payload.password,
+  };
+
+  const { data } = await api.post("/auth/register", body);
 
   return data;
 }
@@ -191,8 +180,7 @@ export async function registerUser(
 //
 
 export async function getProfile(): Promise<User> {
-  const { data } =
-    await api.get<User>("/auth/me");
+  const { data } = await api.get<User>("/auth/me");
 
   return data;
 }
@@ -200,11 +188,7 @@ export async function getProfile(): Promise<User> {
 export async function updateProfile(
   payload: Partial<User>
 ): Promise<User> {
-  const { data } =
-    await api.put<User>(
-      "/auth/me",
-      payload
-    );
+  const { data } = await api.put<User>("/auth/me", payload);
 
   saveUser(data);
 
@@ -221,13 +205,10 @@ export async function changePassword(
   currentPassword: string,
   newPassword: string
 ) {
-  const { data } = await api.put(
-    "/auth/change-password",
-    {
-      current_password: currentPassword,
-      new_password: newPassword,
-    }
-  );
+  const { data } = await api.put("/auth/change-password", {
+    current_password: currentPassword,
+    new_password: newPassword,
+  });
 
   return data;
 }
@@ -239,15 +220,10 @@ export async function changePassword(
 //
 
 export async function refreshAccessToken(): Promise<LoginResponse> {
-  const { data } =
-    await api.post<LoginResponse>(
-      "/auth/refresh"
-    );
+  const { data } = await api.post<LoginResponse>("/auth/refresh");
 
   if (data.access_token) {
-    saveAccessToken(
-      data.access_token
-    );
+    saveAccessToken(data.access_token);
   }
 
   return data;
