@@ -37,10 +37,12 @@ class Settings(BaseSettings):
     ALGORITHM: Literal["HS256", "HS384", "HS512"] = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=60, gt=0, le=1440)
 
-    EMBEDDING_MODEL: str = "sentence-transformers/all-MiniLM-L6-v2"
+    # FastEmbed model. BGE-small is a 384-dimensional ONNX model
+    # designed for lightweight CPU inference.
+    EMBEDDING_MODEL: str = "BAAI/bge-small-en-v1.5"
     EMBEDDING_DEVICE: Literal["cpu"] = "cpu"
-    EMBEDDING_BATCH_SIZE: int = Field(default=8, gt=0, le=128)
-    EMBEDDING_LOAD_RETRIES: int = Field(default=3, gt=0, le=5)
+    EMBEDDING_BATCH_SIZE: int = Field(default=4, gt=0, le=32)
+    EMBEDDING_LOAD_RETRIES: int = Field(default=2, gt=0, le=3)
 
     CHUNK_SIZE: int = Field(default=500, gt=0, le=10000)
     CHUNK_OVERLAP: int = Field(default=100, ge=0, le=5000)
