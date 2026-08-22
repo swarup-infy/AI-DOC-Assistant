@@ -1,4 +1,12 @@
-import { memo, useCallback, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
+import {
+  memo,
+  useCallback,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+  type KeyboardEvent,
+} from "react";
 import {
   CheckCircle2,
   FileText,
@@ -56,7 +64,9 @@ function ChatInput({
     }
   }, [loading, onSend, question, uploading]);
 
-  const handleFileChange = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = useCallback(async (
+    event: ChangeEvent<HTMLInputElement>
+  ) => {
     const file = event.target.files?.[0];
     event.target.value = "";
 
@@ -99,7 +109,9 @@ function ChatInput({
               </span>
               <div className="min-w-0">
                 <p className="truncate text-xs font-semibold text-foreground">{attachedDocument.filename}</p>
-                <p className="text-[11px] text-muted-foreground">{formatBytes(attachedDocument.file_size)} · Ready for all AI modes</p>
+                <p className="text-[11px] text-muted-foreground">
+                  {formatBytes(attachedDocument.file_size)} · Ready for all AI modes
+                </p>
               </div>
               <CheckCircle2 size={15} className="shrink-0 text-emerald-500" />
             </div>
