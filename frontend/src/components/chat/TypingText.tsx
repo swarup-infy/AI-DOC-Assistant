@@ -20,7 +20,7 @@ function TypingText({
     enabled ? "" : text
   );
 
-  const timeoutRef = useRef<number>();
+  const timeoutRef = useRef<number | undefined>(undefined);
 
   useEffect(() => {
     if (!enabled) {
@@ -41,37 +41,27 @@ function TypingText({
     const type = () => {
       if (cancelled) return;
 
-      index++;
-
+      index += 1;
       setDisplayText(text.slice(0, index));
 
       if (index < text.length) {
-        timeoutRef.current = window.setTimeout(
-          type,
-          speed
-        );
+        timeoutRef.current = window.setTimeout(type, speed);
       }
     };
 
-    timeoutRef.current = window.setTimeout(
-      type,
-      speed
-    );
+    timeoutRef.current = window.setTimeout(type, speed);
 
     return () => {
       cancelled = true;
 
-      if (timeoutRef.current) {
+      if (timeoutRef.current !== undefined) {
         window.clearTimeout(timeoutRef.current);
       }
     };
   }, [text, speed, enabled]);
 
   return (
-    <span
-      aria-live="polite"
-      aria-atomic="true"
-    >
+    <span aria-live="polite" aria-atomic="true">
       {displayText}
     </span>
   );
