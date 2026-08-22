@@ -34,16 +34,20 @@ API.interceptors.response.use(
   }
 );
 
-export interface UploadResponse {
-  message: string;
-}
-
 export interface Document {
   id: number;
   filename: string;
   file_type: string;
   file_size: number;
   uploaded_at: string;
+  updated_at?: string;
+}
+
+export interface UploadResponse {
+  status: "success";
+  message: string;
+  document: Document;
+  chunks: number;
 }
 
 export async function uploadDocument(
@@ -54,12 +58,7 @@ export async function uploadDocument(
 
   const { data } = await API.post<UploadResponse>(
     "/upload/file",
-    formData,
-    {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    }
+    formData
   );
 
   return data;
