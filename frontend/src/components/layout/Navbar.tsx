@@ -6,7 +6,6 @@ import {
   useState,
   type ChangeEvent,
 } from "react";
-
 import {
   LogOut,
   Menu,
@@ -15,8 +14,8 @@ import {
   Sun,
   UserCircle,
 } from "lucide-react";
-
 import { useNavigate } from "react-router-dom";
+
 import { useAuth } from "../../hooks/useAuth";
 
 interface NavbarProps {
@@ -24,22 +23,16 @@ interface NavbarProps {
 }
 
 const STORAGE_KEY = "theme";
-
 type Theme = "light" | "dark";
 
 const isTheme = (value: string | null): value is Theme =>
   value === "dark" || value === "light";
 
 const getInitialTheme = (): Theme => {
-  if (typeof window === "undefined") {
-    return "light";
-  }
+  if (typeof window === "undefined") return "dark";
 
   const saved = localStorage.getItem(STORAGE_KEY);
-
-  if (isTheme(saved)) {
-    return saved;
-  }
+  if (isTheme(saved)) return saved;
 
   return window.matchMedia("(prefers-color-scheme: dark)").matches
     ? "dark"
@@ -51,7 +44,7 @@ const applyTheme = (theme: Theme) => {
 };
 
 const iconButtonClass =
-  "rounded-2xl border border-border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2";
+  "inline-flex items-center justify-center rounded-xl border border-border bg-card/70 text-muted-foreground transition-all duration-200 hover:border-border-strong hover:bg-accent hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary";
 
 function Navbar({ onMenuClick }: NavbarProps) {
   const navigate = useNavigate();
@@ -69,40 +62,21 @@ function Navbar({ onMenuClick }: NavbarProps) {
     const media = window.matchMedia("(prefers-color-scheme: dark)");
 
     const handleSystemTheme = (event: MediaQueryListEvent) => {
-      if (localStorage.getItem(STORAGE_KEY)) {
-        return;
-      }
-
-      const nextTheme: Theme = event.matches ? "dark" : "light";
-      setTheme(nextTheme);
-      applyTheme(nextTheme);
+      if (localStorage.getItem(STORAGE_KEY)) return;
+      setTheme(event.matches ? "dark" : "light");
     };
 
     const handleStorage = (event: StorageEvent) => {
-      if (event.key !== STORAGE_KEY || !isTheme(event.newValue)) {
-        return;
+      if (event.key === STORAGE_KEY && isTheme(event.newValue)) {
+        setTheme(event.newValue);
       }
-
-      const nextTheme = event.newValue;
-      setTheme(nextTheme);
-      applyTheme(nextTheme);
     };
 
-    if (media.addEventListener) {
-      media.addEventListener("change", handleSystemTheme);
-    } else {
-      media.addListener(handleSystemTheme);
-    }
-
+    media.addEventListener?.("change", handleSystemTheme);
     window.addEventListener("storage", handleStorage);
 
     return () => {
-      if (media.removeEventListener) {
-        media.removeEventListener("change", handleSystemTheme);
-      } else {
-        media.removeListener(handleSystemTheme);
-      }
-
+      media.removeEventListener?.("change", handleSystemTheme);
       window.removeEventListener("storage", handleStorage);
     };
   }, []);
@@ -110,16 +84,14 @@ function Navbar({ onMenuClick }: NavbarProps) {
   const toggleTheme = useCallback(() => {
     setTheme((current) => {
       const next: Theme = current === "dark" ? "light" : "dark";
-      applyTheme(next);
       localStorage.setItem(STORAGE_KEY, next);
+      applyTheme(next);
       return next;
     });
   }, []);
 
   const handleSearchChange = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) => {
-      setSearch(event.target.value);
-    },
+    (event: ChangeEvent<HTMLInputElement>) => setSearch(event.target.value),
     []
   );
 
@@ -128,10 +100,7 @@ function Navbar({ onMenuClick }: NavbarProps) {
   }, [navigate]);
 
   const handleLogout = useCallback(() => {
-    if (!window.confirm("Are you sure you want to logout?")) {
-      return;
-    }
-
+    if (!window.confirm("Are you sure you want to logout?")) return;
     logout();
     navigate("/login", { replace: true });
   }, [logout, navigate]);
@@ -139,30 +108,30 @@ function Navbar({ onMenuClick }: NavbarProps) {
   const displayName = useMemo(() => user?.name ?? "Profile", [user]);
 
   return (
-    <header className="flex h-20 items-center justify-between gap-4 px-5 sm:px-8">
-      <div className="flex items-center gap-4">
+    <div className="flex h-[72px] items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
+      <div className="flex min-w-0 items-center gap-3">
         <button
           type="button"
           onClick={onMenuClick}
           aria-label="Open navigation menu"
-          className={`${iconButtonClass} p-3 hover:bg-accent lg:hidden`}
+          className={`${iconButtonClass} h-10 w-10 lg:hidden`}
         >
-          <Menu size={22} />
+          <Menu size={19} />
         </button>
 
         <div className="min-w-0">
-          <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">
+          <p className="hidden text-[10px] font-semibold uppercase tracking-[0.24em] text-muted-foreground sm:block">
             Workspace
           </p>
-          <h1 className="font-display truncate text-2xl font-light leading-none text-foreground sm:text-3xl">
+          <h1 className="truncate font-display text-lg font-semibold tracking-tight text-foreground sm:text-xl">
             AI Document Assistant
           </h1>
         </div>
       </div>
 
-      <div role="search" className="hidden flex-1 justify-center px-8 lg:flex">
-        <div className="flex w-full max-w-xl items-center gap-3 rounded-full border border-border bg-card px-5 py-3 transition-all focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/15">
-          <Search size={18} className="shrink-0 text-muted-foreground" />
+      <div role="search" className="hidden min-w-0 flex-1 justify-center px-5 md:flex">
+        <div className="flex w-full max-w-[560px] items-center gap-3 rounded-xl border border-border bg-card/65 px-3.5 py-2.5 shadow-sm transition-all focus-within:border-primary/60 focus-within:bg-card focus-within:ring-4 focus-within:ring-primary/10">
+          <Search size={17} className="shrink-0 text-muted-foreground" />
           <input
             type="search"
             value={search}
@@ -173,17 +142,19 @@ function Navbar({ onMenuClick }: NavbarProps) {
             autoCorrect="off"
             autoCapitalize="off"
             spellCheck={false}
-            enterKeyHint="search"
             className="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
           />
+          <kbd className="hidden rounded-md border border-border bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground lg:inline-block">
+            /
+          </kbd>
         </div>
       </div>
 
-      <div className="flex items-center gap-2 sm:gap-3">
+      <div className="flex shrink-0 items-center gap-2">
         <button
           type="button"
           aria-label="Search"
-          className={`${iconButtonClass} p-3 hover:bg-accent lg:hidden`}
+          className={`${iconButtonClass} h-10 w-10 md:hidden`}
         >
           <Search size={18} />
         </button>
@@ -193,9 +164,9 @@ function Navbar({ onMenuClick }: NavbarProps) {
           onClick={toggleTheme}
           aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
           title={darkMode ? "Light mode" : "Dark mode"}
-          className={`${iconButtonClass} p-3 hover:bg-accent`}
+          className={`${iconButtonClass} h-10 w-10`}
         >
-          {darkMode ? <Sun size={19} /> : <Moon size={19} />}
+          {darkMode ? <Sun size={18} /> : <Moon size={18} />}
         </button>
 
         <button
@@ -203,15 +174,12 @@ function Navbar({ onMenuClick }: NavbarProps) {
           onClick={handleProfile}
           aria-label="Open profile"
           title="Profile"
-          className={`${iconButtonClass} flex items-center gap-3 bg-card px-4 py-3 hover:border-primary/30 hover:bg-accent`}
+          className="hidden h-10 items-center gap-2.5 rounded-xl border border-border bg-card/70 px-3 transition-all hover:border-border-strong hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary sm:flex"
         >
-          <UserCircle size={22} className="shrink-0" />
+          <UserCircle size={20} className="text-muted-foreground" />
           <div className="hidden text-left lg:block">
-            <p className="text-xs text-muted-foreground">Welcome</p>
-            <p
-              className="max-w-[180px] truncate text-sm font-medium text-foreground"
-              title={displayName}
-            >
+            <p className="text-[10px] leading-3 text-muted-foreground">Welcome</p>
+            <p className="max-w-[130px] truncate text-xs font-semibold text-foreground" title={displayName}>
               {displayName}
             </p>
           </div>
@@ -222,13 +190,13 @@ function Navbar({ onMenuClick }: NavbarProps) {
           onClick={handleLogout}
           aria-label="Logout"
           title="Logout"
-          className="flex items-center gap-2 rounded-2xl bg-primary px-5 py-3 text-primary-foreground transition-all duration-200 hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/25 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+          className="inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-3.5 text-sm font-semibold text-primary-foreground shadow-md shadow-primary/20 transition-all hover:bg-primary-hover hover:shadow-lg hover:shadow-primary/25 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-primary"
         >
-          <LogOut size={18} className="shrink-0" />
+          <LogOut size={17} />
           <span className="hidden md:inline">Logout</span>
         </button>
       </div>
-    </header>
+    </div>
   );
 }
 
