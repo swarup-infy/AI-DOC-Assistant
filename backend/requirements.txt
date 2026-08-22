@@ -43,12 +43,16 @@ groq==1.5.0
 
 
 # ==========================================================
-# Lightweight CPU Embeddings + Vector Database
+# Lightweight CPU Embeddings
 # ==========================================================
 
-# FastEmbed uses quantized ONNX models and avoids the large
-# PyTorch + Transformers memory footprint of SentenceTransformers.
 fastembed==0.8.0
+
+
+# ==========================================================
+# Vector Database
+# ==========================================================
+
 chromadb==1.5.9
 
 
