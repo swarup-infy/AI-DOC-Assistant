@@ -90,7 +90,6 @@ export default function DocumentsPage() {
 
   function selectFile(file: File) {
     if (!validateFile(file)) return;
-
     setSelectedFile(file);
     setMessage("");
   }
@@ -103,7 +102,6 @@ export default function DocumentsPage() {
   function handleDrop(event: React.DragEvent<HTMLDivElement>) {
     event.preventDefault();
     setDragActive(false);
-
     const file = event.dataTransfer.files?.[0];
     if (file) selectFile(file);
   }
@@ -118,11 +116,9 @@ export default function DocumentsPage() {
     try {
       setLoading(true);
       setMessage("");
-
       const result = await uploadDocument(selectedFile);
       setMessage(result.message || "Document uploaded successfully.");
       setMessageType("success");
-
       await loadDocuments();
       clearSelectedFile();
     } catch (error) {
@@ -179,12 +175,10 @@ export default function DocumentsPage() {
 
         <section className="surface overflow-hidden rounded-2xl">
           <div className="border-b border-border px-5 py-5 sm:px-6">
-            <div>
-              <h3 className="text-base font-semibold text-foreground">Add a document</h3>
-              <p className="mt-1 text-sm text-muted-foreground">
-                PDF, DOCX, CSV, XLS and XLSX up to 20 MB.
-              </p>
-            </div>
+            <h3 className="text-base font-semibold text-foreground">Add a document</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              PDF, DOCX, CSV, XLS and XLSX up to 20 MB.
+            </p>
           </div>
 
           <div className="p-5 sm:p-6">
@@ -222,7 +216,7 @@ export default function DocumentsPage() {
               className={`group cursor-pointer rounded-2xl border border-dashed p-7 text-center transition-all sm:p-10 ${
                 dragActive
                   ? "border-primary bg-primary/10"
-                  : "border-border-strong bg-muted/20 hover:border-primary/50 hover:bg-primary/5"
+                  : "border-border bg-muted/20 hover:border-primary/50 hover:bg-primary/5"
               }`}
             >
               <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-transform group-hover:scale-105">
@@ -295,7 +289,7 @@ export default function DocumentsPage() {
                   messageType === "success"
                     ? "border-success/20 bg-success/10 text-success"
                     : messageType === "error"
-                      ? "border-danger/20 bg-danger/10 text-danger"
+                      ? "border-destructive/20 bg-destructive/10 text-destructive"
                       : "border-border bg-muted text-foreground"
                 }`}
               >
