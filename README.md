@@ -353,7 +353,7 @@ The core backend and document ingestion pipeline are implemented and working. Se
 
 ## Live Demo
 
-A deployed version is available at: **[ai-doc-assistant-three.vercel.app](https://ai-doc-assistant-three.vercel.app)**
+A deployed version is available at: **[ai-doc-assistant-three.vercel.app](https://ai-doc-assistant-nu.vercel.app/login)**
 
 > The live application will continue to evolve as new backend and AI capabilities are added.
 
