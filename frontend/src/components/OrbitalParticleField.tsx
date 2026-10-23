@@ -44,6 +44,34 @@ export default function OrbitalParticleField() {
     if (!canvas || !ctx) return;
 
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const isLightMode = () => document.documentElement.dataset.theme === "light";
+    const palette = () => isLightMode()
+      ? {
+          teal: "#0284c7",
+          tealBright: "#38bdf8",
+          rose: "#db2777",
+          ivory: "#475569",
+          line: "rgba(2, 132, 199, 0.30)",
+          orbit: "rgba(2, 132, 199, 0.28)",
+          orbitAccent: "rgba(219, 39, 119, 0.20)",
+          triangle: "rgba(124, 58, 237, 0.28)",
+          trail: "rgba(2, 132, 199, 0.42)",
+          trailAccent: "rgba(219, 39, 119, 0.42)",
+          node: "rgba(2, 132, 199, 0.32)",
+        }
+      : {
+          teal: COLORS.teal,
+          tealBright: COLORS.tealBright,
+          rose: COLORS.rose,
+          ivory: COLORS.ivory,
+          line: COLORS.line,
+          orbit: "",
+          orbitAccent: "",
+          triangle: "",
+          trail: "",
+          trailAccent: "",
+          node: "",
+        };
     let width = 1;
     let height = 1;
     let dpr = 1;
@@ -167,6 +195,7 @@ export default function OrbitalParticleField() {
       }
 
       ctx.clearRect(0, 0, width, height);
+      const colors = palette();
       const pointerEase = 1 - Math.exp(-4.2 * dt);
       pointerX = lerp(pointerX, reduced ? 0 : targetX, pointerEase);
       pointerY = lerp(pointerY, reduced ? 0 : targetY, pointerEase);
@@ -187,13 +216,13 @@ export default function OrbitalParticleField() {
         ctx.rotate(o.rotation + orbitTurn + (reduced ? 0 : Math.sin(elapsed * 0.65 + o.phase) * 0.22));
         ctx.beginPath();
         ctx.ellipse(0, 0, o.rx * breathe, o.ry * breathe, 0, o.start, o.start + o.arc);
-        ctx.strokeStyle = `rgba(121, 200, 200, ${o.depth * 0.16 * CONFIG.lineOpacity})`;
+        ctx.strokeStyle = isLightMode() ? `rgba(2, 132, 199, ${o.depth * 0.30 * CONFIG.lineOpacity})` : `rgba(121, 200, 200, ${o.depth * 0.16 * CONFIG.lineOpacity})`;
         ctx.lineWidth = o.depth > 0.65 ? 0.9 : 0.65;
         ctx.stroke();
         if (o.depth > 0.62) {
           ctx.beginPath();
           ctx.ellipse(0, 0, o.rx * breathe * 0.88, o.ry * breathe * 0.88, 0, 0, Math.PI * 2);
-          ctx.strokeStyle = "rgba(218,123,147,0.10)";
+          ctx.strokeStyle = isLightMode() ? "rgba(219,39,119,0.20)" : "rgba(218,123,147,0.10)";
           ctx.lineWidth = 0.6;
           ctx.stroke();
         }
@@ -217,14 +246,14 @@ export default function OrbitalParticleField() {
         ctx.lineTo(pts[1].x + ox * t.depth, pts[1].y + oy * t.depth);
         ctx.lineTo(pts[2].x + ox * t.depth, pts[2].y + oy * t.depth);
         ctx.closePath();
-        ctx.strokeStyle = `rgba(218,123,147,${0.10 + t.depth * 0.13})`;
+        ctx.strokeStyle = isLightMode() ? `rgba(124,58,237,${0.18 + t.depth * 0.18})` : `rgba(218,123,147,${0.10 + t.depth * 0.13})`;
         ctx.lineWidth = t.depth > 0.65 ? 0.9 : 0.6;
         ctx.stroke();
         if (t.depth > 0.66 && t.phase > 1.5) {
           ctx.beginPath();
           ctx.moveTo(lerp(pts[0].x, pts[1].x, .5), lerp(pts[0].y, pts[1].y, .5));
           ctx.lineTo(lerp(pts[1].x, pts[2].x, .5), lerp(pts[1].y, pts[2].y, .5));
-          ctx.strokeStyle = "rgba(121,200,200,0.11)";
+          ctx.strokeStyle = isLightMode() ? "rgba(2,132,199,0.26)" : "rgba(121,200,200,0.11)";
           ctx.stroke();
         }
       }
@@ -241,7 +270,7 @@ export default function OrbitalParticleField() {
         const dist = Math.hypot(ax - bx, ay - by);
         if (dist < Math.min(width, height) * 0.5) {
           ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by);
-          ctx.strokeStyle = COLORS.line; ctx.lineWidth = 0.65; ctx.stroke();
+          ctx.strokeStyle = colors.line; ctx.lineWidth = 0.65; ctx.stroke();
         }
       }
 
@@ -266,7 +295,7 @@ export default function OrbitalParticleField() {
             const prev = p.trail[j - 1]; const cur = p.trail[j];
             const tailAlpha = (j / p.trail.length) * 0.26 * p.depth;
             ctx.beginPath(); ctx.moveTo(prev.x, prev.y); ctx.lineTo(cur.x, cur.y);
-            ctx.strokeStyle = p.mode === 1 ? `rgba(218,123,147,${tailAlpha})` : `rgba(121,200,200,${tailAlpha})`;
+            ctx.strokeStyle = p.mode === 1 ? (isLightMode() ? `rgba(219,39,119,${tailAlpha * 1.6})` : `rgba(218,123,147,${tailAlpha})`) : (isLightMode() ? `rgba(2,132,199,${tailAlpha * 1.6})` : `rgba(121,200,200,${tailAlpha})`);
             ctx.lineWidth = (j / p.trail.length) * (p.mode === 1 ? 1.6 : 0.9);
             ctx.stroke();
           }
@@ -276,15 +305,15 @@ export default function OrbitalParticleField() {
         ctx.save();
         ctx.globalCompositeOperation = "lighter";
         ctx.globalAlpha = p.depth * (p.mode === 1 ? behavior : 0.75);
-        ctx.fillStyle = p.mode === 1 ? COLORS.rose : COLORS.tealBright;
-        ctx.shadowColor = p.mode === 1 ? COLORS.rose : COLORS.teal;
-        ctx.shadowBlur = (p.mode === 1 ? 10 : 5) * CONFIG.glow;
+        ctx.fillStyle = p.mode === 1 ? colors.rose : colors.tealBright;
+        ctx.shadowColor = p.mode === 1 ? colors.rose : colors.teal;
+        ctx.shadowBlur = (p.mode === 1 ? 12 : 8) * CONFIG.glow;
         ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.fill();
-        ctx.shadowBlur = 0; ctx.fillStyle = COLORS.ivory;
+        ctx.shadowBlur = 0; ctx.fillStyle = colors.ivory;
         ctx.beginPath(); ctx.arc(x, y, Math.max(0.45, radius * 0.36), 0, Math.PI * 2); ctx.fill();
         if (p.mode === 1) {
           const wingAngle = Math.atan2(Math.cos(p.angle), -Math.sin(p.angle));
-          ctx.strokeStyle = "rgba(218,123,147,0.36)";
+          ctx.strokeStyle = isLightMode() ? "rgba(219,39,119,0.55)" : "rgba(218,123,147,0.36)";
           ctx.lineWidth = 0.6;
           ctx.beginPath();
           ctx.moveTo(x - Math.cos(wingAngle) * 3, y - Math.sin(wingAngle) * 3);
@@ -296,7 +325,7 @@ export default function OrbitalParticleField() {
         // A subtle pulse at selected orbit intersections.
         if (i % 9 === 0 && Math.abs(Math.sin(p.angle * 1.6)) > 0.992) {
           ctx.beginPath(); ctx.arc(x, y, 3 + (1 - Math.abs(Math.sin(p.angle))) * 8, 0, Math.PI * 2);
-          ctx.strokeStyle = "rgba(121,200,200,0.16)"; ctx.lineWidth = 0.7; ctx.stroke();
+          ctx.strokeStyle = isLightMode() ? "rgba(2,132,199,0.32)" : "rgba(121,200,200,0.16)"; ctx.lineWidth = 0.7; ctx.stroke();
         }
       }
 
@@ -306,7 +335,7 @@ export default function OrbitalParticleField() {
         const pulse = reduced ? 0.3 : Math.max(0, Math.sin(elapsed * 1.25 + i * 1.7));
         if (pulse > 0.72) {
           ctx.beginPath(); ctx.arc(center.x + ox * 0.3, center.y + oy * 0.3, 2 + pulse * 4, 0, Math.PI * 2);
-          ctx.strokeStyle = `rgba(121,200,200,${(pulse - 0.7) * 0.35})`; ctx.lineWidth = 0.8; ctx.stroke();
+          ctx.strokeStyle = isLightMode() ? `rgba(2,132,199,${(pulse - 0.7) * 0.55})` : `rgba(121,200,200,${(pulse - 0.7) * 0.35})`; ctx.lineWidth = 0.8; ctx.stroke();
         }
       }
       raf = requestAnimationFrame(draw);
