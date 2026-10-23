@@ -1,5 +1,9 @@
 """Test configuration: isolate imports from developer credentials and databases."""
 import os
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 # These values are deliberately synthetic and are only used by unit tests.
 os.environ["DATABASE_URL"] = "postgresql+psycopg2://test:test@127.0.0.1:5432/test_auth"
