@@ -29,7 +29,6 @@ const CONFIG = {
   pointerParallax: 0.012,
 };
 
-const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const seeded = (seed: number) => {
   const n = Math.sin(seed * 127.1 + 311.7) * 43758.5453;
