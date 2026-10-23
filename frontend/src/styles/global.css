@@ -757,8 +757,9 @@ ol {
   .auth-grain .auth-particle { width: 3px; height: 3px; }
 }
 @media (prefers-reduced-motion: reduce) {
+  /* Keep the requested subtle auth particles animated; other UI motion remains reduced. */
   .auth-grain .auth-particle {
-    animation: none !important;
-    opacity: .3;
+    animation-duration: 9s !important;
+    animation-iteration-count: infinite !important;
   }
 }
