@@ -23,7 +23,7 @@ interface AuthContextType {
   loading: boolean;
   isAuthenticated: boolean;
 
-  login: (token: string) => Promise<void>;
+  login: (token: string, user?: User) => Promise<void>;
   logout: () => void;
 
   refreshUser: () => Promise<void>;
@@ -82,8 +82,15 @@ export function AuthProvider({
   }, [logout]);
 
   const login = useCallback(
-    async (token: string) => {
+    async (token: string, authenticatedUser?: User) => {
       saveAccessToken(token);
+
+      // Login already returns the profile; avoid a second blocking request.
+      if (authenticatedUser) {
+        saveUser(authenticatedUser);
+        setUser(authenticatedUser);
+        return;
+      }
 
       await refreshUser();
     },
