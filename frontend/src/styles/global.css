@@ -764,3 +764,21 @@ ol {
     animation: auth-particle-float 7s ease-in-out infinite alternate !important;
   }
 }
+
+
+/* Interactive orbital geometry canvas — rendered behind all auth content. */
+.auth-grain .orbital-particle-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0.96;
+}
+@media (max-width: 639px) {
+  .auth-grain .orbital-particle-canvas {
+    opacity: 0.76;
+  }
+}
