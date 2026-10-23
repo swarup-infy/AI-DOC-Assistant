@@ -1334,3 +1334,53 @@ ol {
     background-size: 100% 100%, 270px 270px, 100% 100%, 100% 100%;
   }
 }
+
+
+/* Geometric design system for app pages only. Auth/login/register are intentionally excluded. */
+.app-shell:not(.auth-shell)::after,
+.aurora-bg::after {
+  background-image:
+    radial-gradient(ellipse at 15% 12%, color-mix(in srgb, var(--primary) 10%, transparent), transparent 46%),
+    url("/images/backgrounds/geometric-lattice.svg"),
+    url("/images/backgrounds/ornamental-rose.svg");
+  background-size: 100% 100%, 360px 360px, 520px 520px;
+  background-position: center, 0 0, 100% 100%;
+  background-repeat: no-repeat, repeat, repeat;
+  opacity: .32;
+  mix-blend-mode: soft-light;
+}
+
+:root[data-theme="light"] .app-shell:not(.auth-shell)::after,
+:root[data-theme="light"] .aurora-bg::after {
+  background-image:
+    linear-gradient(135deg, rgba(255,255,255,.18), rgba(226,232,240,.26)),
+    url("/images/backgrounds/geometric-lattice.svg"),
+    url("/images/backgrounds/ornamental-rose.svg");
+  background-size: 100% 100%, 300px 300px, 440px 440px;
+  background-position: center, 0 0, 100% 100%;
+  background-repeat: no-repeat, repeat, repeat;
+  opacity: .24;
+  mix-blend-mode: multiply;
+}
+
+:root[data-theme="dark"] .app-shell:not(.auth-shell)::after,
+:root:not([data-theme="light"]) .app-shell:not(.auth-shell)::after,
+:root[data-theme="dark"] .aurora-bg::after,
+:root:not([data-theme="light"]) .aurora-bg::after {
+  background-image:
+    radial-gradient(ellipse at 15% 12%, rgba(129,140,248,.16), transparent 46%),
+    url("/images/backgrounds/geometric-lattice.svg"),
+    url("/images/backgrounds/ornamental-rose.svg");
+  background-size: 100% 100%, 360px 360px, 520px 520px;
+  background-position: center, 0 0, 100% 100%;
+  background-repeat: no-repeat, repeat, repeat;
+  opacity: .25;
+  mix-blend-mode: screen;
+}
+
+@media (max-width: 639px) {
+  .app-shell:not(.auth-shell)::after,
+  .aurora-bg::after {
+    background-size: 100% 100%, 230px 230px, 340px 340px;
+  }
+}
