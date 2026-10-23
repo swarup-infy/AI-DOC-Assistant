@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" fill="none">
+  <defs>
+    <linearGradient id="rose" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f9a8d4"/><stop offset=".48" stop-color="#be185d"/><stop offset="1" stop-color="#831843"/></linearGradient>
+    <radialGradient id="glow"><stop stop-color="#fbcfe8" stop-opacity=".9"/><stop offset="1" stop-color="#be185d" stop-opacity="0"/></radialGradient>
+    <g id="petal">
+      <path d="M0 -88 C-24 -65 -25 -35 0 -12 C25 -35 24 -65 0 -88Z" fill="url(#rose)" fill-opacity=".28" stroke="#fbcfe8" stroke-opacity=".68" stroke-width="1.3"/>
+      <path d="M0 -76 Q-9 -45 0 -20 Q9 -45 0 -76Z" stroke="#fce7f3" stroke-opacity=".72" stroke-width="1.1"/>
+      <circle cx="0" cy="-83" r="3" fill="#fce7f3" fill-opacity=".85"/>
+    </g>
+    <g id="flower">
+      <circle r="88" fill="url(#glow)" opacity=".7"/>
+      <circle r="73" stroke="#f9a8d4" stroke-opacity=".62" stroke-width="1.2"/>
+      <circle r="63" stroke="#fce7f3" stroke-opacity=".4" stroke-dasharray="2 5"/>
+      <g><use href="#petal"/><use href="#petal" transform="rotate(30)"/><use href="#petal" transform="rotate(60)"/><use href="#petal" transform="rotate(90)"/><use href="#petal" transform="rotate(120)"/><use href="#petal" transform="rotate(150)"/><use href="#petal" transform="rotate(180)"/><use href="#petal" transform="rotate(210)"/><use href="#petal" transform="rotate(240)"/><use href="#petal" transform="rotate(270)"/><use href="#petal" transform="rotate(300)"/><use href="#petal" transform="rotate(330)"/></g>
+      <circle r="30" fill="#9d174d" fill-opacity=".35" stroke="#fce7f3" stroke-opacity=".72" stroke-width="1.4"/>
+      <circle r="21" stroke="#fbcfe8" stroke-opacity=".75" stroke-dasharray="2 3"/>
+      <circle r="9" fill="#f9a8d4" fill-opacity=".65"/>
+      <path d="M0 -15 L4 -4 L15 0 L4 4 L0 15 L-4 4 L-15 0 L-4 -4Z" fill="#fce7f3" fill-opacity=".75"/>
+    </g>
+    <pattern id="fabric" width="300" height="300" patternUnits="userSpaceOnUse">
+      <rect width="300" height="300" fill="#831843"/>
+      <path d="M0 0 Q75 35 0 150 Q75 265 0 300 M300 0 Q225 35 300 150 Q225 265 300 300 M0 0 Q150 75 300 0 M0 300 Q150 225 300 300" stroke="#f9a8d4" stroke-opacity=".23" stroke-width="2"/>
+      <use href="#flower" x="150" y="150" transform="scale(.82) translate(33 33)"/>
+      <use href="#flower" x="0" y="0" transform="scale(.48) translate(0 0)"/>
+      <use href="#flower" x="300" y="0" transform="scale(.48) translate(312 0)"/>
+      <use href="#flower" x="0" y="300" transform="scale(.48) translate(0 312)"/>
+      <use href="#flower" x="300" y="300" transform="scale(.48) translate(312 312)"/>
+      <path d="M150 0 C125 28 125 52 150 70 C175 52 175 28 150 0Z M150 300 C125 272 125 248 150 230 C175 248 175 272 150 300Z M0 150 C28 125 52 125 70 150 C52 175 28 175 0 150Z M300 150 C272 125 248 125 230 150 C248 175 272 175 300 150Z" fill="#f472b6" fill-opacity=".24" stroke="#fce7f3" stroke-opacity=".45"/>
+    </pattern>
+  </defs>
+  <rect width="600" height="600" fill="url(#fabric)"/>
+  <rect width="600" height="600" fill="url(#glow)" opacity=".22"/>
+  <g stroke="#fbcfe8" stroke-opacity=".18" stroke-width="1">
+    <path d="M300 0V600M0 300H600M0 0L600 600M600 0L0 600"/>
+    <circle cx="300" cy="300" r="260"/><circle cx="300" cy="300" r="230"/><circle cx="300" cy="300" r="190"/>
+  </g>
+</svg>
