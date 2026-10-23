@@ -74,46 +74,61 @@ export default function DashboardPage() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-7 pb-10 fade-in">
-        <section className="relative overflow-hidden rounded-3xl border border-border bg-card p-6 shadow-sm sm:p-8 lg:p-10">
-          <div className="pointer-events-none absolute -right-24 -top-28 h-80 w-80 rounded-full bg-primary/15 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-36 left-1/3 h-72 w-72 rounded-full bg-secondary/10 blur-3xl" />
-          <div className="relative flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
-            <div className="max-w-2xl">
-              <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary">
-                <Sparkles size={14} />
-                AI-powered workspace
+      <div className="dashboard-content space-y-7 pb-10">
+        <section className="dashboard-hero relative isolate min-h-[390px] overflow-hidden rounded-[30px] border border-white/30 shadow-xl sm:min-h-[430px]">
+          <div className="dashboard-hero-glow pointer-events-none absolute inset-0" aria-hidden="true" />
+          <div className="relative z-10 flex min-h-[390px] flex-col justify-between p-6 sm:min-h-[430px] sm:p-9 lg:p-11">
+            <div className="flex items-center justify-between gap-4">
+              <span className="inline-flex items-center gap-2 rounded-full border border-white/45 bg-white/45 px-3 py-1.5 text-xs font-semibold text-slate-800 backdrop-blur-md">
+                <Sparkles size={14} /> AI DOCUMENT STUDIO
+              </span>
+              <span className="rounded-full border border-white/50 bg-white/45 px-3 py-1.5 text-xs font-semibold text-slate-700 backdrop-blur-md">WORKSPACE · READY</span>
+            </div>
+            <div className="grid flex-1 items-center gap-6 py-8 lg:grid-cols-[1fr_0.9fr]">
+              <div className="max-w-xl">
+                <p className="text-xs font-bold uppercase tracking-[0.28em] text-indigo-800/80">{greeting}, {firstName}</p>
+                <h2 className="mt-3 max-w-xl font-display text-4xl font-semibold leading-[1.04] tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
+                  Your knowledge.
+                  <span className="block text-indigo-700">In motion.</span>
+                </h2>
+                <p className="mt-4 max-w-md text-sm leading-6 text-slate-700 sm:text-base">
+                  Turn your documents into answers, insights, and useful conversations.
+                </p>
+                <div className="mt-6 flex flex-wrap gap-3">
+                  <button type="button" onClick={() => navigate("/documents")} className="group inline-flex h-11 items-center gap-2 rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white shadow-lg shadow-indigo-600/25 transition duration-200 hover:-translate-y-0.5 hover:bg-indigo-700">
+                    <UploadCloud size={17} /> Upload document <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />
+                  </button>
+                  <button type="button" onClick={() => navigate("/chat")} className="inline-flex h-11 items-center gap-2 rounded-xl border border-white/70 bg-white/60 px-4 text-sm font-semibold text-slate-800 backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-white/85">
+                    <Bot size={17} /> Open AI chat
+                  </button>
+                </div>
               </div>
-              <h2 className="mt-5 font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl lg:text-5xl">
-                {greeting}, {firstName}.
-              </h2>
-              <p className="mt-4 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">
-                Your documents, semantic search, and AI conversations — organized in one focused workspace.
-              </p>
-              <div className="mt-7 flex flex-wrap gap-3">
-                <button type="button" onClick={() => navigate("/documents")} className="group inline-flex h-11 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-md shadow-primary/20 transition hover:-translate-y-0.5 hover:opacity-95">
-                  <UploadCloud size={17} /> Upload document <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />
-                </button>
-                <button type="button" onClick={() => navigate("/chat")} className="inline-flex h-11 items-center gap-2 rounded-xl border border-border bg-background/60 px-4 text-sm font-semibold text-foreground transition hover:bg-accent">
-                  <Bot size={17} className="text-primary" /> Open AI chat
-                </button>
+              <div className="dashboard-product-stage relative mx-auto flex h-[220px] w-full max-w-[420px] items-center justify-center sm:h-[270px] lg:h-[300px]" aria-label="Decorative AI document artwork">
+                <div className="dashboard-product-orbit dashboard-product-orbit-one" />
+                <div className="dashboard-product-orbit dashboard-product-orbit-two" />
+                <div className="dashboard-product-glass-card dashboard-product-card-back">
+                  <div className="h-2 w-14 rounded-full bg-sky-400/80" />
+                  <div className="mt-5 h-2 w-full rounded-full bg-slate-300/80" />
+                  <div className="mt-2 h-2 w-4/5 rounded-full bg-slate-200" />
+                  <div className="mt-5 grid grid-cols-3 gap-2"><span className="h-12 rounded-lg bg-violet-200/80" /><span className="h-12 rounded-lg bg-sky-200/80" /><span className="h-12 rounded-lg bg-rose-200/80" /></div>
+                </div>
+                <div className="dashboard-product-glass-card dashboard-product-card-front">
+                  <div className="flex items-center gap-2"><span className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-600 text-white"><Sparkles size={16} /></span><span className="text-xs font-semibold text-slate-800">AI INSIGHTS</span><span className="ml-auto h-2 w-2 rounded-full bg-emerald-500" /></div>
+                  <div className="mt-5 rounded-xl bg-indigo-50 p-3"><p className="text-[10px] font-bold uppercase tracking-wider text-indigo-700">Semantic search</p><p className="mt-1 text-xs font-medium text-slate-700">Find meaning, not just words.</p></div>
+                  <div className="mt-3 flex items-center gap-2"><span className="h-7 w-7 rounded-full bg-sky-200" /><span className="h-2 flex-1 rounded-full bg-slate-200" /><span className="h-2 w-8 rounded-full bg-rose-200" /></div>
+                </div>
+                <span className="dashboard-float-chip dashboard-chip-top"><Sparkles size={13} /> RAG ready</span>
+                <span className="dashboard-float-chip dashboard-chip-bottom"><FileText size={13} /> Smart documents</span>
               </div>
             </div>
-            <div className="hidden w-64 shrink-0 rounded-2xl border border-border bg-background/55 p-5 backdrop-blur-xl lg:block">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-muted-foreground">System status</span>
-                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-success"><span className="h-1.5 w-1.5 rounded-full bg-success" />Ready</span>
-              </div>
-              <div className="mt-5 h-px bg-border" />
-              <div className="mt-4 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary"><Sparkles size={19} /></div>
-                <div><p className="text-sm font-semibold text-foreground">Groq AI</p><p className="text-xs text-muted-foreground">Assistant engine connected</p></div>
-              </div>
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/45 pt-4 text-xs font-medium text-slate-700">
+              <span>One workspace. More clarity.</span>
+              <span className="inline-flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-emerald-500" /> Groq AI connected</span>
             </div>
           </div>
         </section>
 
-        <section className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
+        <section className="dashboard-reveal grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
           {stats.map(({ label, value, icon: Icon }) => (
             <article key={label} className="surface surface-hover rounded-2xl p-5 sm:p-6">
               <div className="flex items-center justify-between gap-3"><span className="text-xs font-medium text-muted-foreground sm:text-sm">{label}</span><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary"><Icon size={17} /></span></div>
@@ -122,7 +137,7 @@ export default function DashboardPage() {
           ))}
         </section>
 
-        <section className="grid gap-4 xl:grid-cols-[minmax(0,1.7fr)_minmax(300px,0.8fr)]">
+        <section className="dashboard-reveal dashboard-reveal-late grid gap-4 xl:grid-cols-[minmax(0,1.7fr)_minmax(300px,0.8fr)]">
           <article className="surface overflow-hidden rounded-2xl">
             <div className="flex items-center justify-between border-b border-border px-5 py-5 sm:px-6">
               <div><h3 className="text-base font-semibold text-foreground">Recent documents</h3><p className="mt-1 text-xs text-muted-foreground sm:text-sm">Your latest files and their processing status.</p></div>
