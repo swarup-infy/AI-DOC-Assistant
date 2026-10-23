@@ -85,7 +85,7 @@ export default function OrbitalParticleField() {
           x: width * (0.07 + seeded(s * 7) * 0.86),
           y: height * (0.08 + seeded(s * 11) * 0.84),
           rx, ry, rotation: seeded(s * 13) * Math.PI,
-          speed: (0.14 + seeded(s * 17) * 0.20) * (i % 2 ? -1 : 1),
+          speed: (0.18 + seeded(s * 17) * 0.24) * (i % 2 ? -1 : 1),
           phase: seeded(s * 19) * Math.PI * 2,
           depth: 0.22 + seeded(s * 23) * 0.65,
           arc: seeded(s * 29) > 0.66 ? Math.PI * (1.25 + seeded(s * 31) * 0.6) : Math.PI * 2,
@@ -107,7 +107,7 @@ export default function OrbitalParticleField() {
       particles = Array.from({ length: Math.round(CONFIG.particleCount * (width < 600 ? 0.58 : 1) * qualityScale) }, (_, i) => ({
         path: i % Math.max(1, orbits.length),
         angle: seeded(i + 101) * Math.PI * 2,
-        speed: 0.14 + seeded(i + 211) * (i % 7 === 0 ? 0.45 : 0.25),
+        speed: 0.42 + seeded(i + 211) * (i % 7 === 0 ? 0.82 : 0.48),
         direction: i % 3 === 0 ? -1 : 1,
         size: 0.7 + seeded(i + 307) * (i % 6 === 0 ? 1.8 : 0.8),
         depth: 0.25 + seeded(i + 401) * 0.7,
@@ -147,7 +147,7 @@ export default function OrbitalParticleField() {
     });
     const orbitPoint = (o: Orbit, angle: number, index: number, time: number): Point => {
       const center = orbitCenter(o, index, time);
-      const a = angle + o.rotation + time * (0.12 + o.depth * 0.16);
+      const a = angle + o.rotation + time * o.speed;
       const breathe = 1 + Math.sin(time * 1.45 + o.phase) * 0.075;
       return { x: center.x + Math.cos(a) * o.rx * breathe, y: center.y + Math.sin(a) * o.ry * breathe };
     };
@@ -178,19 +178,19 @@ export default function OrbitalParticleField() {
         const center = orbitCenter(o, orbits.indexOf(o), reduced ? elapsed * 0.12 : elapsed);
         const cx = center.x + ox * o.depth;
         const cy = center.y + oy * o.depth;
-        const orbitTurn = reduced ? 0 : elapsed * (0.10 + o.depth * 0.13);
+        const orbitTurn = reduced ? 0 : elapsed * o.speed;
         const breathe = reduced ? 1 : 1 + Math.sin(elapsed * 1.45 + o.phase) * 0.075;
         ctx.save();
         ctx.translate(cx, cy);
         ctx.rotate(o.rotation + orbitTurn + (reduced ? 0 : Math.sin(elapsed * 0.65 + o.phase) * 0.22));
         ctx.beginPath();
-        ctx.ellipse(0, 0, o.rx * breathe, o.ry * breathe, 0, o.start + orbitTurn, o.start + o.arc + orbitTurn);
+        ctx.ellipse(0, 0, o.rx * breathe, o.ry * breathe, 0, o.start, o.start + o.arc);
         ctx.strokeStyle = `rgba(121, 200, 200, ${o.depth * 0.16 * CONFIG.lineOpacity})`;
         ctx.lineWidth = o.depth > 0.65 ? 0.9 : 0.65;
         ctx.stroke();
         if (o.depth > 0.62) {
           ctx.beginPath();
-          ctx.ellipse(0, 0, o.rx * breathe * 0.88, o.ry * breathe * 0.88, 0, -orbitTurn, Math.PI * 2 - orbitTurn);
+          ctx.ellipse(0, 0, o.rx * breathe * 0.88, o.ry * breathe * 0.88, 0, 0, Math.PI * 2);
           ctx.strokeStyle = "rgba(218,123,147,0.10)";
           ctx.lineWidth = 0.6;
           ctx.stroke();
