@@ -5,7 +5,7 @@ from typing import Annotated, Any
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError, jwt
+import jwt
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
@@ -19,7 +19,7 @@ from app.models.user import User
 # ==========================================================
 
 pwd_context = CryptContext(
-    schemes=["bcrypt"],
+    schemes=["argon2", "bcrypt"],
     deprecated="auto",
 )
 
@@ -189,7 +189,7 @@ def decode_access_token(
             },
         )
 
-    except JWTError:
+    except jwt.PyJWTError:
         return None
 
     if payload.get("type") != "access":

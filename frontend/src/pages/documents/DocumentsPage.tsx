@@ -34,11 +34,12 @@ function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function getFileIcon(filename: string) {
+function getFileIcon(filename: string, size = 21) {
   const extension = filename.split(".").pop()?.toLowerCase();
-  return extension === "csv" || extension === "xls" || extension === "xlsx"
+  const Icon = extension === "csv" || extension === "xls" || extension === "xlsx"
     ? FileSpreadsheet
     : FileText;
+  return <Icon size={size} />;
 }
 
 export default function DocumentsPage() {
@@ -148,7 +149,7 @@ export default function DocumentsPage() {
     }
   }
 
-  const SelectedIcon = selectedFile ? getFileIcon(selectedFile.name) : FileUp;
+  const selectedIcon = selectedFile ? getFileIcon(selectedFile.name) : <FileUp size={21} />;
 
   return (
     <DashboardLayout>
@@ -238,7 +239,7 @@ export default function DocumentsPage() {
               <div className="mt-4 flex flex-col gap-4 rounded-2xl border border-primary/20 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex min-w-0 items-center gap-3">
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                    <SelectedIcon size={21} />
+                    {selectedIcon}
                   </div>
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold text-foreground" title={selectedFile.name}>

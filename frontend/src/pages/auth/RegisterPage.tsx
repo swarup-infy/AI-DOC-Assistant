@@ -100,8 +100,8 @@ export default function RegisterPage() {
 
   return (
     <AuthLayout>
-      <div className="grid items-center gap-16 lg:grid-cols-[1.1fr_1fr]">
-        <section className="hidden lg:block">
+      <div className="grid items-center gap-12 lg:grid-cols-[1.1fr_1fr]">
+        <section className="auth-enter-delay hidden lg:block">
           <Logo size={56} />
 
           <div className="mt-10 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-xs font-semibold text-primary">
@@ -111,7 +111,7 @@ export default function RegisterPage() {
 
           <h1 className="mt-6 max-w-xl text-6xl font-black leading-tight">
             Create your
-            <span className="block bg-gradient-to-r from-primary via-fuchsia-500 to-cyan-400 bg-clip-text text-transparent">
+            <span className="block bg-gradient-to-r from-[#DA7B93] via-[#376E6F] to-[#8db5b1] bg-clip-text text-transparent">
               AI Workspace
             </span>
           </h1>
@@ -147,7 +147,7 @@ export default function RegisterPage() {
         </section>
 
         <section className="flex justify-center">
-          <Card className="w-full max-w-md rounded-3xl bg-card/80 p-10 shadow-2xl backdrop-blur-xl">
+          <Card className="auth-enter-delay w-full max-w-md rounded-3xl border border-border/80 bg-card/85 p-8 shadow-2xl backdrop-blur-xl sm:p-10">
             <div className="mb-8 text-center">
               <Logo showWordmark={false} size={42} />
               <h2 className="mt-6 text-4xl font-bold">Create Account</h2>
@@ -245,7 +245,7 @@ export default function RegisterPage() {
               <label className="flex items-start gap-3 text-sm text-muted-foreground">
                 <input
                   type="checkbox"
-                  className="mt-1 h-4 w-4 rounded accent-primary"
+                  className="mt-1 h-4 w-4 rounded accent-primary" aria-label="Agree to Terms of Service and Privacy Notice"
                   required
                 />
                 <span>

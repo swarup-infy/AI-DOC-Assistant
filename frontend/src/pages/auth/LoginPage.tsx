@@ -2,7 +2,6 @@ import {
 
   useCallback,
 
-  useEffect,
 
   useState,
 
@@ -153,24 +152,7 @@ export default function LoginPage() {
   const [serverError, setServerError] =
 
     useState("");
-
-
-
-  const [mounted, setMounted] =
-
-    useState(false);
-
-
-
-  useEffect(() => {
-
-    setMounted(true);
-
-  }, []);
-
-
-
-  const {
+const {
 
     register,
 
@@ -260,7 +242,7 @@ export default function LoginPage() {
 
     <AuthLayout>
 
-      <div className="grid w-full items-center gap-y-14 lg:grid-cols-[3fr_2fr] lg:gap-x-16">
+      <div className="grid w-full items-center gap-y-12 lg:grid-cols-[3fr_2fr] lg:gap-x-16">
 
 
 
@@ -270,15 +252,7 @@ export default function LoginPage() {
 
         <section
 
-          className={`hidden transition-all duration-700 ease-out lg:block ${
-
-            mounted
-
-              ? "translate-x-0 opacity-100"
-
-              : "-translate-x-6 opacity-0"
-
-          }`}
+          className="auth-enter-delay hidden transition-all duration-700 ease-out lg:block translate-x-0 opacity-100"
 
         >
 
@@ -300,7 +274,7 @@ export default function LoginPage() {
 
             Your documents,
 
-            <span className="block bg-gradient-to-r from-primary via-fuchsia-500 to-cyan-400 bg-clip-text text-transparent">
+            <span className="block bg-gradient-to-r from-[#DA7B93] via-[#376E6F] to-[#8db5b1] bg-clip-text text-transparent">
 
               finally intelligent.
 
@@ -416,15 +390,7 @@ export default function LoginPage() {
 
                   }}
 
-                  className={`flex items-center gap-4 transition-all duration-700 ease-out ${
-
-                    mounted
-
-                      ? "translate-y-0 opacity-100"
-
-                      : "translate-y-3 opacity-0"
-
-                  }`}
+                  className="auth-enter-delay flex items-center gap-4 transition-all duration-700 ease-out translate-y-0 opacity-100"
 
                 >
 
@@ -478,15 +444,7 @@ export default function LoginPage() {
 
           <Card
 
-            className={`w-full max-w-lg rounded-3xl bg-card/70 p-8 shadow-2xl shadow-black/10 backdrop-blur-2xl transition-all duration-700 ease-out sm:p-10 ${
-
-              mounted
-
-                ? "translate-y-0 opacity-100"
-
-                : "translate-y-4 opacity-0"
-
-            }`}
+            className="auth-enter-delay w-full max-w-lg rounded-3xl border border-border/80 bg-card/85 p-8 shadow-2xl shadow-black/20 backdrop-blur-2xl transition-all duration-700 ease-out sm:p-10 translate-y-0 opacity-100"
 
           >
 

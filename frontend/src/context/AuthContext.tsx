@@ -1,3 +1,5 @@
+/* The provider intentionally exports the hook alongside the component for compatibility with existing imports. */
+/* eslint-disable react-refresh/only-export-components */
 import {
   createContext,
   useCallback,

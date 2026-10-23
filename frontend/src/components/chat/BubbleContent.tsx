@@ -98,13 +98,15 @@ function BubbleContent({ message }: BubbleContentProps) {
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
-          a: ({ node, ...props }) => (
-            <a
+          a: (componentProps) => {
+            const { node, ...props } = componentProps;
+            void node;
+            return <a
               {...props}
               target="_blank"
               rel="noopener noreferrer"
-            />
-          ),
+            />;
+          },
 
           code: ({ className, children, ...props }) => (
             <code
@@ -115,14 +117,16 @@ function BubbleContent({ message }: BubbleContentProps) {
             </code>
           ),
 
-          img: ({ node, ...props }) => (
-            <img
+          img: (componentProps) => {
+            const { node, ...props } = componentProps;
+            void node;
+            return <img
               loading="lazy"
               decoding="async"
               alt={props.alt ?? ""}
               {...props}
-            />
-          ),
+            />;
+          },
         }}
       >
         {message}
