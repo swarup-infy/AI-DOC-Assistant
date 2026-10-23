@@ -141,9 +141,17 @@ export default function OrbitalParticleField() {
       const x = p.x - cx; const y = p.y - cy;
       return { x: cx + x * Math.cos(angle) - y * Math.sin(angle), y: cy + x * Math.sin(angle) + y * Math.cos(angle) };
     };
-    const orbitPoint = (o: Orbit, angle: number): Point => {
-      const a = angle + o.rotation;
-      return { x: o.x + Math.cos(a) * o.rx, y: o.y + Math.sin(a) * o.ry };
+    const orbitCenter = (o: Orbit, index: number, time: number): Point => ({
+      x: o.x + Math.sin(time * (0.16 + o.depth * 0.12) + o.phase) * Math.min(width, height) * 0.035
+        + Math.cos(time * 0.09 + index) * 10,
+      y: o.y + Math.cos(time * (0.13 + o.depth * 0.1) + o.phase) * Math.min(width, height) * 0.028
+        + Math.sin(time * 0.11 + index * 0.7) * 8,
+    });
+    const orbitPoint = (o: Orbit, angle: number, index: number, time: number): Point => {
+      const center = orbitCenter(o, index, time);
+      const a = angle + o.rotation + time * (0.025 + o.depth * 0.025);
+      const breathe = 1 + Math.sin(time * 0.7 + o.phase) * 0.055;
+      return { x: center.x + Math.cos(a) * o.rx * breathe, y: center.y + Math.sin(a) * o.ry * breathe };
     };
     const draw = (timestamp: number) => {
       if (hidden) return;
@@ -169,20 +177,22 @@ export default function OrbitalParticleField() {
 
       // Distant orbital layer.
       for (const o of orbits) {
-        const drift = reduced ? 0 : Math.sin(elapsed * 0.12 + o.phase) * 3;
-        const cx = o.x + ox * o.depth + drift;
-        const cy = o.y + oy * o.depth;
+        const center = orbitCenter(o, orbits.indexOf(o), reduced ? elapsed * 0.12 : elapsed);
+        const cx = center.x + ox * o.depth;
+        const cy = center.y + oy * o.depth;
+        const orbitTurn = reduced ? 0 : elapsed * (0.018 + o.depth * 0.022);
+        const breathe = reduced ? 1 : 1 + Math.sin(elapsed * 0.65 + o.phase) * 0.055;
         ctx.save();
         ctx.translate(cx, cy);
-        ctx.rotate(o.rotation + (reduced ? 0 : Math.sin(elapsed * 0.07 + o.phase) * 0.08));
+        ctx.rotate(o.rotation + orbitTurn + (reduced ? 0 : Math.sin(elapsed * 0.22 + o.phase) * 0.14));
         ctx.beginPath();
-        ctx.ellipse(0, 0, o.rx, o.ry, 0, o.start, o.start + o.arc);
+        ctx.ellipse(0, 0, o.rx * breathe, o.ry * breathe, 0, o.start + orbitTurn, o.start + o.arc + orbitTurn);
         ctx.strokeStyle = `rgba(121, 200, 200, ${o.depth * 0.16 * CONFIG.lineOpacity})`;
         ctx.lineWidth = o.depth > 0.65 ? 0.9 : 0.65;
         ctx.stroke();
         if (o.depth > 0.62) {
           ctx.beginPath();
-          ctx.ellipse(0, 0, o.rx * 0.88, o.ry * 0.88, 0, 0, Math.PI * 2);
+          ctx.ellipse(0, 0, o.rx * breathe * 0.88, o.ry * breathe * 0.88, 0, -orbitTurn, Math.PI * 2 - orbitTurn);
           ctx.strokeStyle = "rgba(218,123,147,0.10)";
           ctx.lineWidth = 0.6;
           ctx.stroke();
@@ -194,8 +204,14 @@ export default function OrbitalParticleField() {
       for (const t of triangles) {
         const cx = (t.points[0].x + t.points[1].x + t.points[2].x) / 3;
         const cy = (t.points[0].y + t.points[1].y + t.points[2].y) / 3;
-        const rot = reduced ? 0 : Math.sin(elapsed * 0.08 + t.phase) * 0.10 + elapsed * t.speed;
-        const pts = t.points.map((p) => rotatePoint(p, cx, cy, rot));
+        const rot = reduced ? 0 : Math.sin(elapsed * 0.48 + t.phase) * 0.22 + elapsed * t.speed * 2.4;
+        const floatX = reduced ? 0 : Math.sin(elapsed * 0.24 + t.phase) * Math.min(width, height) * 0.025;
+        const floatY = reduced ? 0 : Math.cos(elapsed * 0.2 + t.phase) * Math.min(width, height) * 0.022;
+        const pulseScale = reduced ? 1 : 1 + Math.sin(elapsed * 0.8 + t.phase) * 0.08;
+        const pts = t.points.map((p) => {
+          const rotated = rotatePoint(p, cx, cy, rot);
+          return { x: cx + (rotated.x - cx) * pulseScale + floatX, y: cy + (rotated.y - cy) * pulseScale + floatY };
+        });
         ctx.beginPath();
         ctx.moveTo(pts[0].x + ox * t.depth, pts[0].y + oy * t.depth);
         ctx.lineTo(pts[1].x + ox * t.depth, pts[1].y + oy * t.depth);
@@ -216,9 +232,12 @@ export default function OrbitalParticleField() {
       // Sparse constellations connect nearby orbit centers, not every object.
       for (let i = 0; i < orbits.length; i++) {
         const a = orbits[i];
-        const nearest = orbits[(i + 3) % orbits.length];
-        const ax = a.x + ox * a.depth; const ay = a.y + oy * a.depth;
-        const bx = nearest.x + ox * nearest.depth; const by = nearest.y + oy * nearest.depth;
+        const nearestIndex = (i + 3) % orbits.length;
+        const nearest = orbits[nearestIndex];
+        const aCenter = orbitCenter(a, i, reduced ? elapsed * 0.12 : elapsed);
+        const bCenter = orbitCenter(nearest, nearestIndex, reduced ? elapsed * 0.12 : elapsed);
+        const ax = aCenter.x + ox * a.depth; const ay = aCenter.y + oy * a.depth;
+        const bx = bCenter.x + ox * nearest.depth; const by = bCenter.y + oy * nearest.depth;
         const dist = Math.hypot(ax - bx, ay - by);
         if (dist < Math.min(width, height) * 0.5) {
           ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by);
@@ -237,7 +256,7 @@ export default function OrbitalParticleField() {
           p.modeTimer += dt;
           if (p.mode === 1 && p.modeTimer > 4 + p.phase % 3) { p.modeTimer = 0; p.direction *= -1; }
         }
-        const point = orbitPoint(orbit, p.angle + Math.sin(elapsed * 0.6 + p.phase) * 0.025);
+        const point = orbitPoint(orbit, p.angle + Math.sin(elapsed * 1.1 + p.phase) * 0.11, p.path % orbits.length, reduced ? elapsed * 0.12 : elapsed);
         const x = point.x + ox * p.depth;
         const y = point.y + oy * p.depth;
         p.trail.push({ x, y });
@@ -284,10 +303,11 @@ export default function OrbitalParticleField() {
       // Quiet node lights at selected orbital centers.
       for (let i = 0; i < pulseNodes.length; i++) {
         const n = pulseNodes[i];
-        const pulse = reduced ? 0.3 : Math.max(0, Math.sin(elapsed * 0.8 + i * 1.7));
-        if (pulse > 0.88) {
-          ctx.beginPath(); ctx.arc(n.x + ox * 0.3, n.y + oy * 0.3, 2 + pulse * 3, 0, Math.PI * 2);
-          ctx.strokeStyle = `rgba(121,200,200,${(pulse - 0.85) * 0.3})`; ctx.lineWidth = 0.8; ctx.stroke();
+        const center = orbitCenter(orbits[i], i, reduced ? elapsed * 0.12 : elapsed);
+        const pulse = reduced ? 0.3 : Math.max(0, Math.sin(elapsed * 1.25 + i * 1.7));
+        if (pulse > 0.72) {
+          ctx.beginPath(); ctx.arc(center.x + ox * 0.3, center.y + oy * 0.3, 2 + pulse * 4, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(121,200,200,${(pulse - 0.7) * 0.35})`; ctx.lineWidth = 0.8; ctx.stroke();
         }
       }
       raf = requestAnimationFrame(draw);
