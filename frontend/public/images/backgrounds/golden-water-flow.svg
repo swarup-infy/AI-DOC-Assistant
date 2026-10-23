@@ -7,10 +7,10 @@
 <g fill="none" stroke-linecap="round">
  <path d="M-180 810 C150 510 270 1050 610 740 S1040 210 1320 460 S1590 830 1810 510" stroke="#d4af37" stroke-opacity=".10" stroke-width="88" filter="url(#soft)"/>
  <path d="M-200 790 C150 490 240 1040 590 730 S1040 190 1320 450 S1590 820 1820 490" stroke="url(#silk)" stroke-width="86"/>
- <path d="M-210 770 C140 470 240 1020 590 710 S1040 170 1320 430 S1590 800 1830 470" stroke="url(#edge)" stroke-width="2.5"/>
- <path d="M-220 810 C140 510 240 1060 600 750 S1040 210 1320 470 S1590 840 1830 510" stroke="#fff4c2" stroke-opacity=".24" stroke-width="1.1"/>
+
+
  <path d="M-140 280 C190 530 300 60 640 280 S1040 710 1300 360 S1550 120 1760 280" stroke="url(#silk)" stroke-width="58"/>
- <path d="M-140 260 C190 510 300 40 640 260 S1040 690 1300 340 S1550 100 1760 260" stroke="url(#edge)" stroke-width="2"/>
- <path d="M-200 550 C140 300 340 800 660 530 S1090 90 1350 240 S1570 600 1800 330" stroke="url(#edge)" stroke-width="1.4" stroke-opacity=".7"/>
+
+
 </g>
 </svg>
