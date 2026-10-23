@@ -6,13 +6,10 @@ import {
   AlertCircle,
   ArrowRight,
   BrainCircuit,
-  Check,
   Eye,
   EyeOff,
   Lock,
   Mail,
-  ShieldCheck,
-  Sparkles,
   User,
 } from "lucide-react";
 
@@ -26,13 +23,6 @@ import {
   type RegisterFormData,
 } from "../../types/auth";
 import { registerUser } from "../../services/authService";
-
-const features = [
-  "Your files, together",
-  "Search across your documents",
-  "Ask questions in plain language",
-  "Privacy-minded by design",
-];
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -100,58 +90,29 @@ export default function RegisterPage() {
 
   return (
     <AuthLayout>
-      <div className="grid items-center gap-16 lg:grid-cols-[1.1fr_1fr]">
-        <section className="hidden lg:block">
-          <Logo size={56} />
-
-          <div className="mt-10 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-xs font-semibold text-primary">
-            <Sparkles size={14} />
-            Your workspace starts here
-          </div>
-
-          <h1 className="mt-6 max-w-xl text-6xl font-black leading-tight">
-            Bring your files
-            <span className="block bg-gradient-to-r from-[#F4F3F0] via-[#DA7B93] to-[#9BC8B5] bg-clip-text text-transparent">
-              into one place.
-            </span>
+      <div className="auth-content grid items-center gap-12 lg:grid-cols-[1fr_440px] xl:grid-cols-[1fr_460px]">
+        <section className="auth-intro hidden lg:block">
+          <Logo size={48} />
+          <p className="auth-eyebrow mt-14">A quieter way to work</p>
+          <h1 className="auth-headline mt-5">
+            Keep it
+            <span>all together.</span>
           </h1>
-
-          <p className="mt-6 max-w-lg text-lg leading-8 text-muted-foreground">
-            Keep your everyday documents together, find what you need, and ask questions without starting from scratch.
+          <p className="auth-tagline mt-5">
+            One thoughtful space for your documents.
           </p>
-
-          <div className="mt-12 space-y-5">
-            {features.map((item) => (
-              <div
-                key={item}
-                className="flex items-center gap-4 rounded-2xl border border-border bg-card/50 p-5 backdrop-blur"
-              >
-                <div className="rounded-xl bg-primary/10 p-3">
-                  <Check size={18} className="text-primary" />
-                </div>
-                <span className="font-medium">{item}</span>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-12 flex items-center gap-4 rounded-2xl border border-primary/20 bg-primary/5 p-6">
-            <ShieldCheck size={30} className="text-primary" />
-            <div>
-              <h3 className="font-semibold">Enterprise Security</h3>
-              <p className="text-sm text-muted-foreground">
-                AES-256 encryption with secure AI processing.
-              </p>
-            </div>
+          <div className="auth-title-rule mt-8" aria-hidden="true">
+            <span />
           </div>
         </section>
 
         <section className="flex justify-center">
-          <Card className="w-full max-w-md rounded-3xl bg-card/80 p-10 shadow-2xl backdrop-blur-xl">
+          <Card className="auth-panel w-full max-w-md rounded-[28px] p-7 shadow-2xl sm:p-9">
             <div className="mb-8 text-center">
               <Logo showWordmark={false} size={42} />
-              <h2 className="mt-6 text-4xl font-bold">Create Account</h2>
+              <h2 className="mt-5 text-3xl font-semibold tracking-tight sm:text-[2rem]">Create Account</h2>
               <p className="mt-3 text-muted-foreground">
-                Start using AI Document Assistant today.
+                A home for your documents.
               </p>
             </div>
 
