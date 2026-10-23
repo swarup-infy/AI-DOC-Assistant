@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.core.exceptions import add_exception_handlers
 from app.core.logger import logger
+from app.core.security_headers import SecurityHeadersMiddleware
 
 from app.routes.auth import router as auth_router
 from app.routes.chat import router as chat_router
@@ -79,6 +80,7 @@ app = FastAPI(
 
 
 add_exception_handlers(app)
+app.add_middleware(SecurityHeadersMiddleware)
 
 
 # ==========================================================
