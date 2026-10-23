@@ -28,7 +28,14 @@ export interface User {
 export interface LoginResponse {
   access_token: string;
   token_type: string;
-  user?: User;
+  user?: {
+    id: number;
+    username: string;
+    email: string;
+    is_active: boolean;
+    created_at?: string;
+    updated_at?: string;
+  };
 }
 
 //
@@ -144,6 +151,7 @@ export async function loginUser(
     "/auth/login",
     body,
     {
+      timeout: 90000,
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
