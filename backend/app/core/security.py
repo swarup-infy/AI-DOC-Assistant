@@ -19,7 +19,7 @@ from app.models.user import User
 # ==========================================================
 
 pwd_context = CryptContext(
-    schemes=["bcrypt"],
+    schemes=["argon2", "bcrypt"],
     deprecated="auto",
 )
 
