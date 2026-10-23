@@ -85,7 +85,7 @@ export default function OrbitalParticleField() {
           x: width * (0.07 + seeded(s * 7) * 0.86),
           y: height * (0.08 + seeded(s * 11) * 0.84),
           rx, ry, rotation: seeded(s * 13) * Math.PI,
-          speed: (0.035 + seeded(s * 17) * 0.06) * (i % 2 ? -1 : 1),
+          speed: (0.14 + seeded(s * 17) * 0.20) * (i % 2 ? -1 : 1),
           phase: seeded(s * 19) * Math.PI * 2,
           depth: 0.22 + seeded(s * 23) * 0.65,
           arc: seeded(s * 29) > 0.66 ? Math.PI * (1.25 + seeded(s * 31) * 0.6) : Math.PI * 2,
@@ -140,15 +140,15 @@ export default function OrbitalParticleField() {
       return { x: cx + x * Math.cos(angle) - y * Math.sin(angle), y: cy + x * Math.sin(angle) + y * Math.cos(angle) };
     };
     const orbitCenter = (o: Orbit, index: number, time: number): Point => ({
-      x: o.x + Math.sin(time * (0.16 + o.depth * 0.12) + o.phase) * Math.min(width, height) * 0.035
-        + Math.cos(time * 0.09 + index) * 10,
-      y: o.y + Math.cos(time * (0.13 + o.depth * 0.1) + o.phase) * Math.min(width, height) * 0.028
-        + Math.sin(time * 0.11 + index * 0.7) * 8,
+      x: o.x + Math.sin(time * (0.42 + o.depth * 0.28) + o.phase) * Math.min(width, height) * 0.035
+        + Math.cos(time * 0.24 + index) * 10,
+      y: o.y + Math.cos(time * (0.36 + o.depth * 0.24) + o.phase) * Math.min(width, height) * 0.028
+        + Math.sin(time * 0.28 + index * 0.7) * 8,
     });
     const orbitPoint = (o: Orbit, angle: number, index: number, time: number): Point => {
       const center = orbitCenter(o, index, time);
-      const a = angle + o.rotation + time * (0.025 + o.depth * 0.025);
-      const breathe = 1 + Math.sin(time * 0.7 + o.phase) * 0.055;
+      const a = angle + o.rotation + time * (0.12 + o.depth * 0.16);
+      const breathe = 1 + Math.sin(time * 1.45 + o.phase) * 0.075;
       return { x: center.x + Math.cos(a) * o.rx * breathe, y: center.y + Math.sin(a) * o.ry * breathe };
     };
     const draw = (timestamp: number) => {
@@ -178,11 +178,11 @@ export default function OrbitalParticleField() {
         const center = orbitCenter(o, orbits.indexOf(o), reduced ? elapsed * 0.12 : elapsed);
         const cx = center.x + ox * o.depth;
         const cy = center.y + oy * o.depth;
-        const orbitTurn = reduced ? 0 : elapsed * (0.018 + o.depth * 0.022);
-        const breathe = reduced ? 1 : 1 + Math.sin(elapsed * 0.65 + o.phase) * 0.055;
+        const orbitTurn = reduced ? 0 : elapsed * (0.10 + o.depth * 0.13);
+        const breathe = reduced ? 1 : 1 + Math.sin(elapsed * 1.45 + o.phase) * 0.075;
         ctx.save();
         ctx.translate(cx, cy);
-        ctx.rotate(o.rotation + orbitTurn + (reduced ? 0 : Math.sin(elapsed * 0.22 + o.phase) * 0.14));
+        ctx.rotate(o.rotation + orbitTurn + (reduced ? 0 : Math.sin(elapsed * 0.65 + o.phase) * 0.22));
         ctx.beginPath();
         ctx.ellipse(0, 0, o.rx * breathe, o.ry * breathe, 0, o.start + orbitTurn, o.start + o.arc + orbitTurn);
         ctx.strokeStyle = `rgba(121, 200, 200, ${o.depth * 0.16 * CONFIG.lineOpacity})`;
