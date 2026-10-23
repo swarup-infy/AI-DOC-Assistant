@@ -108,12 +108,12 @@ export default function TermsPage() {
             <span className="rounded-full border border-border px-3 py-1.5">
               Last updated: October 23, 2026
             </span>
-            <Link
-              to="/privacy"
+            <a
+              href="https://ai-doc-assistant-nu.vercel.app/privacy"
               className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1.5 transition hover:border-primary/50 hover:text-foreground"
             >
               Privacy Policy <ArrowUpRight size={13} />
-            </Link>
+            </a>
           </div>
         </header>
 
@@ -220,9 +220,9 @@ export default function TermsPage() {
           <h2 className="font-semibold text-foreground">Questions or concerns?</h2>
           <p className="mt-2">
             For information about how data is handled, read the{" "}
-            <Link to="/privacy" className="font-semibold text-primary underline underline-offset-4">
+            <a href="https://ai-doc-assistant-nu.vercel.app/privacy" className="font-semibold text-primary underline underline-offset-4">
               Privacy Policy
-            </Link>
+            </a>
             . For support, use the contact channel provided in the application.
           </p>
           <p className="mt-4 text-xs">
