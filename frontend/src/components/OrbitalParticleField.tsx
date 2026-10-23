@@ -20,10 +20,10 @@ const COLORS = {
   line: "rgba(121, 200, 200, 0.20)",
 };
 const CONFIG = {
-  particleCount: 48,
-  orbitCount: 15,
-  triangleCount: 10,
-  trailLength: 9,
+  particleCount: 36,
+  orbitCount: 12,
+  triangleCount: 8,
+  trailLength: 6,
   glow: 1,
   lineOpacity: 1,
   pointerParallax: 0.012,
@@ -95,7 +95,7 @@ export default function OrbitalParticleField() {
       const rect = canvas.getBoundingClientRect();
       width = Math.max(1, rect.width);
       height = Math.max(1, rect.height);
-      dpr = Math.min(window.devicePixelRatio || 1, 1.65);
+      dpr = Math.min(window.devicePixelRatio || 1, 1.35);
       canvas.width = Math.round(width * dpr);
       canvas.height = Math.round(height * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -142,7 +142,7 @@ export default function OrbitalParticleField() {
         phase: seeded(i + 503) * 12,
         pulse: seeded(i + 601) * Math.PI * 2,
         trail: [],
-        trailLimit: i % 7 === 0 ? CONFIG.trailLength + 5 : CONFIG.trailLength,
+        trailLimit: i % 7 === 0 ? CONFIG.trailLength + 3 : CONFIG.trailLength,
         mode: i % 7 === 0 ? 1 : 0,
         modeTimer: seeded(i + 701) * 5,
       }));
