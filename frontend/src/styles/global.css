@@ -285,12 +285,15 @@ ol {
   inset: 0;
   z-index: -1;
   pointer-events: none;
+  /* Ornamental, mandala-inspired linework instead of a technical grid. */
   background-image:
-    linear-gradient(to right, var(--border) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--border) 1px, transparent 1px);
-  background-size: 56px 56px;
-  mask-image: linear-gradient(to bottom, black, transparent 78%);
-  opacity: 0.3;
+    repeating-radial-gradient(circle at 12% 18%, transparent 0 18px, color-mix(in srgb, var(--primary) 9%, transparent) 19px 20px, transparent 21px 37px),
+    repeating-radial-gradient(circle at 88% 76%, transparent 0 24px, color-mix(in srgb, var(--secondary) 8%, transparent) 25px 26px, transparent 27px 48px),
+    radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--primary) 5%, transparent), transparent 65%);
+  background-size: 460px 460px, 560px 560px, 100% 100%;
+  background-position: -130px -110px, calc(100% + 180px) calc(100% + 160px), center;
+  background-repeat: no-repeat;
+  opacity: 0.72;
 }
 
 /* Reusable premium surfaces */
@@ -411,9 +414,12 @@ ol {
 }
 .auth-grid {
   background-image:
-    linear-gradient(to right, rgba(244,243,240,.07) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(244,243,240,.07) 1px, transparent 1px);
-  background-size: 56px 56px;
+    repeating-radial-gradient(circle at 18% 22%, transparent 0 20px, rgba(244,243,240,.09) 21px 22px, transparent 23px 42px),
+    repeating-radial-gradient(circle at 82% 78%, transparent 0 26px, rgba(218,123,147,.12) 27px 28px, transparent 29px 54px),
+    radial-gradient(ellipse at 50% 50%, rgba(121,200,200,.06), transparent 68%);
+  background-size: 500px 500px, 620px 620px, 100% 100%;
+  background-position: -150px -140px, calc(100% + 190px) calc(100% + 200px), center;
+  background-repeat: no-repeat;
   mask-image: linear-gradient(to bottom, black, transparent 88%);
 }
 .auth-panel {
