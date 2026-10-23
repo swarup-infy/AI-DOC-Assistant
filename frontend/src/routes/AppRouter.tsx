@@ -7,6 +7,7 @@ import { getAccessToken } from "../services/authService";
 
 const LoginPage = lazy(() => import("../pages/auth/LoginPage"));
 const RegisterPage = lazy(() => import("../pages/auth/RegisterPage"));
+const TermsPage = lazy(() => import("../pages/TermsPage"));
 const DashboardPage = lazy(() => import("../pages/dashboard/DashboardPage"));
 const DocumentsPage = lazy(() => import("../pages/documents/DocumentsPage"));
 const ChatPage = lazy(() => import("../pages/chat/ChatPage"));
@@ -19,6 +20,7 @@ interface AppRoute { path: string; element: ReactNode; }
 const publicRoutes: AppRoute[] = [
   { path: "/login", element: <LoginPage /> },
   { path: "/register", element: <RegisterPage /> },
+  { path: "/terms", element: <TermsPage /> },
 ];
 
 const protectedRoutes: AppRoute[] = [
