@@ -85,7 +85,7 @@ function Logo({
           y1="24"
           x2="29"
           y2="24"
-          stroke="#7C3AED"
+          stroke="#2E151B"
           strokeWidth="2"
           strokeLinecap="round"
         />
@@ -95,7 +95,7 @@ function Logo({
           y1="28"
           x2="27"
           y2="28"
-          stroke="#7C3AED"
+          stroke="#2E151B"
           strokeWidth="2"
           strokeLinecap="round"
         />
