@@ -19,6 +19,7 @@ import Input from "../../components/ui/Input";
 import Logo from "../../components/ui/Logo";
 import { loginSchema, type LoginFormData } from "../../types/auth";
 import { loginUser } from "../../services/authService";
+import api from "../../api/api";
 import { useAuth } from "../../hooks/useAuth";
 
 export default function LoginPage() {
@@ -30,6 +31,9 @@ export default function LoginPage() {
 
   useEffect(() => {
     setMounted(true);
+
+    // Wake a sleeping free-tier backend while the user enters credentials.
+    void api.get("/auth/", { timeout: 90000 }).catch(() => undefined);
   }, []);
 
   const {
@@ -46,11 +50,23 @@ export default function LoginPage() {
       setServerError("");
       try {
         const response = await loginUser(data);
-        await login(response.access_token);
+        const user = response.user
+          ? {
+              id: response.user.id,
+              name: response.user.username,
+              email: response.user.email,
+              created_at: response.user.created_at,
+            }
+          : undefined;
+
+        await login(response.access_token, user);
         navigate("/dashboard", { replace: true });
       } catch (error) {
+        const message = error instanceof Error ? error.message : "";
         setServerError(
-          error instanceof Error ? error.message : "Unable to sign in."
+          message.toLowerCase().includes("timeout")
+            ? "The server is taking longer than expected to wake up. Please wait a moment and try again."
+            : message || "Unable to sign in."
         );
       }
     },
