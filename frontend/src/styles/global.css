@@ -1012,3 +1012,96 @@ ol {
   border-color: rgba(100, 116, 139, 0.15);
   box-shadow: 0 9px 28px -19px rgba(100, 116, 139, 0.28);
 }
+
+
+/* FINAL LIGHT-MODE BACKGROUND + AUTH FORM FIXES.
+   Explicitly target actual page wrappers so app-level background utilities cannot cover the palette. */
+:root[data-theme="light"] html,
+:root[data-theme="light"] body,
+:root[data-theme="light"] #root {
+  min-height: 100%;
+  background-color: #f8fafc;
+}
+
+:root[data-theme="light"] body {
+  background-image:
+    radial-gradient(ellipse at 12% 12%, rgba(125, 211, 252, .34), transparent 42%),
+    radial-gradient(ellipse at 86% 18%, rgba(203, 213, 225, .52), transparent 42%),
+    linear-gradient(135deg, #ffffff 0%, #f4f8fc 52%, #e7edf3 100%);
+  background-attachment: fixed;
+}
+
+:root[data-theme="light"] .app-shell:not(.auth-shell) {
+  background-color: transparent !important;
+  background-image:
+    radial-gradient(ellipse at 12% 12%, rgba(125, 211, 252, .25), transparent 42%),
+    radial-gradient(ellipse at 86% 18%, rgba(203, 213, 225, .40), transparent 42%),
+    linear-gradient(135deg, rgba(255,255,255,.82) 0%, rgba(244,248,252,.78) 52%, rgba(231,237,243,.88) 100%) !important;
+  background-attachment: fixed;
+}
+
+:root[data-theme="light"] .auth-shell {
+  background-color: #f8fafc !important;
+  background-image:
+    radial-gradient(ellipse at 12% 14%, rgba(125, 211, 252, .42), transparent 43%),
+    radial-gradient(ellipse at 88% 76%, rgba(203, 213, 225, .48), transparent 44%),
+    radial-gradient(ellipse at 58% 96%, rgba(186, 230, 253, .28), transparent 40%),
+    linear-gradient(135deg, #ffffff 0%, #f4f8fc 48%, #e8eef4 100%) !important;
+}
+
+:root[data-theme="light"] .auth-grain {
+  background: transparent !important;
+  opacity: 1;
+}
+
+:root[data-theme="light"] .auth-panel {
+  background: rgba(255, 255, 255, .97) !important;
+  border: 1px solid rgba(148, 163, 184, .34) !important;
+  color: #171a2b !important;
+  box-shadow: 0 22px 65px rgba(71, 85, 105, .14), 0 0 32px rgba(125, 211, 252, .12) !important;
+}
+
+:root[data-theme="light"] .auth-panel h1,
+:root[data-theme="light"] .auth-panel h2,
+:root[data-theme="light"] .auth-panel h3,
+:root[data-theme="light"] .auth-panel label,
+:root[data-theme="light"] .auth-panel p,
+:root[data-theme="light"] .auth-panel span:not(.text-destructive),
+:root[data-theme="light"] .auth-intro h1,
+:root[data-theme="light"] .auth-intro p {
+  text-shadow: none;
+}
+
+:root[data-theme="light"] .auth-panel input:not([type="checkbox"]):not([type="radio"]) {
+  color: #171a2b !important;
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, .035);
+}
+
+:root[data-theme="light"] .auth-panel input:not([type="checkbox"]):focus {
+  border-color: #6366f1 !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, .13);
+}
+
+:root[data-theme="light"] .auth-panel input::placeholder {
+  color: #64748b !important;
+  opacity: 1 !important;
+}
+
+:root[data-theme="light"] .auth-panel .text-muted-foreground,
+:root[data-theme="light"] .auth-panel .text-foreground\/60,
+:root[data-theme="light"] .auth-panel .text-foreground\/70,
+:root[data-theme="light"] .auth-panel .text-foreground\/80 {
+  color: #475569 !important;
+}
+
+:root[data-theme="light"] .auth-panel .bg-muted\/30,
+:root[data-theme="light"] .auth-panel .bg-muted {
+  background-color: #f1f5f9 !important;
+}
+
+:root[data-theme="light"] .auth-panel .border-border,
+:root[data-theme="light"] .auth-panel .border-white\/10 {
+  border-color: #d5dce6 !important;
+}
