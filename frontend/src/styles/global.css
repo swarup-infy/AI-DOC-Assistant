@@ -1532,3 +1532,100 @@ ol {
     animation: none !important;
   }
 }
+
+
+/* Auth visual refinement: retain existing glow/orbit/triangle canvas, add gold liquid ribbons.
+   Do not hide OrbitalParticleField or remove its existing animation. */
+.auth-shell::after {
+  background-image:
+    url("/images/backgrounds/golden-water-flow.svg"),
+    url("/images/liquid-ribbon.svg") !important;
+  background-repeat: no-repeat, no-repeat !important;
+  background-size: 145% 130%, min(1240px, 100vw) auto !important;
+  background-position: 50% 50%, 67% 48% !important;
+  opacity: .98 !important;
+  mix-blend-mode: screen !important;
+  animation: auth-art-breathe 16s ease-in-out infinite alternate !important;
+}
+
+.auth-shell .auth-grain {
+  background:
+    linear-gradient(90deg, rgba(7,8,17,.62) 0%, rgba(7,8,17,.28) 43%, rgba(7,8,17,.08) 100%) !important;
+}
+
+/* Keep existing orbital particles and geometric motion visible above the water. */
+.auth-shell .auth-grain canvas,
+.auth-shell .auth-grain .orbital-particle-canvas {
+  display: block !important;
+  opacity: .92;
+  position: relative;
+  z-index: 2;
+}
+
+.auth-shell .auth-grain::before,
+.auth-shell .auth-grain::after {
+  z-index: 1;
+  opacity: .55;
+  background:
+    repeating-radial-gradient(ellipse at 48% 50%,
+      transparent 0 42px,
+      rgba(212,175,55,.07) 44px,
+      rgba(255,222,120,.42) 45px,
+      rgba(181,130,20,.15) 47px,
+      transparent 50px 78px),
+    linear-gradient(118deg,
+      transparent 27%,
+      rgba(212,175,55,.02) 35%,
+      rgba(255,222,120,.28) 43%,
+      rgba(255,248,200,.52) 44%,
+      rgba(184,134,11,.14) 46%,
+      transparent 55%) !important;
+  background-size: 135% 135%, 230% 100% !important;
+  mix-blend-mode: screen !important;
+  animation: gold-water-flow 19s ease-in-out infinite alternate !important;
+}
+
+.auth-shell .auth-grain::after {
+  opacity: .38;
+  animation: gold-water-flow-reverse 25s ease-in-out infinite alternate !important;
+}
+
+:root[data-theme="light"] .auth-shell::after {
+  background-image:
+    url("/images/backgrounds/golden-water-flow.svg"),
+    url("/images/liquid-ribbon.svg") !important;
+  opacity: .68 !important;
+  mix-blend-mode: multiply !important;
+}
+
+:root[data-theme="light"] .auth-shell .auth-grain {
+  background:
+    linear-gradient(90deg, rgba(255,253,246,.66) 0%, rgba(255,253,246,.28) 43%, rgba(255,253,246,.08) 100%) !important;
+}
+
+:root[data-theme="light"] .auth-shell .auth-grain canvas,
+:root[data-theme="light"] .auth-shell .auth-grain .orbital-particle-canvas {
+  opacity: .85;
+  mix-blend-mode: multiply;
+}
+
+:root[data-theme="light"] .auth-shell .auth-grain::before,
+:root[data-theme="light"] .auth-shell .auth-grain::after {
+  opacity: .42;
+  background:
+    repeating-radial-gradient(ellipse at 48% 50%,
+      transparent 0 42px,
+      rgba(161,118,15,.04) 44px,
+      rgba(202,160,35,.25) 45px,
+      rgba(255,220,105,.10) 47px,
+      transparent 50px 78px),
+    linear-gradient(118deg,
+      transparent 27%,
+      rgba(212,175,55,.02) 35%,
+      rgba(202,160,35,.14) 43%,
+      rgba(255,248,220,.72) 44%,
+      rgba(184,134,11,.10) 46%,
+      transparent 55%) !important;
+  background-size: 135% 135%, 230% 100% !important;
+  mix-blend-mode: multiply !important;
+}
