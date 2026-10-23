@@ -47,11 +47,11 @@ function Logo({
             <stop stopColor="var(--primary)" />
             <stop
               offset="0.55"
-              stopColor="#8B5CF6"
+              stopColor="#DA7B93"
             />
             <stop
               offset="1"
-              stopColor="#06B6D4"
+              stopColor="#376E6F"
             />
           </linearGradient>
         </defs>
@@ -74,7 +74,7 @@ function Logo({
         <path
           d="M27 13v6h6"
           fill="none"
-          stroke="#7C3AED"
+          stroke="#2E151B"
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
