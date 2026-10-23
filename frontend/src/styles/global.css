@@ -495,3 +495,173 @@ ol {
 @media (prefers-reduced-motion: reduce) {
   .auth-art-image { animation: none; }
 }
+
+
+/* Cinematic auth treatment: the animated liquid glass ribbon is the hero. */
+.auth-shell {
+  isolation: isolate;
+  background:
+    radial-gradient(ellipse at 14% 18%, rgba(77, 34, 90, .24), transparent 35rem),
+    radial-gradient(ellipse at 86% 82%, rgba(13, 100, 120, .16), transparent 34rem),
+    #070811;
+}
+.auth-shell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: .045;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.6'/%3E%3C/svg%3E");
+  mix-blend-mode: screen;
+}
+.auth-shell::after {
+  content: "";
+  position: absolute;
+  inset: -3% -2%;
+  z-index: 0;
+  pointer-events: none;
+  background-image: url("/images/liquid-ribbon.svg");
+  background-repeat: no-repeat;
+  background-size: min(1240px, 100vw) auto;
+  background-position: 67% 48%;
+  opacity: .92;
+  transform-origin: 68% 48%;
+  animation: auth-art-breathe 16s ease-in-out infinite alternate;
+}
+.auth-grain {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(90deg, rgba(7,8,17,.72) 0%, rgba(7,8,17,.34) 43%, rgba(7,8,17,.12) 100%);
+}
+.auth-content {
+  position: relative;
+  z-index: 2;
+}
+.auth-intro {
+  max-width: 560px;
+}
+.auth-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: .55rem;
+  color: #b9a5d5;
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  animation: auth-copy-in .7s .15s both;
+}
+.auth-headline {
+  max-width: 620px;
+  color: #f4f1f8;
+  font-size: clamp(2.8rem, 5.2vw, 5rem);
+  font-weight: 600;
+  letter-spacing: -.065em;
+  line-height: .99;
+  animation: auth-copy-in .8s .28s both;
+}
+.auth-headline span {
+  display: block;
+  margin-top: .12em;
+  background: linear-gradient(100deg, #e8c0ec 0%, #a7a8f2 44%, #71dce7 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+.auth-tagline {
+  color: rgba(239,236,247,.72);
+  font-size: 1rem;
+  letter-spacing: .005em;
+  animation: auth-copy-in .8s .45s both;
+}
+.auth-title-rule {
+  width: 10rem;
+  height: 1px;
+  overflow: hidden;
+  background: rgba(255,255,255,.12);
+}
+.auth-title-rule span {
+  display: block;
+  width: 42%;
+  height: 100%;
+  background: linear-gradient(90deg, #e68bd6, #68d9e8);
+  transform-origin: left;
+  animation: auth-rule-draw 1.3s .7s both, auth-rule-glide 5s 2s ease-in-out infinite;
+}
+.auth-panel {
+  position: relative;
+  z-index: 3;
+  border: 1px solid rgba(221,218,244,.16);
+  background: rgba(10, 13, 25, .82);
+  box-shadow: 0 30px 100px rgba(0,0,0,.36), inset 0 1px rgba(255,255,255,.035);
+  backdrop-filter: blur(24px) saturate(125%);
+}
+.auth-card-kicker {
+  color: rgba(195,184,221,.7);
+  font-size: .65rem;
+  font-weight: 700;
+  letter-spacing: .18em;
+}
+.auth-primary-button {
+  background: #d88ba9 !important;
+  color: #1c1020 !important;
+  box-shadow: none !important;
+  transition: background .2s ease, transform .2s ease;
+}
+.auth-primary-button:hover:not(:disabled) {
+  background: #e7a1bd !important;
+  transform: translateY(-1px);
+}
+@keyframes auth-art-breathe {
+  from { transform: translate3d(-.5%, .4%, 0) scale(1); }
+  to { transform: translate3d(.7%, -.5%, 0) scale(1.025); }
+}
+@keyframes auth-copy-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes auth-rule-draw {
+  from { width: 0; }
+  to { width: 100%; }
+}
+@keyframes auth-rule-glide {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(140%); }
+}
+@media (max-width: 1023px) {
+  .auth-shell::after {
+    inset: -1% -18%;
+    background-size: min(1100px, 145vw) auto;
+    background-position: 62% 4%;
+    opacity: .58;
+  }
+  .auth-grain {
+    background: linear-gradient(180deg, rgba(7,8,17,.24) 0%, rgba(7,8,17,.56) 38%, rgba(7,8,17,.84) 100%);
+  }
+}
+@media (max-width: 639px) {
+  .auth-shell::after {
+    background-size: 155vw auto;
+    background-position: 55% 0%;
+    opacity: .4;
+  }
+  .auth-panel {
+    background: rgba(10,13,25,.88);
+    backdrop-filter: blur(18px);
+  }
+  .auth-headline { font-size: clamp(2.3rem, 10vw, 3rem); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .auth-shell::after,
+  .auth-eyebrow,
+  .auth-headline,
+  .auth-tagline,
+  .auth-title-rule span {
+    animation: none !important;
+  }
+  .auth-headline, .auth-tagline, .auth-eyebrow { opacity: 1; transform: none; }
+  .auth-title-rule span { width: 100%; transform: none; }
+}
