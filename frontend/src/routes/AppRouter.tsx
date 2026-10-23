@@ -70,6 +70,9 @@ export default function AppRouter() {
       <Routes>
         <Route path="/" element={<RootRedirect />} />
         {publicRoutes.map((route) => <Route key={route.path} path={route.path} element={route.element} />)}
+        {/* Keep legal pages directly addressable on the public site. */}
+        <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/terms" element={<TermsPage />} />
         <Route element={<ProtectedRoute />}>
           {protectedRoutes.map((route) => <Route key={route.path} path={route.path} element={route.element} />)}
         </Route>
