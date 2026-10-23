@@ -5,7 +5,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   AlertCircle,
   ArrowRight,
-  BrainCircuit,
   Eye,
   EyeOff,
   Lock,
