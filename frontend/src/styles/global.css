@@ -437,3 +437,61 @@ ol {
   .auth-shell { background: linear-gradient(155deg, #2F4454 0%, #263945 62%, #1C3334 100%); }
   .auth-grid { background-size: 36px 36px; opacity: .5; }
 }
+
+
+/* Editorial authentication art: let one tactile image carry the page. */
+.auth-shell {
+  background:
+    radial-gradient(ellipse at 6% 9%, rgba(91, 49, 65, .48), transparent 34rem),
+    radial-gradient(ellipse at 90% 78%, rgba(48, 101, 105, .3), transparent 36rem),
+    linear-gradient(140deg, #2d3d49 0%, #263945 58%, #1c3334 100%);
+}
+.auth-grid {
+  opacity: .42;
+  background-size: 54px 54px;
+  mask-image: linear-gradient(to bottom, rgba(0,0,0,.7), transparent 72%);
+}
+.auth-art-frame {
+  position: relative;
+  width: min(100%, 520px);
+  margin-left: -1.5rem;
+}
+.auth-art-image {
+  width: 100%;
+  height: clamp(220px, 27vw, 320px);
+  object-fit: contain;
+  filter: saturate(.82) contrast(1.02);
+  transform: translateY(2px);
+  animation: sculpture-arrive 1s cubic-bezier(.2,.75,.2,1) both;
+}
+.auth-art-caption {
+  margin: -.15rem 0 0 2rem;
+  color: rgba(244,243,240,.62);
+  font-size: .78rem;
+  letter-spacing: .025em;
+}
+.auth-panel {
+  border: 1px solid rgba(244,243,240,.2);
+  background: rgba(28,51,52,.82);
+  box-shadow: 0 24px 70px rgba(11,22,30,.2);
+  backdrop-filter: blur(18px);
+}
+.auth-primary-button {
+  background: #DA7B93 !important;
+  color: #2E151B !important;
+  box-shadow: none !important;
+}
+.auth-primary-button:hover:not(:disabled) {
+  background: #e493a8 !important;
+  transform: translateY(-1px);
+}
+@keyframes sculpture-arrive {
+  from { opacity: 0; transform: translateY(12px) scale(.985); }
+  to { opacity: 1; transform: translateY(2px) scale(1); }
+}
+@media (max-width: 1279px) {
+  .auth-art-frame { margin-left: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .auth-art-image { animation: none; }
+}
