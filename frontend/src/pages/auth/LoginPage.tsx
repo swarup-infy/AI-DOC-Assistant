@@ -152,24 +152,7 @@ export default function LoginPage() {
   const [serverError, setServerError] =
 
     useState("");
-
-
-
-  const [mounted, setMounted] =
-
-    useState(false);
-
-
-
-  useEffect(() => {
-
-    setMounted(true);
-
-  }, []);
-
-
-
-  const {
+const {
 
     register,
 
@@ -269,15 +252,7 @@ export default function LoginPage() {
 
         <section
 
-          className={`hidden transition-all duration-700 ease-out lg:block ${
-
-            mounted
-
-              ? "translate-x-0 opacity-100"
-
-              : "-translate-x-6 opacity-0"
-
-          }`}
+          className="auth-enter-delay hidden transition-all duration-700 ease-out lg:block translate-x-0 opacity-100"
 
         >
 
@@ -415,15 +390,7 @@ export default function LoginPage() {
 
                   }}
 
-                  className={`flex items-center gap-4 transition-all duration-700 ease-out ${
-
-                    mounted
-
-                      ? "translate-y-0 opacity-100"
-
-                      : "translate-y-3 opacity-0"
-
-                  }`}
+                  className="auth-enter-delay flex items-center gap-4 transition-all duration-700 ease-out translate-y-0 opacity-100"
 
                 >
 
