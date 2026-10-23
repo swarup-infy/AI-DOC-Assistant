@@ -187,7 +187,15 @@ export default function LoginPage() {
             </p>
 
             <div className="mt-6 border-t border-white/10 pt-4 text-center text-xs text-muted-foreground">
-              Your documents stay organized in one place.
+              <p>Your documents stay organized in one place.</p>
+              <nav aria-label="Legal links" className="mt-3 flex items-center justify-center gap-4">
+                <Link to="/terms" className="underline underline-offset-4 transition hover:text-foreground">
+                  Terms &amp; Conditions
+                </Link>
+                <a href="https://ai-doc-assistant-nu.vercel.app/privacy" className="underline underline-offset-4 transition hover:text-foreground">
+                  Privacy Policy
+                </a>
+              </nav>
             </div>
           </Card>
         </section>
