@@ -1668,3 +1668,49 @@ ol {
     background-position: 50% 50%, 67% 48% !important;
   }
 }
+
+
+/* Final auth background matching the clean reference: broad ribbons only.
+   Remove hairline gold strokes and concentric pseudo-line overlays; keep the
+   existing orbital canvas for subtle circles/triangles and the purple ribbon. */
+.auth-shell::after {
+  background-image:
+    url("/images/backgrounds/golden-water-flow.svg"),
+    url("/images/liquid-ribbon.svg") !important;
+  background-repeat: no-repeat, no-repeat !important;
+  background-size: 150% 125%, min(1240px, 100vw) auto !important;
+  background-position: 52% 50%, 67% 48% !important;
+  opacity: .92 !important;
+  mix-blend-mode: screen !important;
+  animation: auth-art-breathe 16s ease-in-out infinite alternate !important;
+}
+.auth-shell .auth-grain::before,
+.auth-shell .auth-grain::after {
+  content: none !important;
+  display: none !important;
+  background: none !important;
+  animation: none !important;
+  opacity: 0 !important;
+}
+:root[data-theme="light"] .auth-shell::after {
+  opacity: .64 !important;
+  mix-blend-mode: multiply !important;
+}
+:root[data-theme="light"] .auth-shell .auth-grain::before,
+:root[data-theme="light"] .auth-shell .auth-grain::after {
+  content: none !important;
+  display: none !important;
+  background: none !important;
+  animation: none !important;
+  opacity: 0 !important;
+}
+.auth-shell .auth-grain canvas,
+.auth-shell .auth-grain .orbital-particle-canvas {
+  opacity: .16 !important;
+}
+@media (max-width: 767px) {
+  .auth-shell::after {
+    background-size: 180% 135%, 150vw auto !important;
+    background-position: 50% 50%, 67% 48% !important;
+  }
+}
