@@ -10,8 +10,8 @@
 :root {
   color-scheme: dark;
 
-  --font-display: "Space Grotesk", "Inter", sans-serif;
-  --font-sans: "Inter", "Segoe UI", sans-serif;
+  --font-display: "Aptos Display", "Segoe UI", system-ui, sans-serif;
+  --font-sans: Inter, "Segoe UI", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
   --bg: #2F4454;
