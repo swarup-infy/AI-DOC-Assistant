@@ -10,6 +10,17 @@ import "./styles/global.css";
 
 import App from "./App";
 
+// Apply the saved theme before React renders so every route (including
+// login, register, terms, and privacy) starts with the correct palette.
+const savedTheme = localStorage.getItem("theme");
+const initialTheme =
+  savedTheme === "light" || savedTheme === "dark"
+    ? savedTheme
+    : window.matchMedia("(prefers-color-scheme: dark)").matches
+      ? "dark"
+      : "light";
+document.documentElement.setAttribute("data-theme", initialTheme);
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
