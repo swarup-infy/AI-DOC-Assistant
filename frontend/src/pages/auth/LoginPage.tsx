@@ -444,15 +444,7 @@ const {
 
           <Card
 
-            className={`w-full max-w-lg rounded-3xl border border-border/80 bg-card/85 p-8 shadow-2xl shadow-black/20 backdrop-blur-2xl transition-all duration-700 ease-out sm:p-10 ${
-
-              mounted
-
-                ? "translate-y-0 opacity-100"
-
-                : "translate-y-4 opacity-0"
-
-            }`}
+            className="auth-enter-delay w-full max-w-lg rounded-3xl border border-border/80 bg-card/85 p-8 shadow-2xl shadow-black/20 backdrop-blur-2xl transition-all duration-700 ease-out sm:p-10 translate-y-0 opacity-100"
 
           >
 
