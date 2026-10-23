@@ -28,10 +28,10 @@ import {
 import { registerUser } from "../../services/authService";
 
 const features = [
-  "Secure cloud storage",
-  "AI powered document search",
-  "Chat with your documents",
-  "Enterprise-grade encryption",
+  "Your files, together",
+  "Search across your documents",
+  "Ask questions in plain language",
+  "Privacy-minded by design",
 ];
 
 export default function RegisterPage() {
@@ -106,19 +106,18 @@ export default function RegisterPage() {
 
           <div className="mt-10 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-xs font-semibold text-primary">
             <Sparkles size={14} />
-            Start for free
+            Your workspace starts here
           </div>
 
           <h1 className="mt-6 max-w-xl text-6xl font-black leading-tight">
-            Create your
+            Bring your files
             <span className="block bg-gradient-to-r from-[#F4F3F0] via-[#DA7B93] to-[#9BC8B5] bg-clip-text text-transparent">
-              AI Workspace
+              into one place.
             </span>
           </h1>
 
           <p className="mt-6 max-w-lg text-lg leading-8 text-muted-foreground">
-            Upload, organize, search and chat with your documents using
-            cutting-edge AI.
+            Keep your everyday documents together, find what you need, and ask questions without starting from scratch.
           </p>
 
           <div className="mt-12 space-y-5">
