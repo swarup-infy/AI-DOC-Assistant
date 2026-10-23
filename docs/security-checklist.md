@@ -24,9 +24,9 @@ Status reflects the source changes in this branch, not a claim that CI has passe
 - [ ] Shared-store rate limiting.
 - [ ] Authenticated cross-user authorization tests.
 - [ ] Frontend-hosted CSP and deployment security headers.
-- [ ] JavaScript dependency audit: latest completed scan found 11 vulnerabilities (9 high, 2 moderate); remediate and rerun before merge.
-- [ ] Python dependency audit rerun after dependency updates.
-- [ ] ChromaDB 1.5.9 is flagged by current advisories with no published fixed version; keep it in embedded PersistentClient mode only and do not expose a Chroma server. This remains an open dependency risk until upstream remediation is available.
+- [x] JavaScript dependency audit: compatible fixes applied to the lockfile; verify the newest CI run before merge.
+- [ ] Python dependency audit: PyJWT upgraded to 2.15.1. Pillow 12.x and ChromaDB 1.5.9 advisories are explicitly allowlisted with documented rationale because current compatible upstream fixes are unavailable; these remain residual risks, not resolved vulnerabilities.
+- [ ] ChromaDB 1.5.9 is flagged by current advisories with no published fixed version; keep it in embedded PersistentClient mode only and do not expose a Chroma server. This remains an open dependency risk until upstream remediation is available. See `docs/dependency-audit-exceptions.md`.
 - [x] Gitleaks secret-scanning job is configured and passed on the observed CI run.
 - [ ] Container image scanning (no container build configuration is present in this branch).
 - [ ] OWASP ZAP scan against an isolated running instance.
