@@ -154,7 +154,7 @@ export default function OrbitalParticleField() {
     const draw = (timestamp: number) => {
       if (hidden) return;
       if (!lastTime) lastTime = timestamp;
-      const dt = Math.min(0.035, (timestamp - lastTime) / 1000);
+      const dt = Math.min(0.05, Math.max(0, (timestamp - lastTime) / 1000));
       lastTime = timestamp;
       elapsed += dt;
       frameSamples++;
@@ -167,15 +167,17 @@ export default function OrbitalParticleField() {
       }
 
       ctx.clearRect(0, 0, width, height);
-      pointerX = lerp(pointerX, reduced ? 0 : targetX, 0.035);
-      pointerY = lerp(pointerY, reduced ? 0 : targetY, 0.035);
+      const pointerEase = 1 - Math.exp(-4.2 * dt);
+      pointerX = lerp(pointerX, reduced ? 0 : targetX, pointerEase);
+      pointerY = lerp(pointerY, reduced ? 0 : targetY, pointerEase);
       const motion = reduced ? 0.12 : 1;
       const ox = pointerX;
       const oy = pointerY;
 
       // Distant orbital layer.
-      for (const o of orbits) {
-        const center = orbitCenter(o, orbits.indexOf(o), reduced ? elapsed * 0.12 : elapsed);
+      for (let orbitIndex = 0; orbitIndex < orbits.length; orbitIndex++) {
+        const o = orbits[orbitIndex];
+        const center = orbitCenter(o, orbitIndex, reduced ? elapsed * 0.12 : elapsed);
         const cx = center.x + ox * o.depth;
         const cy = center.y + oy * o.depth;
         const orbitTurn = reduced ? 0 : elapsed * o.speed;
