@@ -1714,3 +1714,52 @@ ol {
     background-position: 50% 50%, 67% 48% !important;
   }
 }
+
+
+/* Final motion tuning: make the original geometry readable and move the broad
+   gold + purple ribbons independently, without bringing back hairline overlays. */
+.auth-shell::after {
+  background-size: 155% 132%, min(1320px, 108vw) auto !important;
+  animation: auth-ribbon-current 22s ease-in-out infinite alternate !important;
+  will-change: background-position, transform;
+}
+@keyframes auth-ribbon-current {
+  0% {
+    background-position: 44% 42%, 61% 44%;
+    transform: translate3d(-.6%, -.3%, 0) scale(1);
+  }
+  50% {
+    background-position: 52% 50%, 67% 48%;
+    transform: translate3d(.35%, .2%, 0) scale(1.012);
+  }
+  100% {
+    background-position: 60% 58%, 73% 53%;
+    transform: translate3d(.7%, .4%, 0) scale(1.025);
+  }
+}
+.auth-shell .auth-grain canvas,
+.auth-shell .auth-grain .orbital-particle-canvas {
+  opacity: .48 !important;
+  filter: drop-shadow(0 0 1px rgba(121, 200, 200, .16));
+}
+:root[data-theme="light"] .auth-shell .auth-grain canvas,
+:root[data-theme="light"] .auth-shell .auth-grain .orbital-particle-canvas {
+  opacity: .58 !important;
+  filter: drop-shadow(0 0 1px rgba(2, 132, 199, .22));
+}
+@media (max-width: 767px) {
+  .auth-shell .auth-grain canvas,
+  .auth-shell .auth-grain .orbital-particle-canvas {
+    opacity: .30 !important;
+  }
+  :root[data-theme="light"] .auth-shell .auth-grain canvas,
+  :root[data-theme="light"] .auth-shell .auth-grain .orbital-particle-canvas {
+    opacity: .42 !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .auth-shell::after {
+    animation: none !important;
+    will-change: auto;
+  }
+}
