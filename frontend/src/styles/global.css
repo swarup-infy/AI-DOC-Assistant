@@ -1631,11 +1631,15 @@ ol {
 }
 
 
-/* Auth background: preserve original glow and orbital canvas; remove decorative gold line overlays. */
+/* Auth background: remove thin decorative overlays but retain the broad gold water ribbon. */
 .auth-shell::after {
-  background-image: none !important;
-  opacity: 0 !important;
-  animation: none !important;
+  background-image: url("/images/backgrounds/golden-water-flow.svg") !important;
+  background-repeat: no-repeat !important;
+  background-size: 150% 125% !important;
+  background-position: 52% 50% !important;
+  opacity: .72 !important;
+  mix-blend-mode: screen !important;
+  animation: auth-art-breathe 16s ease-in-out infinite alternate !important;
 }
 .auth-shell .auth-grain::before,
 .auth-shell .auth-grain::after {
@@ -1644,10 +1648,12 @@ ol {
   animation: none !important;
   filter: none !important;
 }
-:root[data-theme="light"] .auth-shell::after,
+:root[data-theme="light"] .auth-shell::after {
+  opacity: .48 !important;
+  mix-blend-mode: multiply !important;
+}
 :root[data-theme="light"] .auth-shell .auth-grain::before,
 :root[data-theme="light"] .auth-shell .auth-grain::after {
-  background-image: none !important;
   background: none !important;
   opacity: 0 !important;
   animation: none !important;
