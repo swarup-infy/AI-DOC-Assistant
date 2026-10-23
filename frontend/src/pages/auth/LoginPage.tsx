@@ -260,7 +260,7 @@ export default function LoginPage() {
 
     <AuthLayout>
 
-      <div className="grid w-full items-center gap-y-14 lg:grid-cols-[3fr_2fr] lg:gap-x-16">
+      <div className="grid w-full items-center gap-y-12 lg:grid-cols-[3fr_2fr] lg:gap-x-16">
 
 
 
@@ -300,7 +300,7 @@ export default function LoginPage() {
 
             Your documents,
 
-            <span className="block bg-gradient-to-r from-primary via-fuchsia-500 to-cyan-400 bg-clip-text text-transparent">
+            <span className="block bg-gradient-to-r from-[#DA7B93] via-[#376E6F] to-[#8db5b1] bg-clip-text text-transparent">
 
               finally intelligent.
 
@@ -478,7 +478,7 @@ export default function LoginPage() {
 
           <Card
 
-            className={`w-full max-w-lg rounded-3xl bg-card/70 p-8 shadow-2xl shadow-black/10 backdrop-blur-2xl transition-all duration-700 ease-out sm:p-10 ${
+            className={`w-full max-w-lg rounded-3xl border border-border/80 bg-card/85 p-8 shadow-2xl shadow-black/20 backdrop-blur-2xl transition-all duration-700 ease-out sm:p-10 ${
 
               mounted
 
