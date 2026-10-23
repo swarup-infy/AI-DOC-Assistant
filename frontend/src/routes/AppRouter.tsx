@@ -21,8 +21,6 @@ interface AppRoute { path: string; element: ReactNode; }
 const publicRoutes: AppRoute[] = [
   { path: "/login", element: <LoginPage /> },
   { path: "/register", element: <RegisterPage /> },
-  { path: "/terms", element: <TermsPage /> },
-  { path: "/privacy", element: <PrivacyPage /> },
 ];
 
 const protectedRoutes: AppRoute[] = [
@@ -70,7 +68,7 @@ export default function AppRouter() {
       <Routes>
         <Route path="/" element={<RootRedirect />} />
         {publicRoutes.map((route) => <Route key={route.path} path={route.path} element={route.element} />)}
-        {/* Keep legal pages directly addressable on the public site. */}
+        {/* Legal pages are explicit public routes for reliable direct navigation. */}
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route element={<ProtectedRoute />}>
