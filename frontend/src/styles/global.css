@@ -980,3 +980,35 @@ ol {
 :root[data-theme="light"] .app-shell .bg-black\/40 {
   background-color: rgba(35, 39, 82, 0.06);
 }
+
+
+/* Light mode atmospheric background: ghost white, sky blue, and soft grey.
+   Foreground text and the existing pink button glow are intentionally untouched. */
+:root[data-theme="light"] body,
+:root[data-theme="light"] .app-shell:not(.auth-shell) {
+  background-color: #f8faff;
+  background-image:
+    radial-gradient(ellipse at 12% 10%, rgba(125, 211, 252, 0.22), transparent 40%),
+    radial-gradient(ellipse at 86% 18%, rgba(203, 213, 225, 0.34), transparent 38%),
+    radial-gradient(ellipse at 65% 92%, rgba(186, 230, 253, 0.22), transparent 45%),
+    linear-gradient(135deg, #ffffff 0%, #f3f7fc 46%, #e9eff5 100%);
+  background-attachment: fixed;
+}
+
+:root[data-theme="light"] .auth-shell {
+  background:
+    radial-gradient(ellipse at 12% 15%, rgba(125, 211, 252, 0.30), transparent 43%),
+    radial-gradient(ellipse at 88% 72%, rgba(203, 213, 225, 0.38), transparent 44%),
+    radial-gradient(ellipse at 58% 96%, rgba(186, 230, 253, 0.22), transparent 40%),
+    linear-gradient(135deg, #ffffff 0%, #f4f8fc 48%, #e9eef4 100%);
+}
+
+:root[data-theme="light"] .auth-grain {
+  background: linear-gradient(90deg, rgba(255,255,255,.62) 0%, rgba(245,249,253,.42) 50%, rgba(232,240,247,.28) 100%);
+}
+
+:root[data-theme="light"] .surface,
+:root[data-theme="light"] .bg-card {
+  border-color: rgba(100, 116, 139, 0.15);
+  box-shadow: 0 9px 28px -19px rgba(100, 116, 139, 0.28);
+}
