@@ -111,7 +111,7 @@ export default function RegisterPage() {
 
           <h1 className="mt-6 max-w-xl text-6xl font-black leading-tight">
             Create your
-            <span className="block bg-gradient-to-r from-primary via-fuchsia-500 to-cyan-400 bg-clip-text text-transparent">
+            <span className="block bg-gradient-to-r from-[#F4F3F0] via-[#DA7B93] to-[#9BC8B5] bg-clip-text text-transparent">
               AI Workspace
             </span>
           </h1>
@@ -270,7 +270,7 @@ export default function RegisterPage() {
                 type="submit"
                 loading={isSubmitting}
                 iconRight={<ArrowRight size={18} />}
-                className="h-12 w-full rounded-xl text-base font-semibold"
+                className="auth-primary-button h-12 w-full rounded-xl text-base font-semibold"
               >
                 Create Account
               </Button>
