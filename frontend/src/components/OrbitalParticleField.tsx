@@ -62,7 +62,6 @@ export default function OrbitalParticleField() {
     let triangles: Triangle[] = [];
     let particles: Particle[] = [];
     let reduced = reducedMotion.matches;
-    let pulseNodes: { x: number; y: number; strength: number }[] = [];
 
     const resize = () => {
       const rect = canvas.getBoundingClientRect();
@@ -119,7 +118,6 @@ export default function OrbitalParticleField() {
         mode: i % 7 === 0 ? 1 : 0,
         modeTimer: seeded(i + 701) * 5,
       }));
-      pulseNodes = orbits.map((o) => ({ x: o.x, y: o.y, strength: 0 }));
     };
 
     const onPointerMove = (event: PointerEvent) => {
@@ -301,8 +299,7 @@ export default function OrbitalParticleField() {
       }
 
       // Quiet node lights at selected orbital centers.
-      for (let i = 0; i < pulseNodes.length; i++) {
-        const n = pulseNodes[i];
+      for (let i = 0; i < orbits.length; i++) {
         const center = orbitCenter(orbits[i], i, reduced ? elapsed * 0.12 : elapsed);
         const pulse = reduced ? 0.3 : Math.max(0, Math.sin(elapsed * 1.25 + i * 1.7));
         if (pulse > 0.72) {
