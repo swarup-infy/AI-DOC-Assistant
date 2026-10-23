@@ -665,3 +665,57 @@ ol {
   .auth-headline, .auth-tagline, .auth-eyebrow { opacity: 1; transform: none; }
   .auth-title-rule span { width: 100%; transform: none; }
 }
+
+
+/* Quiet ambient particles — decorative only; existing layout and artwork stay unchanged. */
+.auth-grain::before,
+.auth-grain::after {
+  content: "";
+  position: absolute;
+  display: block;
+  pointer-events: none;
+  border-radius: 999px;
+  opacity: 0;
+  filter: blur(1px);
+  will-change: transform, opacity;
+}
+.auth-grain::before {
+  width: 5px;
+  height: 5px;
+  top: 22%;
+  left: 13%;
+  background: #e7a9e8;
+  box-shadow:
+    0 0 14px 3px rgba(231,169,232,.38),
+    23vw 19vh 0 -1px rgba(123,225,239,.8),
+    48vw -4vh 0 0 rgba(180,157,245,.65),
+    66vw 37vh 0 -1px rgba(123,225,239,.7),
+    79vw -10vh 0 0 rgba(231,169,232,.6);
+  animation: auth-particles-drift 18s ease-in-out 1s infinite alternate;
+}
+.auth-grain::after {
+  width: 3px;
+  height: 3px;
+  top: 72%;
+  left: 28%;
+  background: #7be0ec;
+  box-shadow:
+    17vw -29vh 0 0 rgba(123,225,239,.72),
+    37vw 8vh 0 0 rgba(231,169,232,.7),
+    52vw -20vh 0 -1px rgba(180,157,245,.8),
+    61vw 14vh 0 0 rgba(123,225,239,.6);
+  animation: auth-particles-drift 23s ease-in-out 2s infinite alternate-reverse;
+}
+@keyframes auth-particles-drift {
+  0% { opacity: 0; transform: translate3d(0, 12px, 0); }
+  18% { opacity: .48; }
+  55% { opacity: .22; transform: translate3d(10px, -13px, 0); }
+  100% { opacity: .4; transform: translate3d(-6px, -24px, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .auth-grain::before,
+  .auth-grain::after {
+    animation: none !important;
+    opacity: .22;
+  }
+}
