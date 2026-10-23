@@ -1263,3 +1263,74 @@ ol {
   .dashboard-product-stage { margin-top: 6px; }
   .dashboard-product-glass-card { padding: 14px; }
 }
+
+
+/* Rich ornamental fabric texture inspired by the supplied floral reference.
+   This replaces the thin concentric-only decoration with a layered pattern. */
+.app-shell::after,
+.aurora-bg::after {
+  background-image:
+    linear-gradient(135deg, color-mix(in srgb, var(--bg) 28%, transparent), color-mix(in srgb, var(--bg) 60%, transparent)),
+    url("/images/backgrounds/ornamental-rose.svg"),
+    radial-gradient(ellipse at 12% 10%, color-mix(in srgb, var(--primary) 16%, transparent), transparent 48%),
+    radial-gradient(ellipse at 90% 86%, color-mix(in srgb, var(--secondary) 14%, transparent), transparent 46%);
+  background-size: 100% 100%, 440px 440px, 100% 100%, 100% 100%;
+  background-position: center, 0 0, center, center;
+  background-repeat: no-repeat, repeat, no-repeat, no-repeat;
+  opacity: 0.34;
+  mix-blend-mode: soft-light;
+}
+
+:root[data-theme="light"] .app-shell::after,
+:root[data-theme="light"] .aurora-bg::after {
+  background-image:
+    linear-gradient(135deg, rgba(255,255,255,.58), rgba(241,245,249,.70)),
+    url("/images/backgrounds/ornamental-rose.svg"),
+    radial-gradient(ellipse at 12% 10%, rgba(186,230,253,.40), transparent 48%),
+    radial-gradient(ellipse at 90% 86%, rgba(203,213,225,.48), transparent 46%);
+  background-size: 100% 100%, 360px 360px, 100% 100%, 100% 100%;
+  background-position: center, 0 0, center, center;
+  background-repeat: no-repeat, repeat, no-repeat, no-repeat;
+  opacity: 0.28;
+  mix-blend-mode: multiply;
+}
+
+:root[data-theme="dark"] .app-shell::after,
+:root:not([data-theme="light"]) .app-shell::after,
+:root[data-theme="dark"] .aurora-bg::after,
+:root:not([data-theme="light"]) .aurora-bg::after {
+  opacity: 0.22;
+  mix-blend-mode: screen;
+}
+
+.auth-shell::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(135deg, rgba(15,23,42,.12), rgba(15,23,42,.42)),
+    url("/images/backgrounds/ornamental-rose.svg");
+  background-size: 100% 100%, 460px 460px;
+  background-position: center, center;
+  background-repeat: no-repeat, repeat;
+  opacity: .25;
+  mix-blend-mode: screen;
+}
+
+:root[data-theme="light"] .auth-shell::after {
+  background-image:
+    linear-gradient(135deg, rgba(255,255,255,.68), rgba(226,232,240,.76)),
+    url("/images/backgrounds/ornamental-rose.svg");
+  opacity: .30;
+  mix-blend-mode: multiply;
+}
+
+@media (max-width: 639px) {
+  .app-shell::after,
+  .aurora-bg::after,
+  .auth-shell::after {
+    background-size: 100% 100%, 270px 270px, 100% 100%, 100% 100%;
+  }
+}
