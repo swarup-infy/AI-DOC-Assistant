@@ -104,9 +104,9 @@ const features = [
 
     icon: Bot,
 
-    title: "Smart Document Analysis",
+    title: "Make sense of long files",
 
-    description: "Understand PDFs instantly.",
+    description: "Get to the important parts faster.",
 
   },
 
@@ -114,9 +114,9 @@ const features = [
 
     icon: FileSearch,
 
-    title: "Semantic Search",
+    title: "Find the detail you remember",
 
-    description: "Find information in seconds.",
+    description: "Search by meaning, not just filenames.",
 
   },
 
@@ -124,9 +124,9 @@ const features = [
 
     icon: BrainCircuit,
 
-    title: "Groq Powered AI Chat",
+    title: "Ask your documents",
 
-    description: "Lightning-fast intelligent responses.",
+    description: "Get a useful answer with its context.",
 
   },
 
@@ -290,7 +290,7 @@ export default function LoginPage() {
 
             <Sparkles className="h-4 w-4" />
 
-            Powered by Groq
+            A little less digging
 
           </div>
 
@@ -298,11 +298,11 @@ export default function LoginPage() {
 
           <h1 className="mt-6 max-w-xl text-5xl font-black leading-[1.05] tracking-tight text-foreground xl:text-6xl">
 
-            Your documents,
+            Your work,
 
             <span className="block bg-gradient-to-r from-[#F4F3F0] via-[#DA7B93] to-[#9BC8B5] bg-clip-text text-transparent">
 
-              finally intelligent.
+              a little clearer.
 
             </span>
 
@@ -312,11 +312,7 @@ export default function LoginPage() {
 
           <p className="mt-5 max-w-md text-lg leading-8 text-muted-foreground">
 
-            Upload, search, summarize, and chat
-
-            with your documents using powerful AI
-
-            — built for teams that move fast.
+            Keep your PDFs and notes in one place. Search for the detail you need, or ask a question when opening every file feels like too much.
 
           </p>
 
