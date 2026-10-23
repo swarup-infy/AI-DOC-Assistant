@@ -24,8 +24,10 @@ Status reflects the source changes in this branch, not a claim that CI has passe
 - [ ] Shared-store rate limiting.
 - [ ] Authenticated cross-user authorization tests.
 - [ ] Frontend-hosted CSP and deployment security headers.
-- [ ] Dependency audit findings reviewed and resolved.
-- [ ] Secret scanning and container image scanning.
+- [ ] JavaScript dependency audit: latest completed scan found 11 vulnerabilities (9 high, 2 moderate); remediate and rerun before merge.
+- [ ] Python dependency audit result reviewed; current run was still in progress at last check.
+- [x] Gitleaks secret-scanning job is configured and passed on the observed CI run.
+- [ ] Container image scanning (no container build configuration is present in this branch).
 - [ ] OWASP ZAP scan against an isolated running instance.
 - [ ] WCAG 2.2 AA manual review.
 - [ ] Production deployment and TLS configuration reviewed.
