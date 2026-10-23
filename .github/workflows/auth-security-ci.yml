@@ -18,7 +18,7 @@ jobs:
       run:
         working-directory: backend
     env:
-      DATABASE_URL: sqlite+pysqlite:///:memory:
+      DATABASE_URL: postgresql+psycopg2://test:test@127.0.0.1:5432/test_auth
       SECRET_KEY: unit-test-secret-key-that-is-long-enough-for-testing
       GROQ_API_KEY: unit-test-key-not-valid-for-provider
       ENVIRONMENT: testing
