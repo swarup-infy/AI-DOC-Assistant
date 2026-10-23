@@ -1105,3 +1105,34 @@ ol {
 :root[data-theme="light"] .auth-panel .border-white\/10 {
   border-color: #d5dce6 !important;
 }
+
+
+/* Light-mode animation styling: crisp sky-blue, violet and rose geometry on pale surfaces. */
+:root[data-theme="light"] .auth-grain .orbital-particle-canvas {
+  opacity: 0.82;
+  filter: saturate(1.18) contrast(1.06);
+  mix-blend-mode: multiply;
+}
+
+:root[data-theme="light"] .auth-grain .auth-particle {
+  background: #0284c7;
+  box-shadow: 0 0 12px 3px rgba(2, 132, 199, .28);
+}
+
+:root[data-theme="light"] .auth-grain .particle-two,
+:root[data-theme="light"] .auth-grain .particle-five {
+  background: #db2777;
+  box-shadow: 0 0 14px 3px rgba(219, 39, 119, .26);
+}
+
+:root[data-theme="light"] .auth-grain .particle-four,
+:root[data-theme="light"] .auth-grain .particle-eight {
+  background: #7c3aed;
+  box-shadow: 0 0 14px 3px rgba(124, 58, 237, .24);
+}
+
+@media (max-width: 639px) {
+  :root[data-theme="light"] .auth-grain .orbital-particle-canvas {
+    opacity: 0.72;
+  }
+}
