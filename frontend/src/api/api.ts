@@ -16,7 +16,7 @@ const USER_KEY = "user";
 
 const api: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 90000,
+  timeout: 30000,
   withCredentials: false,
   headers: {
     Accept: "application/json",
