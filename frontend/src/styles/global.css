@@ -1763,3 +1763,65 @@ ol {
     will-change: auto;
   }
 }
+
+
+/* Brighter, faster auth atmosphere: vivid geometry and quicker broad-ribbon motion. */
+.auth-shell::after {
+  animation: auth-ribbon-bright 10s ease-in-out infinite alternate !important;
+  filter: saturate(1.28) brightness(1.22) drop-shadow(0 0 18px rgba(212,175,55,.14));
+  opacity: 1 !important;
+}
+@keyframes auth-ribbon-bright {
+  0% {
+    background-position: 38% 38%, 56% 42%;
+    transform: translate3d(-1%, -.5%, 0) scale(1);
+    filter: saturate(1.18) brightness(1.08) drop-shadow(0 0 12px rgba(212,175,55,.12));
+  }
+  50% {
+    background-position: 53% 50%, 68% 48%;
+    transform: translate3d(.4%, .2%, 0) scale(1.025);
+    filter: saturate(1.42) brightness(1.25) drop-shadow(0 0 24px rgba(212,175,55,.24));
+  }
+  100% {
+    background-position: 65% 62%, 77% 56%;
+    transform: translate3d(1%, .5%, 0) scale(1.045);
+    filter: saturate(1.5) brightness(1.3) drop-shadow(0 0 28px rgba(212,175,55,.28));
+  }
+}
+.auth-shell .auth-grain canvas,
+.auth-shell .auth-grain .orbital-particle-canvas {
+  opacity: .76 !important;
+  filter:
+    brightness(1.55)
+    saturate(1.35)
+    drop-shadow(0 0 2px rgba(121,200,200,.32))
+    drop-shadow(0 0 8px rgba(218,123,147,.16)) !important;
+}
+:root[data-theme="light"] .auth-shell .auth-grain canvas,
+:root[data-theme="light"] .auth-shell .auth-grain .orbital-particle-canvas {
+  opacity: .82 !important;
+  filter:
+    brightness(1.3)
+    saturate(1.5)
+    drop-shadow(0 0 2px rgba(2,132,199,.32))
+    drop-shadow(0 0 8px rgba(124,58,237,.16)) !important;
+}
+:root[data-theme="light"] .auth-shell::after {
+  filter: saturate(1.2) brightness(1.08) !important;
+}
+@media (max-width: 767px) {
+  .auth-shell .auth-grain canvas,
+  .auth-shell .auth-grain .orbital-particle-canvas {
+    opacity: .48 !important;
+  }
+  :root[data-theme="light"] .auth-shell .auth-grain canvas,
+  :root[data-theme="light"] .auth-shell .auth-grain .orbital-particle-canvas {
+    opacity: .58 !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .auth-shell::after {
+    animation: none !important;
+    filter: none !important;
+  }
+}
