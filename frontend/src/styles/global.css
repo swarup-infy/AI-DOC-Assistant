@@ -1631,61 +1631,28 @@ ol {
 }
 
 
-/* Luxury auth polish: smoother reveal, quieter gold silk, lower overdraw. */
-.auth-intro,
-.auth-panel {
-  backface-visibility: hidden;
-  transform: translateZ(0);
-}
-.auth-intro {
-  transition-duration: 560ms !important;
-}
-.auth-panel {
-  transition-duration: 560ms !important;
-  box-shadow:
-    0 30px 90px rgba(0,0,0,.28),
-    0 0 0 1px rgba(255,255,255,.045),
-    0 0 40px rgba(212,175,55,.055) !important;
-}
+/* Auth background: preserve original glow and orbital canvas; remove decorative gold line overlays. */
 .auth-shell::after {
-  background-size: 125% 115%, min(1120px, 92vw) auto !important;
-  background-position: 48% 50%, 65% 50% !important;
-  opacity: .78 !important;
-  will-change: background-position, opacity;
+  background-image: none !important;
+  opacity: 0 !important;
+  animation: none !important;
 }
 .auth-shell .auth-grain::before,
 .auth-shell .auth-grain::after {
-  opacity: .30 !important;
-  filter: blur(2px);
-  will-change: transform;
+  background: none !important;
+  opacity: 0 !important;
+  animation: none !important;
+  filter: none !important;
 }
-.auth-shell .auth-grain::after {
-  opacity: .22 !important;
-}
-.auth-shell .orbital-particle-canvas {
-  opacity: .72;
-  contain: strict;
-}
-:root[data-theme="light"] .auth-shell::after {
-  opacity: .48 !important;
-}
+:root[data-theme="light"] .auth-shell::after,
 :root[data-theme="light"] .auth-shell .auth-grain::before,
 :root[data-theme="light"] .auth-shell .auth-grain::after {
-  opacity: .25 !important;
+  background-image: none !important;
+  background: none !important;
+  opacity: 0 !important;
+  animation: none !important;
 }
-@media (max-width: 767px) {
-  .auth-shell::after {
-    background-size: 160% 120%, 150vw auto !important;
-    background-position: center, 65% 45% !important;
-    opacity: .5 !important;
-  }
-  .auth-shell .orbital-particle-canvas { opacity: .55; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .auth-shell::after,
-  .auth-shell .auth-grain::before,
-  .auth-shell .auth-grain::after {
-    animation: none !important;
-    transition: none !important;
-  }
+.auth-shell .orbital-particle-canvas {
+  opacity: .82;
+  contain: strict;
 }
