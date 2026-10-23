@@ -1,16 +1,54 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice">
 <defs>
- <linearGradient id="silk" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#8f6b12" stop-opacity="0"/><stop offset=".28" stop-color="#b99328" stop-opacity=".08"/><stop offset=".43" stop-color="#f4d875" stop-opacity=".24"/><stop offset=".5" stop-color="#fff3bc" stop-opacity=".34"/><stop offset=".58" stop-color="#d4af37" stop-opacity=".18"/><stop offset=".82" stop-color="#8f6b12" stop-opacity=".06"/><stop offset="1" stop-color="#8f6b12" stop-opacity="0"/></linearGradient>
- <linearGradient id="edge" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#d4af37" stop-opacity="0"/><stop offset=".42" stop-color="#e6ca71" stop-opacity=".45"/><stop offset=".5" stop-color="#fff5cb" stop-opacity=".62"/><stop offset=".58" stop-color="#c9a227" stop-opacity=".25"/><stop offset="1" stop-color="#d4af37" stop-opacity="0"/></linearGradient>
- <filter id="soft"><feGaussianBlur stdDeviation="9"/></filter>
+  <linearGradient id="liquidGold" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#76500b" stop-opacity=".02"/>
+    <stop offset=".2" stop-color="#c69b24" stop-opacity=".22"/>
+    <stop offset=".36" stop-color="#f4d76c" stop-opacity=".48"/>
+    <stop offset=".47" stop-color="#fff4c2" stop-opacity=".7"/>
+    <stop offset=".54" stop-color="#d7ad31" stop-opacity=".52"/>
+    <stop offset=".7" stop-color="#a87912" stop-opacity=".28"/>
+    <stop offset=".88" stop-color="#f0d46b" stop-opacity=".16"/>
+    <stop offset="1" stop-color="#76500b" stop-opacity=".02"/>
+  </linearGradient>
+  <linearGradient id="goldGloss" x1="0" y1="0" x2="0.9" y2="1">
+    <stop offset="0" stop-color="#fff9d9" stop-opacity="0"/>
+    <stop offset=".42" stop-color="#fff5cb" stop-opacity=".8"/>
+    <stop offset=".5" stop-color="#fffdf0" stop-opacity=".95"/>
+    <stop offset=".58" stop-color="#f0cf5c" stop-opacity=".7"/>
+    <stop offset="1" stop-color="#fff9d9" stop-opacity="0"/>
+  </linearGradient>
+  <filter id="goldBloom" x="-25%" y="-25%" width="150%" height="150%">
+    <feGaussianBlur stdDeviation="16"/>
+  </filter>
 </defs>
-<g fill="none" stroke-linecap="round">
- <path d="M-180 810 C150 510 270 1050 610 740 S1040 210 1320 460 S1590 830 1810 510" stroke="#d4af37" stroke-opacity=".10" stroke-width="88" filter="url(#soft)"/>
- <path d="M-200 790 C150 490 240 1040 590 730 S1040 190 1320 450 S1590 820 1820 490" stroke="url(#silk)" stroke-width="86"/>
-
-
- <path d="M-140 280 C190 530 300 60 640 280 S1040 710 1300 360 S1550 120 1760 280" stroke="url(#silk)" stroke-width="58"/>
-
-
+<g fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Broad liquid-gold ribbon: soft body, luminous rim and reflective highlight -->
+  <path d="M-210 790 C115 495 252 1020 570 770 S1000 270 1270 420 S1570 830 1820 470"
+        stroke="#d8ad35" stroke-opacity=".23" stroke-width="150" filter="url(#goldBloom)"/>
+  <path d="M-220 785 C120 495 245 1010 575 755 S1000 250 1275 410 S1570 820 1820 465"
+        stroke="url(#liquidGold)" stroke-width="126"/>
+  <path d="M-220 758 C120 470 245 985 575 728 S1000 226 1275 385 S1570 795 1820 440"
+        stroke="url(#goldGloss)" stroke-width="7" opacity=".78"/>
+  <path d="M-220 815 C120 525 245 1040 575 783 S1000 280 1275 440 S1570 850 1820 495"
+        stroke="#b78316" stroke-opacity=".32" stroke-width="3"/>
+  <!-- Second wide, folded gold current to create a liquid-metal / logo-like contour -->
+  <path d="M-180 250 C155 510 292 60 610 270 S1010 680 1280 350 S1550 100 1770 270"
+        stroke="#c9a227" stroke-opacity=".14" stroke-width="104" filter="url(#goldBloom)"/>
+  <path d="M-180 250 C155 510 292 60 610 270 S1010 680 1280 350 S1550 100 1770 270"
+        stroke="url(#liquidGold)" stroke-width="88"/>
+  <path d="M-180 228 C155 488 292 38 610 248 S1010 658 1280 328 S1550 78 1770 248"
+        stroke="url(#goldGloss)" stroke-width="5" opacity=".72"/>
+  <!-- Reflective folds give the wide shapes a flowing, molten-gold finish -->
+  <path d="M-130 555 C160 340 330 770 645 540 S1080 145 1330 260 S1580 570 1790 345"
+        stroke="url(#goldGloss)" stroke-width="22" opacity=".34"/>
 </g>
+<style>
+  svg { animation: liquid-gold-drift 10s ease-in-out infinite alternate; transform-origin: center; }
+  @keyframes liquid-gold-drift {
+    0% { transform: translate3d(-1.2%, -.4%, 0) scale(1); }
+    50% { transform: translate3d(.4%, .3%, 0) scale(1.018); }
+    100% { transform: translate3d(1.2%, .7%, 0) scale(1.03); }
+  }
+  @media (prefers-reduced-motion: reduce) { svg { animation: none; } }
+</style>
 </svg>
