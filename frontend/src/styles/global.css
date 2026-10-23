@@ -1,4 +1,3 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
 @import "tailwindcss";
 
 /* ========================================================================== 
@@ -10,44 +9,44 @@
 :root {
   color-scheme: dark;
 
-  --font-display: "Space Grotesk", "Inter", sans-serif;
-  --font-sans: "Inter", "Segoe UI", sans-serif;
+  --font-display: "Aptos Display", "Segoe UI", system-ui, sans-serif;
+  --font-sans: Inter, "Segoe UI", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  --bg: #070812;
-  --bg-elevated: #0b0d18;
-  --surface: #101321;
-  --surface-2: #15192a;
-  --surface-3: #1b2033;
-  --card: rgba(15, 18, 32, 0.88);
-  --card-solid: #101321;
-  --muted: #171b2d;
-  --accent: #211b3d;
+  --bg: #2F4454;
+  --bg-elevated: #263945;
+  --surface: #263945;
+  --surface-2: #243641;
+  --surface-3: #1C3334;
+  --card: rgba(28, 51, 52, 0.88);
+  --card-solid: #263945;
+  --muted: #263945;
+  --accent: #2E151B;
 
-  --fg: #f7f7fb;
-  --fg-muted: #a5a9c1;
-  --fg-dim: #70758f;
+  --fg: #F4F3F0;
+  --fg-muted: #B7C1C8;
+  --fg-dim: #93A1AA;
 
-  --border: rgba(255, 255, 255, 0.085);
-  --border-strong: rgba(255, 255, 255, 0.15);
-  --ring: rgba(124, 92, 255, 0.55);
+  --border: rgba(244, 243, 240, 0.18);
+  --border-strong: rgba(244, 243, 240, 0.28);
+  --ring: rgba(218, 123, 147, 0.55);
 
-  --primary: #7c5cff;
-  --primary-hover: #8d72ff;
-  --primary-active: #6848e8;
+  --primary: #DA7B93;
+  --primary-hover: #e493a8;
+  --primary-active: #b95f79;
   --primary-fg: #ffffff;
 
-  --secondary: #22d3ee;
-  --secondary-hover: #46def1;
-  --secondary-fg: #061017;
+  --secondary: #376E6F;
+  --secondary-hover: #4f8585;
+  --secondary-fg: #ffffff;
 
   --success: #34d399;
   --warning: #fbbf24;
   --danger: #fb7185;
   --info: #38bdf8;
 
-  --gradient-brand: linear-gradient(135deg, #6d4aff 0%, #8b6cff 45%, #22d3ee 100%);
-  --gradient-text: linear-gradient(90deg, #ffffff 0%, #c4b5fd 52%, #67e8f9 100%);
+  --gradient-brand: linear-gradient(135deg, #2E151B 0%, #DA7B93 48%, #376E6F 100%);
+  --gradient-text: linear-gradient(90deg, #F4F3F0 0%, #DA7B93 52%, #9BC8B5 100%);
 
   --radius-xs: 6px;
   --radius-sm: 10px;
@@ -61,7 +60,7 @@
   --shadow-sm: 0 6px 18px -8px rgba(0, 0, 0, 0.5);
   --shadow-md: 0 18px 45px -18px rgba(0, 0, 0, 0.65);
   --shadow-lg: 0 30px 80px -25px rgba(0, 0, 0, 0.75);
-  --shadow-glow: 0 0 0 1px rgba(124, 92, 255, 0.25), 0 14px 38px -12px rgba(124, 92, 255, 0.4);
+  --shadow-glow: 0 0 0 1px rgba(218, 123, 147, 0.18), 0 14px 38px -12px rgba(55, 110, 111, 0.25);
 
   --ease-standard: cubic-bezier(0.2, 0.75, 0.2, 1);
   --ease-spring: cubic-bezier(0.34, 1.35, 0.64, 1);
@@ -85,7 +84,7 @@
   --card: rgba(255, 255, 255, 0.92);
   --card-solid: #ffffff;
   --muted: #f1f2f7;
-  --accent: #eee9ff;
+  --accent: #F3E7EA;
 
   --fg: #151722;
   --fg-muted: #5f6479;
@@ -93,15 +92,15 @@
 
   --border: rgba(15, 23, 42, 0.09);
   --border-strong: rgba(15, 23, 42, 0.15);
-  --ring: rgba(109, 40, 217, 0.32);
+  --ring: rgba(46, 21, 27, 0.32);
 
-  --primary: #6d28d9;
-  --primary-hover: #5b21b6;
-  --primary-active: #4c1d95;
+  --primary: #2E151B;
+  --primary-hover: #1C3334;
+  --primary-active: #1C3334;
   --primary-fg: #ffffff;
 
-  --secondary: #0891b2;
-  --secondary-hover: #0e7490;
+  --secondary: #376E6F;
+  --secondary-hover: #1C3334;
   --secondary-fg: #ffffff;
 
   --success: #16a34a;
@@ -109,14 +108,14 @@
   --danger: #e11d48;
   --info: #0284c7;
 
-  --gradient-brand: linear-gradient(135deg, #6d28d9 0%, #8b5cf6 45%, #0891b2 100%);
-  --gradient-text: linear-gradient(90deg, #171722 0%, #6d28d9 55%, #0891b2 100%);
+  --gradient-brand: linear-gradient(135deg, #2E151B 0%, #DA7B93 45%, #376E6F 100%);
+  --gradient-text: linear-gradient(90deg, #171722 0%, #2E151B 55%, #376E6F 100%);
 
   --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
   --shadow-sm: 0 6px 18px -10px rgba(15, 23, 42, 0.12);
   --shadow-md: 0 18px 45px -18px rgba(15, 23, 42, 0.16);
   --shadow-lg: 0 30px 70px -24px rgba(15, 23, 42, 0.2);
-  --shadow-glow: 0 0 0 1px rgba(109, 40, 217, 0.16), 0 14px 38px -12px rgba(109, 40, 217, 0.18);
+  --shadow-glow: 0 0 0 1px rgba(46, 21, 27, 0.12), 0 14px 38px -12px rgba(55, 110, 111, 0.16);
 }
 
 @theme inline {
@@ -388,4 +387,53 @@ ol {
   :root {
     --header-h: 64px;
   }
+}
+
+
+/* Authentication visual system: slate, burgundy, dusty rose and muted teal. */
+.auth-shell {
+  isolation: isolate;
+  background:
+    radial-gradient(ellipse at 8% 8%, rgba(46, 21, 27, 0.72), transparent 34rem),
+    radial-gradient(ellipse at 92% 84%, rgba(55, 110, 111, 0.34), transparent 38rem),
+    linear-gradient(135deg, #2F4454 0%, #263945 55%, #1C3334 100%);
+}
+.auth-shell::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.075;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.6'/%3E%3C/svg%3E");
+  mix-blend-mode: soft-light;
+}
+.auth-grid {
+  background-image:
+    linear-gradient(to right, rgba(244,243,240,.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(244,243,240,.07) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: linear-gradient(to bottom, black, transparent 88%);
+}
+.auth-panel {
+  border: 1px solid rgba(244,243,240,.18);
+  background: rgba(28,51,52,.72);
+  box-shadow: 0 24px 72px rgba(0,0,0,.22);
+  backdrop-filter: blur(16px);
+}
+.auth-primary-button {
+  background: #DA7B93 !important;
+  color: #2E151B !important;
+  box-shadow: none !important;
+}
+.auth-primary-button:hover { background: #e493a8 !important; }
+.auth-display-gradient {
+  background: linear-gradient(90deg, #F4F3F0 0%, #DA7B93 54%, #9BC8B5 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+@media (max-width: 767px) {
+  .auth-shell { background: linear-gradient(155deg, #2F4454 0%, #263945 62%, #1C3334 100%); }
+  .auth-grid { background-size: 36px 36px; opacity: .5; }
 }
