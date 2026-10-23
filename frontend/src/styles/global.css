@@ -1384,3 +1384,151 @@ ol {
     background-size: 100% 100%, 230px 230px, 340px 340px;
   }
 }
+
+
+/* Login + registration: remove all ornamental/grid artwork and use flowing gold water.
+   Scoped exclusively to .auth-shell so other app pages keep their geometric backgrounds. */
+.auth-shell {
+  background:
+    radial-gradient(ellipse at 18% 18%, rgba(212, 175, 55, .13), transparent 38%),
+    radial-gradient(ellipse at 82% 78%, rgba(245, 208, 95, .10), transparent 42%),
+    linear-gradient(135deg, #101820 0%, #18232b 48%, #0b1218 100%) !important;
+  isolation: isolate;
+}
+
+.auth-shell::before {
+  opacity: 0 !important;
+  background-image: none !important;
+}
+
+.auth-shell::after {
+  inset: 0 !important;
+  background-color: transparent !important;
+  background-image:
+    radial-gradient(ellipse at 15% 105%, rgba(202, 160, 35, .14), transparent 42%),
+    radial-gradient(ellipse at 90% -5%, rgba(255, 220, 105, .12), transparent 36%) !important;
+  background-size: 100% 100% !important;
+  background-repeat: no-repeat !important;
+  opacity: 1 !important;
+  mix-blend-mode: normal !important;
+  animation: none !important;
+}
+
+.auth-shell .auth-grain {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  background: transparent !important;
+}
+
+.auth-shell .auth-grain canvas,
+.auth-shell .auth-grain .orbital-particle-canvas,
+.auth-shell .auth-grain .auth-particles,
+.auth-shell .auth-grain .auth-particle {
+  display: none !important;
+}
+
+.auth-shell .auth-grain::before,
+.auth-shell .auth-grain::after {
+  content: "";
+  position: absolute;
+  display: block;
+  inset: -35% -20%;
+  width: 140%;
+  height: 170%;
+  border-radius: 42%;
+  pointer-events: none;
+  opacity: .72;
+  filter: blur(1px);
+  will-change: transform, background-position;
+  background:
+    repeating-radial-gradient(ellipse at 48% 50%,
+      transparent 0 34px,
+      rgba(250, 204, 75, .08) 36px,
+      rgba(255, 222, 120, .44) 37px,
+      rgba(181, 130, 20, .18) 39px,
+      transparent 42px 70px),
+    linear-gradient(118deg,
+      transparent 26%,
+      rgba(212, 175, 55, .02) 35%,
+      rgba(255, 222, 120, .26) 43%,
+      rgba(255, 248, 200, .48) 44%,
+      rgba(184, 134, 11, .12) 46%,
+      transparent 55%);
+  background-size: 125% 130%, 220% 100%;
+  animation: gold-water-flow 19s ease-in-out infinite alternate;
+  mask-image: radial-gradient(ellipse at 50% 50%, black 8%, rgba(0,0,0,.75) 48%, transparent 78%);
+}
+
+.auth-shell .auth-grain::after {
+  inset: -28% -35%;
+  opacity: .5;
+  transform: rotate(-18deg);
+  background:
+    repeating-radial-gradient(ellipse at 58% 42%,
+      transparent 0 46px,
+      rgba(212, 175, 55, .08) 48px,
+      rgba(255, 232, 150, .40) 49px,
+      rgba(184, 134, 11, .12) 51px,
+      transparent 54px 88px),
+    linear-gradient(72deg,
+      transparent 34%,
+      rgba(212, 175, 55, .04) 42%,
+      rgba(255, 230, 145, .30) 49%,
+      rgba(255, 248, 210, .40) 50%,
+      transparent 58%);
+  background-size: 145% 140%, 240% 100%;
+  animation: gold-water-flow-reverse 25s ease-in-out infinite alternate;
+}
+
+:root[data-theme="light"] .auth-shell {
+  background:
+    radial-gradient(ellipse at 18% 18%, rgba(212, 175, 55, .16), transparent 38%),
+    radial-gradient(ellipse at 82% 78%, rgba(245, 208, 95, .15), transparent 42%),
+    linear-gradient(135deg, #fffdf6 0%, #f6f1df 48%, #edf2f5 100%) !important;
+}
+
+:root[data-theme="light"] .auth-shell::after {
+  background-image:
+    radial-gradient(ellipse at 15% 105%, rgba(202, 160, 35, .10), transparent 42%),
+    radial-gradient(ellipse at 90% -5%, rgba(255, 220, 105, .15), transparent 36%) !important;
+  mix-blend-mode: normal !important;
+}
+
+:root[data-theme="light"] .auth-shell .auth-grain::before,
+:root[data-theme="light"] .auth-shell .auth-grain::after {
+  opacity: .5;
+  background:
+    repeating-radial-gradient(ellipse at 48% 50%,
+      transparent 0 34px,
+      rgba(161, 118, 15, .05) 36px,
+      rgba(202, 160, 35, .28) 37px,
+      rgba(255, 220, 105, .12) 39px,
+      transparent 42px 70px),
+    linear-gradient(118deg,
+      transparent 26%,
+      rgba(212, 175, 55, .02) 35%,
+      rgba(202, 160, 35, .16) 43%,
+      rgba(255, 248, 220, .72) 44%,
+      rgba(184, 134, 11, .10) 46%,
+      transparent 55%);
+  background-size: 125% 130%, 220% 100%;
+  mix-blend-mode: multiply;
+}
+
+@keyframes gold-water-flow {
+  0% { transform: translate3d(-4%, -2%, 0) rotate(-8deg) scale(1); background-position: 0% 20%, 0% 50%; }
+  50% { transform: translate3d(2%, 1%, 0) rotate(-2deg) scale(1.04); background-position: 55% 48%, 65% 50%; }
+  100% { transform: translate3d(5%, 3%, 0) rotate(6deg) scale(1.08); background-position: 100% 75%, 100% 50%; }
+}
+@keyframes gold-water-flow-reverse {
+  0% { transform: translate3d(4%, 2%, 0) rotate(-22deg) scale(1.02); background-position: 100% 0%, 100% 50%; }
+  100% { transform: translate3d(-4%, -2%, 0) rotate(-10deg) scale(1.1); background-position: 0% 100%, 0% 50%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .auth-shell .auth-grain::before,
+  .auth-shell .auth-grain::after {
+    animation: none !important;
+  }
+}
