@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 700" fill="none">
+  <defs>
+    <linearGradient id="shell" x1="175" y1="130" x2="700" y2="590" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#DDA2C4"/>
+      <stop offset=".28" stop-color="#A477B1"/>
+      <stop offset=".62" stop-color="#477F9A"/>
+      <stop offset="1" stop-color="#203C58"/>
+    </linearGradient>
+    <linearGradient id="inner" x1="310" y1="250" x2="625" y2="520" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F2B1AE"/>
+      <stop offset=".4" stop-color="#966C9B"/>
+      <stop offset="1" stop-color="#28506A"/>
+    </linearGradient>
+    <linearGradient id="rim" x1="250" y1="190" x2="650" y2="570" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F3C7DD"/>
+      <stop offset=".38" stop-color="#B48DBE"/>
+      <stop offset=".72" stop-color="#4D8BA6"/>
+      <stop offset="1" stop-color="#172F49"/>
+    </linearGradient>
+    <radialGradient id="light" cx="0" cy="0" r="1" gradientTransform="matrix(255 250 -260 265 550 260)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFB7A3" stop-opacity=".95"/>
+      <stop offset="1" stop-color="#FFB7A3" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="shadow" x="60" y="40" width="800" height="650" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="18"/>
+    </filter>
+  </defs>
+  <ellipse cx="456" cy="610" rx="300" ry="42" fill="#081625" opacity=".65" filter="url(#shadow)"/>
+  <ellipse cx="455" cy="596" rx="286" ry="35" fill="#0A1728" stroke="#41546B" stroke-width="2"/>
+  <ellipse cx="455" cy="590" rx="245" ry="21" fill="#18283A"/>
+  <path d="M198 303C177 226 238 160 319 177C365 187 385 224 423 229C468 235 511 188 563 177C633 162 690 215 677 281C670 320 644 341 650 382C656 428 711 463 674 513C641 558 582 531 540 541C490 552 465 591 411 570C366 552 360 518 318 502C274 485 211 493 194 447C176 399 221 365 198 303Z" fill="url(#shell)" opacity=".98"/>
+  <path d="M198 303C177 226 238 160 319 177C365 187 385 224 423 229C468 235 511 188 563 177C633 162 690 215 677 281C670 320 644 341 650 382C656 428 711 463 674 513C641 558 582 531 540 541C490 552 465 591 411 570C366 552 360 518 318 502C274 485 211 493 194 447C176 399 221 365 198 303Z" fill="url(#light)"/>
+  <path d="M245 301C232 253 271 222 316 234C355 245 376 279 420 280C467 281 493 238 540 226C584 215 620 245 614 282C609 313 579 338 586 374C593 412 635 438 611 469C587 500 547 475 511 487C471 500 452 530 414 510C383 493 367 462 330 451C296 441 251 451 240 419C227 385 256 344 245 301Z" fill="#17263B" opacity=".94"/>
+  <path d="M198 303C177 226 238 160 319 177C365 187 385 224 423 229C468 235 511 188 563 177C633 162 690 215 677 281C670 320 644 341 650 382C656 428 711 463 674 513C641 558 582 531 540 541C490 552 465 591 411 570C366 552 360 518 318 502C274 485 211 493 194 447C176 399 221 365 198 303Z" stroke="url(#rim)" stroke-width="11" stroke-linejoin="round"/>
+  <path d="M218 275C222 219 273 190 318 207C363 224 388 251 424 253C470 256 509 211 558 202C604 193 651 225 652 263" stroke="#FFE2EB" stroke-opacity=".55" stroke-width="5" stroke-linecap="round"/>
+  <path d="M229 452C267 478 300 464 329 473C373 487 388 525 424 537" stroke="#82B8D0" stroke-opacity=".48" stroke-width="4" stroke-linecap="round"/>
+</svg>
