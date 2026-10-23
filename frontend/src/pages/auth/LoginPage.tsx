@@ -322,67 +322,18 @@ export default function LoginPage() {
 
 
 
-          <div className="pointer-events-none mt-10 hidden max-w-md xl:block">
-
-            <svg
-
-              viewBox="0 0 420 220"
-
-              fill="none"
-
-              className="w-full text-primary"
-
-            >
-
-              <g
-
-                opacity="0.25"
-
-                stroke="currentColor"
-
-                strokeWidth="1"
-
-              >
-
-                <line x1="60" y1="60" x2="180" y2="40" />
-
-                <line x1="180" y1="40" x2="300" y2="70" />
-
-                <line x1="300" y1="70" x2="360" y2="150" />
-
-                <line x1="180" y1="40" x2="150" y2="150" />
-
-                <line x1="150" y1="150" x2="60" y2="60" />
-
-                <line x1="150" y1="150" x2="300" y2="70" />
-
-                <line x1="150" y1="150" x2="260" y2="180" />
-
-                <line x1="260" y1="180" x2="360" y2="150" />
-
-              </g>
-
-
-
-              <g fill="currentColor">
-
-                <circle cx="60" cy="60" r="6" opacity="0.9" />
-
-                <circle cx="180" cy="40" r="8" opacity="0.7" />
-
-                <circle cx="300" cy="70" r="5" opacity="0.6" />
-
-                <circle cx="360" cy="150" r="7" opacity="0.8" />
-
-                <circle cx="150" cy="150" r="10" opacity="0.9" />
-
-                <circle cx="260" cy="180" r="5" opacity="0.5" />
-
-              </g>
-
-            </svg>
-
-          </div>
+          <figure className="auth-art-frame mt-9 hidden max-w-lg xl:block">
+            <img
+              src="/images/fluid-sculpture.svg"
+              alt="An abstract fluid sculpture in rose, lavender and deep blue"
+              className="auth-art-image"
+              loading="eager"
+              decoding="async"
+            />
+            <figcaption className="auth-art-caption">
+              A calmer way to work with your documents.
+            </figcaption>
+          </figure>
 
 
 
