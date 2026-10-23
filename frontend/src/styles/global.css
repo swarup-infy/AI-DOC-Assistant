@@ -1631,7 +1631,7 @@ ol {
 }
 
 
-/* Auth background: restore fine lines and broad gold-purple flowing ribbons. */
+/* Keep the thick gold/purple flowing ribbons; remove only hair-thin gold orbital streaks. */
 .auth-shell::after {
   background-image: url("/images/backgrounds/golden-water-flow.svg"), url("/images/liquid-ribbon.svg") !important;
   background-repeat: no-repeat, no-repeat !important;
@@ -1643,26 +1643,10 @@ ol {
 }
 .auth-shell .auth-grain::before,
 .auth-shell .auth-grain::after {
-  content: "";
-  display: block !important;
-  position: absolute;
-  inset: -30% -24%;
-  width: 148%;
-  height: 165%;
-  pointer-events: none;
-  background:
-    repeating-radial-gradient(ellipse at 48% 50%, transparent 0 42px, rgba(212,175,55,.07) 44px, rgba(255,222,120,.42) 45px, rgba(181,130,20,.15) 47px, transparent 50px 78px),
-    linear-gradient(118deg, transparent 27%, rgba(212,175,55,.02) 35%, rgba(255,222,120,.28) 43%, rgba(255,248,200,.52) 44%, rgba(184,134,11,.14) 46%, transparent 55%) !important;
-  background-size: 135% 135%, 230% 100% !important;
-  mix-blend-mode: screen !important;
-  opacity: .34 !important;
-  filter: blur(.4px);
-  animation: gold-water-flow 19s ease-in-out infinite alternate !important;
-}
-.auth-shell .auth-grain::after {
-  opacity: .24 !important;
-  transform: rotate(-18deg);
-  animation: gold-water-flow-reverse 25s ease-in-out infinite alternate !important;
+  background: none !important;
+  opacity: 0 !important;
+  animation: none !important;
+  filter: none !important;
 }
 :root[data-theme="light"] .auth-shell::after {
   opacity: .64 !important;
@@ -1670,8 +1654,9 @@ ol {
 }
 :root[data-theme="light"] .auth-shell .auth-grain::before,
 :root[data-theme="light"] .auth-shell .auth-grain::after {
-  opacity: .24 !important;
-  mix-blend-mode: multiply !important;
+  background: none !important;
+  opacity: 0 !important;
+  animation: none !important;
 }
 .auth-shell .orbital-particle-canvas {
   opacity: .82;
