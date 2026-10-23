@@ -300,7 +300,7 @@ export default function LoginPage() {
 
             Your documents,
 
-            <span className="block bg-gradient-to-r from-primary via-fuchsia-500 to-cyan-400 bg-clip-text text-transparent">
+            <span className="block bg-gradient-to-r from-[#F4F3F0] via-[#DA7B93] to-[#9BC8B5] bg-clip-text text-transparent">
 
               finally intelligent.
 
@@ -676,7 +676,7 @@ export default function LoginPage() {
 
                 }
 
-                className="h-14 w-full rounded-2xl text-base font-semibold"
+                className="auth-primary-button h-14 w-full rounded-2xl text-base font-semibold"
 
               >
 
