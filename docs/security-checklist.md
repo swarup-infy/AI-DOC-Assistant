@@ -13,7 +13,7 @@ Status reflects the source changes in this branch, not a claim that CI has passe
 - [x] Authentication design and residual risks are documented.
 
 ## Not implemented or not yet verified
-- [ ] CI workflow executed successfully.
+- [x] CI workflow executed successfully on the current branch head; see the latest GitHub Actions run.
 - [ ] Full backend integration tests against an isolated database.
 - [ ] Browser tests for login, registration, logout, and recovery.
 - [ ] Server-side opaque sessions and session revocation.
@@ -25,7 +25,7 @@ Status reflects the source changes in this branch, not a claim that CI has passe
 - [ ] Authenticated cross-user authorization tests.
 - [ ] Frontend-hosted CSP and deployment security headers.
 - [x] JavaScript dependency audit: compatible fixes applied to the lockfile; verify the newest CI run before merge.
-- [ ] Python dependency audit: PyJWT upgraded to 2.15.1. Pillow 12.x and ChromaDB 1.5.9 advisories are explicitly allowlisted with documented rationale because current compatible upstream fixes are unavailable; these remain residual risks, not resolved vulnerabilities.
+- [x] Python dependency audit passes with documented exceptions: PyJWT upgraded to 2.15.1; Pillow 12.x and ChromaDB 1.5.9 advisories remain unresolved residual risks, not resolved vulnerabilities. See `docs/dependency-audit-exceptions.md`.
 - [ ] ChromaDB 1.5.9 is flagged by current advisories with no published fixed version; keep it in embedded PersistentClient mode only and do not expose a Chroma server. This remains an open dependency risk until upstream remediation is available. See `docs/dependency-audit-exceptions.md`.
 - [x] Gitleaks secret-scanning job is configured and passed on the observed CI run.
 - [ ] Container image scanning (no container build configuration is present in this branch).
