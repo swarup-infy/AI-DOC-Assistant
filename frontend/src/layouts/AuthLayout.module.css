@@ -1,0 +1,55 @@
+.shell {
+  isolation: isolate;
+  background: #08080d;
+  min-height: 100svh;
+}
+.pinkOrb,
+.purpleOrb {
+  position: fixed;
+  display: block;
+  z-index: 0;
+  width: clamp(180px, 22vw, 300px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  pointer-events: none;
+  transform-origin: center;
+  will-change: left, top;
+}
+.pinkOrb {
+  left: 66vw;
+  top: -10vh;
+  background: #f52b83;
+  background-image: radial-gradient(circle at 34% 28%, #ff4c91 0%, #f5167b 70%);
+  box-shadow: 0 0 34px rgba(245, 43, 131, .24);
+  animation: pinkJourney 42s ease-in-out infinite alternate;
+}
+.purpleOrb {
+  left: 7vw;
+  top: 76vh;
+  background: #a91ce4;
+  background-image: radial-gradient(circle at 34% 28%, #c52be9 0%, #7838e8 78%);
+  box-shadow: 0 0 38px rgba(169, 28, 228, .22);
+  animation: purpleJourney 48s ease-in-out infinite alternate;
+}
+@keyframes pinkJourney {
+  0% { left: 66vw; top: -10vh; }
+  22% { left: 50vw; top: 16vh; }
+  48% { left: 73vw; top: 43vh; }
+  74% { left: 48vw; top: 69vh; }
+  100% { left: 12vw; top: 52vh; }
+}
+@keyframes purpleJourney {
+  0% { left: 7vw; top: 76vh; }
+  24% { left: 18vw; top: 48vh; }
+  50% { left: 42vw; top: 66vh; }
+  76% { left: 55vw; top: 24vh; }
+  100% { left: 28vw; top: 4vh; }
+}
+@media (max-width: 767px) {
+  .pinkOrb, .purpleOrb { width: 155px; }
+  .pinkOrb { animation-duration: 48s; }
+  .purpleOrb { animation-duration: 54s; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pinkOrb, .purpleOrb { animation: none; }
+}
