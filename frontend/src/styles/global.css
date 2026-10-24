@@ -1877,3 +1877,14 @@ ol {
     will-change: auto !important;
   }
 }
+
+
+/* Directional ribbon overlay v2: explicit asset versioning prevents stale cached SVG artwork. */
+.auth-shell::after {
+  background-image:
+    url("/images/backgrounds/golden-water-flow.svg?v=2"),
+    url("/images/liquid-ribbon.svg?v=2") !important;
+  animation: auth-ribbon-bright 10s ease-in-out infinite alternate !important;
+  background-repeat: no-repeat, no-repeat !important;
+  pointer-events: none !important;
+}
