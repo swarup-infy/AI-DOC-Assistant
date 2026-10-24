@@ -54,6 +54,9 @@
     <path d="M276 300C303 198 401 148 512 183C622 218 680 322 794 310C913 297 985 187 1091 201C1175 213 1222 285 1203 347" stroke="#FFF0FF" stroke-width="2.2" stroke-linecap="round" opacity=".8" filter="url(#gloss)"/>
     <path d="M294 415C382 501 466 525 531 534C609 546 650 525 719 565C797 610 840 671 916 665C980 659 986 612 1027 561" stroke="url(#edge)" stroke-width="10" stroke-linecap="round" opacity=".9"/>
     <path d="M294 415C382 501 466 525 531 534C609 546 650 525 719 565C797 610 840 671 916 665C980 659 986 612 1027 561" stroke="#BDF8FF" stroke-width="2.4" stroke-linecap="round" opacity=".75" filter="url(#gloss)"/>
+    <!-- Traveling highlights follow the ribbon's curved paths in staggered directions. -->
+    <path class="ribbon-current ribbon-current-top" d="M275 300C303 198 401 148 512 183C622 218 680 322 794 310C913 297 985 187 1091 201C1175 213 1222 285 1203 347" stroke="url(#edge)" stroke-width="13" stroke-dasharray="66 610" stroke-linecap="round" opacity=".8"/>
+    <path class="ribbon-current ribbon-current-bottom" d="M294 415C382 501 466 525 531 534C609 546 650 525 719 565C797 610 840 671 916 665C980 659 986 612 1027 561" stroke="#d8fbff" stroke-width="14" stroke-dasharray="82 580" stroke-linecap="round" opacity=".72"/>
     <path d="M439 201C492 181 550 209 595 256C651 315 705 354 779 355C874 356 936 290 1018 269" stroke="#F9C5F0" stroke-width="3" stroke-linecap="round" opacity=".75"/>
     <path d="M492 462C562 492 626 478 688 514C746 547 785 597 841 612" stroke="#56DDEB" stroke-width="3" stroke-linecap="round" opacity=".72"/>
     <path d="M1067 221C1134 232 1175 274 1179 318" stroke="#A8F7FF" stroke-width="3" stroke-linecap="round" opacity=".8"/>
@@ -65,7 +68,12 @@
   <path d="M168 692C391 655 551 715 729 701C902 687 1083 634 1251 671" stroke="#8EDDF0" stroke-opacity=".12" stroke-width="2"/>
   <style>
     #ribbon { animation: drift 12s ease-in-out infinite alternate; }
+    .ribbon-current { animation-iteration-count: infinite; animation-timing-function: linear; }
+    .ribbon-current-top { animation: ribbon-current-forward 6.4s linear infinite; }
+    .ribbon-current-bottom { animation: ribbon-current-reverse 7.8s linear infinite; }
+    @keyframes ribbon-current-forward { from { stroke-dashoffset: 676; } to { stroke-dashoffset: 0; } }
+    @keyframes ribbon-current-reverse { from { stroke-dashoffset: 0; } to { stroke-dashoffset: 662; } }
     @keyframes drift { from { transform: translate(-9px, 5px) rotate(-1deg); } to { transform: translate(10px, -8px) rotate(1deg); } }
-    @media (prefers-reduced-motion: reduce) { #ribbon { animation: none; } }
+    @media (prefers-reduced-motion: reduce) { #ribbon, .ribbon-current { animation: none !important; } }
   </style>
 </svg>
