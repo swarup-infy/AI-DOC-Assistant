@@ -2129,3 +2129,59 @@ ol {
 @media (prefers-reduced-motion: reduce) {
   .auth-shell::before, .auth-shell::after { animation:none !important; }
 }
+
+
+/* Reliable moving circles: real elements avoid pseudo-element background overrides. */
+.auth-shell .auth-orb {
+  position: fixed !important;
+  display: block !important;
+  z-index: 1 !important;
+  width: clamp(190px, 22vw, 300px) !important;
+  height: clamp(190px, 22vw, 300px) !important;
+  border-radius: 50% !important;
+  pointer-events: none !important;
+  opacity: .96 !important;
+  filter: none !important;
+  will-change: transform;
+  transform: translate3d(0,0,0);
+}
+.auth-shell .auth-orb-pink {
+  top: -52px !important;
+  right: clamp(6%, calc((100vw - 900px) / 2), 25%) !important;
+  left: auto !important;
+  bottom: auto !important;
+  background: linear-gradient(135deg,#f0007b 4%,#ff5678 92%) !important;
+  box-shadow: 0 0 45px rgba(255,39,130,.42), inset 0 -15px 38px rgba(255,255,255,.08) !important;
+  animation: auth-orb-float-pink 8s ease-in-out infinite alternate !important;
+}
+.auth-shell .auth-orb-purple {
+  left: clamp(4%, calc((100vw - 1080px) / 2 - 130px), 20%) !important;
+  bottom: -45px !important;
+  top: auto !important;
+  right: auto !important;
+  width: clamp(200px,24vw,320px) !important;
+  height: clamp(200px,24vw,320px) !important;
+  background: linear-gradient(135deg,#d016f5 3%,#7939f4 94%) !important;
+  box-shadow: 0 0 54px rgba(166,45,255,.34), inset 0 -18px 42px rgba(255,255,255,.07) !important;
+  animation: auth-orb-float-purple 10s ease-in-out infinite alternate !important;
+}
+@keyframes auth-orb-float-pink {
+  0% { transform: translate3d(0,0,0) scale(1); }
+  25% { transform: translate3d(-18px,24px,0) scale(1.025); }
+  65% { transform: translate3d(14px,62px,0) scale(.985); }
+  100% { transform: translate3d(-8px,38px,0) scale(1.035); }
+}
+@keyframes auth-orb-float-purple {
+  0% { transform: translate3d(0,0,0) scale(1); }
+  35% { transform: translate3d(24px,-30px,0) scale(.98); }
+  72% { transform: translate3d(-12px,-64px,0) scale(1.035); }
+  100% { transform: translate3d(18px,-42px,0) scale(.97); }
+}
+.auth-shell .auth-content, .auth-shell > section { position:relative; z-index:2; }
+@media(max-width:639px) {
+  .auth-shell .auth-orb-pink { top:-35px !important; right:-42px !important; width:165px !important; height:165px !important; }
+  .auth-shell .auth-orb-purple { left:-44px !important; bottom:-35px !important; width:175px !important; height:175px !important; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .auth-shell .auth-orb { animation:none !important; }
+}
