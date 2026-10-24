@@ -7,8 +7,11 @@ import {
   ArrowRight,
   Eye,
   EyeOff,
+  FileText,
+  BrainCircuit,
   Lock,
   Mail,
+  Search,
   Sparkles,
 } from "lucide-react";
 
@@ -75,146 +78,45 @@ export default function LoginPage() {
 
   return (
     <AuthLayout>
-      <div className={`auth-content grid w-full items-center gap-8 lg:grid-cols-[minmax(0,1fr)_440px] lg:gap-12 xl:grid-cols-[minmax(0,1fr)_460px] xl:gap-16 ${mounted ? "auth-revealed" : "auth-pending"}`}>
-        <section
-          className={`auth-intro auth-reveal-item hidden transition-all duration-700 ease-out lg:block ${
-            mounted ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0"
-          }`}
-        >
-          <Logo size={48} />
-          <p className="auth-eyebrow mt-14">
-            <Sparkles size={14} aria-hidden="true" />
-            A quieter way to work
-          </p>
-          <h1 className="auth-headline mt-5">
-            Less searching.
-            <span>More knowing.</span>
-          </h1>
-          <p className="auth-tagline mt-5">
-            Your documents, all in one place.
-          </p>
-          <div className="auth-title-rule mt-8" aria-hidden="true">
-            <span />
+      <div className={`auth-content auth-split-layout w-full ${mounted ? "auth-revealed" : "auth-pending"}`}>
+        <section className="auth-form-side">
+          <div className="auth-form-brand"><Logo size={38} /></div>
+          <div className="auth-form-heading">
+            <p className="auth-card-kicker">YOUR WORKSPACE</p>
+            <h1 id="auth-title">Welcome back</h1>
+            <p>Sign in to continue working with your documents.</p>
           </div>
+          {serverError && <div role="alert" className="mb-5 flex items-center gap-3 rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive"><AlertCircle className="h-5 w-5 shrink-0" /><span>{serverError}</span></div>}
+          <form onSubmit={handleSubmit(onSubmit)} className="auth-form-fields">
+            <Input label="Email" type="email" autoComplete="email" placeholder="Enter your email" icon={<Mail className="h-5 w-5" />} error={errors.email?.message} {...register("email")} />
+            <Input label="Password" type={showPassword ? "text" : "password"} autoComplete="current-password" placeholder="Enter your password" icon={<Lock className="h-5 w-5" />} error={errors.password?.message}
+              endAdornment={<button type="button" onClick={() => setShowPassword(v => !v)} aria-label={showPassword ? "Hide password" : "Show password"} className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground">{showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}</button>} {...register("password")} />
+            <div className="auth-form-options">
+              <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground"><input type="checkbox" className="h-4 w-4 rounded border-border accent-primary" />Remember me</label>
+              <button type="button" className="text-sm font-medium text-muted-foreground transition hover:text-foreground">Forgot password?</button>
+            </div>
+            <Button type="submit" loading={isSubmitting} iconRight={<ArrowRight className="h-4 w-4" />} className="auth-primary-button h-12 w-full rounded-xl text-sm font-semibold">Sign in</Button>
+          </form>
+          <p className="auth-switch-copy">New to AI Document Assistant? <Link to="/register">Create an account</Link></p>
+          <div className="auth-legal-footer"><p>Securely organized. Ready when you are.</p><nav aria-label="Legal links"><Link to="/terms">Terms</Link><a href="https://ai-doc-assistant-nu.vercel.app/privacy">Privacy</a></nav></div>
         </section>
-
-        <section className="flex justify-center lg:justify-end">
-          <Card
-            className={`auth-panel auth-reveal-card w-full max-w-md rounded-[28px] p-7 shadow-2xl transition-all duration-700 ease-out sm:p-9 ${
-              mounted ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0"
-            }`}
-          >
-            <div className="mb-6 flex justify-center lg:hidden">
-              <Logo size={40} />
-            </div>
-
-            <div className="mb-7">
-              <p className="auth-card-kicker">YOUR WORKSPACE</p>
-              <h2
-                id="auth-title"
-                className="mt-2 text-3xl font-semibold tracking-tight text-foreground sm:text-[2rem]"
-              >
-                Welcome back
-              </h2>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Sign in and pick up where you left off.
-              </p>
-            </div>
-
-            {serverError && (
-              <div
-                role="alert"
-                className="mb-5 flex items-center gap-3 rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive"
-              >
-                <AlertCircle className="h-5 w-5 shrink-0" />
-                <span>{serverError}</span>
+        <aside className="auth-product-side" aria-label="AI Document Assistant workspace preview">
+          <div className="auth-preview-topbar"><div className="auth-window-dots"><i /><i /><i /></div><div className="auth-address"><span className="auth-address-lock">⌑</span> workspace.ai-doc-assistant</div><span className="auth-preview-status"><span /> Secure workspace</span></div>
+          <div className="auth-preview-body">
+            <div className="auth-preview-copy"><p className="auth-preview-kicker">AI DOCUMENT ASSISTANT</p><h2>Make your documents<br /><span>work smarter.</span></h2><p>Find answers, uncover insights, and keep every important detail within reach.</p></div>
+            <div className="auth-dashboard-card">
+              <div className="auth-dashboard-header"><div><span className="auth-dashboard-label">WORKSPACE OVERVIEW</span><h3>Your knowledge hub</h3></div><span className="auth-dashboard-mark"><BrainCircuit size={19} /></span></div>
+              <div className="auth-metric-grid">
+                <div className="auth-metric-card"><span className="auth-metric-icon auth-metric-pink"><FileText size={16} /></span><span className="auth-metric-caption">Documents</span><strong>Organized</strong><small>One searchable space</small></div>
+                <div className="auth-metric-card"><span className="auth-metric-icon auth-metric-teal"><Search size={16} /></span><span className="auth-metric-caption">Discovery</span><strong>Smarter search</strong><small>Meaning, not just keywords</small></div>
               </div>
-            )}
-
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-              <Input
-                label="Email"
-                type="email"
-                autoComplete="email"
-                placeholder="you@example.com"
-                icon={<Mail className="h-5 w-5" />}
-                error={errors.email?.message}
-                {...register("email")}
-              />
-
-              <Input
-                label="Password"
-                type={showPassword ? "text" : "password"}
-                autoComplete="current-password"
-                placeholder="Enter your password"
-                icon={<Lock className="h-5 w-5" />}
-                error={errors.password?.message}
-                endAdornment={
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((value) => !value)}
-                    aria-label={showPassword ? "Hide password" : "Show password"}
-                    className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-5 w-5" />
-                    ) : (
-                      <Eye className="h-5 w-5" />
-                    )}
-                  </button>
-                }
-                {...register("password")}
-              />
-
-              <div className="flex items-center justify-between pt-1 text-sm">
-                <label className="flex cursor-pointer items-center gap-2 text-muted-foreground">
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4 rounded border-border accent-primary"
-                  />
-                  Remember me
-                </label>
-                <button
-                  type="button"
-                  className="font-medium text-foreground/80 transition hover:text-primary hover:underline"
-                >
-                  Forgot password?
-                </button>
+              <div className="auth-activity-panel"><div className="auth-activity-title"><span>Knowledge activity</span><span className="auth-live-dot">● Workspace preview</span></div>
+                <svg viewBox="0 0 440 100" role="img" aria-label="Decorative activity graph" className="auth-activity-chart"><defs><linearGradient id="authChartFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#dba5d7" stopOpacity=".25" /><stop offset="1" stopColor="#dba5d7" stopOpacity="0" /></linearGradient></defs><path d="M0 78 C28 70 36 77 60 59 S96 65 120 49 S155 60 184 40 S225 48 251 30 S287 43 316 22 S350 34 378 17 S414 24 440 8 L440 100 L0 100 Z" fill="url(#authChartFill)" /><path d="M0 78 C28 70 36 77 60 59 S96 65 120 49 S155 60 184 40 S225 48 251 30 S287 43 316 22 S350 34 378 17 S414 24 440 8" fill="none" stroke="#dba5d7" strokeWidth="2.5" strokeLinecap="round" /><path d="M0 98 H440 M0 65 H440 M0 32 H440" stroke="#94a3b8" strokeOpacity=".12" strokeDasharray="3 6" /></svg>
               </div>
-
-              <Button
-                type="submit"
-                loading={isSubmitting}
-                iconRight={<ArrowRight className="h-4 w-4" />}
-                className="auth-primary-button h-12 w-full rounded-xl text-sm font-semibold"
-              >
-                Sign in
-              </Button>
-            </form>
-
-            <p className="mt-6 text-center text-sm text-muted-foreground">
-              New here?
-              <Link
-                to="/register"
-                className="ml-2 font-semibold text-foreground transition hover:text-primary"
-              >
-                Create an account
-              </Link>
-            </p>
-
-            <div className="mt-6 border-t border-white/10 pt-4 text-center text-xs text-muted-foreground">
-              <p>Your documents stay organized in one place.</p>
-              <nav aria-label="Legal links" className="mt-3 flex items-center justify-center gap-4">
-                <Link to="/terms" className="underline underline-offset-4 transition hover:text-foreground">
-                  Terms &amp; Conditions
-                </Link>
-                <a href="https://ai-doc-assistant-nu.vercel.app/privacy" className="underline underline-offset-4 transition hover:text-foreground">
-                  Privacy Policy
-                </a>
-              </nav>
             </div>
-          </Card>
-        </section>
+            <div className="auth-preview-footnote"><Sparkles size={14} /> Less searching. More knowing.</div>
+          </div>
+        </aside>
       </div>
     </AuthLayout>
   );
