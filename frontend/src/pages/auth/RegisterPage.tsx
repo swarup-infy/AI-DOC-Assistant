@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -29,6 +29,12 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [serverError, setServerError] = useState("");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(frame);
+  }, []);
 
   const {
     register,
@@ -90,8 +96,8 @@ export default function RegisterPage() {
 
   return (
     <AuthLayout>
-      <div className="auth-content grid items-center gap-12 lg:grid-cols-[1fr_440px] xl:grid-cols-[1fr_460px]">
-        <section className="auth-intro hidden lg:block">
+      <div className={`auth-content grid w-full items-center gap-8 lg:grid-cols-[minmax(0,1fr)_440px] lg:gap-12 xl:grid-cols-[minmax(0,1fr)_460px] xl:gap-16 ${mounted ? "auth-revealed" : "auth-pending"}`}>
+        <section className="auth-intro auth-reveal-item hidden lg:block">
           <Logo size={48} />
           <p className="auth-eyebrow mt-14">A quieter way to work</p>
           <h1 className="auth-headline mt-5">
@@ -107,7 +113,7 @@ export default function RegisterPage() {
         </section>
 
         <section className="flex justify-center">
-          <Card className="auth-panel w-full max-w-md rounded-[28px] p-7 shadow-2xl sm:p-9">
+          <Card className="auth-panel auth-reveal-card w-full max-w-md rounded-[28px] p-7 shadow-2xl sm:p-9">
             <div className="mb-8 text-center">
               <Logo showWordmark={false} size={42} />
               <h2 className="mt-5 text-3xl font-semibold tracking-tight sm:text-[2rem]">Create Account</h2>
