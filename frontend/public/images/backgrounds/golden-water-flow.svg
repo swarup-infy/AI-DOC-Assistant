@@ -17,40 +17,40 @@
     <stop offset=".58" stop-color="#f0cf5c" stop-opacity=".7"/>
     <stop offset="1" stop-color="#fff9d9" stop-opacity="0"/>
   </linearGradient>
-  <filter id="goldBloom" x="-25%" y="-25%" width="150%" height="150%">
-    <feGaussianBlur stdDeviation="16"/>
+  <filter id="goldBloom" x="-15%" y="-15%" width="130%" height="130%">
+    <feGaussianBlur stdDeviation="7"/>
   </filter>
 </defs>
 <g fill="none" stroke-linecap="round" stroke-linejoin="round">
   <!-- Broad liquid-gold ribbon: soft body, luminous rim and reflective highlight -->
   <path d="M-210 790 C115 495 252 1020 570 770 S1000 270 1270 420 S1570 830 1820 470"
-        stroke="#d8ad35" stroke-opacity=".23" stroke-width="150" filter="url(#goldBloom)"/>
+        stroke="#d8ad35" stroke-opacity=".23" stroke-width="126" filter="url(#goldBloom)"/>
   <path d="M-220 785 C120 495 245 1010 575 755 S1000 250 1275 410 S1570 820 1820 465"
-        stroke="url(#liquidGold)" stroke-width="126"/>
+        stroke="url(#liquidGold)" stroke-width="114"/>
   <path d="M-220 758 C120 470 245 985 575 728 S1000 226 1275 385 S1570 795 1820 440"
-        stroke="url(#goldGloss)" stroke-width="7" opacity=".78"/>
+        stroke="url(#goldGloss)" stroke-width="5" opacity=".62"/>
   <path d="M-220 815 C120 525 245 1040 575 783 S1000 280 1275 440 S1570 850 1820 495"
         stroke="#b78316" stroke-opacity=".32" stroke-width="3"/>
   <!-- Second wide, folded gold current to create a liquid-metal / logo-like contour -->
   <path d="M-180 250 C155 510 292 60 610 270 S1010 680 1280 350 S1550 100 1770 270"
-        stroke="#c9a227" stroke-opacity=".14" stroke-width="104" filter="url(#goldBloom)"/>
+        stroke="#c9a227" stroke-opacity=".14" stroke-width="88" filter="url(#goldBloom)"/>
   <path d="M-180 250 C155 510 292 60 610 270 S1010 680 1280 350 S1550 100 1770 270"
-        stroke="url(#liquidGold)" stroke-width="88"/>
+        stroke="url(#liquidGold)" stroke-width="82"/>
   <path d="M-180 228 C155 488 292 38 610 248 S1010 658 1280 328 S1550 78 1770 248"
-        stroke="url(#goldGloss)" stroke-width="5" opacity=".72"/>
+        stroke="url(#goldGloss)" stroke-width="4" opacity=".58"/>
   <!-- Directional liquid highlights: light travels along the broad roads, not the whole image. -->
   <path class="gold-current gold-current-a"
     d="M-220 785 C120 495 245 1010 575 755 S1000 250 1275 410 S1570 820 1820 465"
-    stroke="url(#goldGloss)" stroke-width="7" stroke-dasharray="52 760" opacity=".42"/>
+    stroke="url(#goldGloss)" stroke-width="5" stroke-dasharray="38 820" opacity=".32"/>
   <path class="gold-current gold-current-b"
     d="M-180 250 C155 510 292 60 610 270 S1010 680 1280 350 S1550 100 1770 270"
-    stroke="url(#goldGloss)" stroke-width="6" stroke-dasharray="44 690" opacity=".36"/>
+    stroke="url(#goldGloss)" stroke-width="4" stroke-dasharray="30 750" opacity=".28"/>
   <path class="gold-current gold-current-c"
     d="M-130 555 C160 340 330 770 645 540 S1080 145 1330 260 S1580 570 1790 345"
-    stroke="#fff3b0" stroke-width="3" stroke-dasharray="32 600" opacity=".3"/>
+    stroke="#fff3b0" stroke-width="2" stroke-dasharray="22 660" opacity=".22"/>
   <!-- Reflective folds give the wide shapes a flowing, molten-gold finish -->
   <path d="M-130 555 C160 340 330 770 645 540 S1080 145 1330 260 S1580 570 1790 345"
-        stroke="url(#goldGloss)" stroke-width="22" opacity=".34"/>
+        stroke="url(#goldGloss)" stroke-width="16" opacity=".22"/>
 </g>
 <style>
 
