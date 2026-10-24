@@ -2241,32 +2241,44 @@ ol {
 }
 
 
-/* Auth orb motion: animate transform itself for broad browser compatibility.
-   Keep transform declarations out of !important rules so keyframes can run. */
+/* Two ambient circles only: broad, slow, smooth orbital travel. */
+.auth-shell .auth-orb {
+  pointer-events: none !important;
+  will-change: transform;
+  backface-visibility: hidden;
+}
 .auth-shell .auth-orb-pink {
-  animation: auth-pink-page-drift 24s ease-in-out infinite alternate !important;
+  animation: auth-pink-wide-orbit 44s linear infinite !important;
 }
 .auth-shell .auth-orb-purple {
-  animation: auth-purple-page-drift 29s ease-in-out infinite alternate !important;
+  animation: auth-purple-wide-orbit 52s linear infinite !important;
 }
-@keyframes auth-pink-page-drift {
-  0%   { transform: translate3d(0, 0, 0) scale(.96); }
-  22%  { transform: translate3d(-17vw, 14vh, 0) scale(1.02); }
-  48%  { transform: translate3d(-36vw, 30vh, 0) scale(.99); }
-  73%  { transform: translate3d(-19vw, 57vh, 0) scale(1.045); }
-  100% { transform: translate3d(-42vw, 35vh, 0) scale(1); }
+/* A dense, rounded path creates a wide orbit rather than a short vertical bob. */
+@keyframes auth-pink-wide-orbit {
+  0%   { transform: translate3d(0,0,0) scale(.98); }
+  12%  { transform: translate3d(-12vw,8vh,0) scale(1); }
+  25%  { transform: translate3d(-26vw,19vh,0) scale(1.035); }
+  37%  { transform: translate3d(-38vw,36vh,0) scale(1.015); }
+  50%  { transform: translate3d(-31vw,56vh,0) scale(.98); }
+  62%  { transform: translate3d(-15vw,65vh,0) scale(.96); }
+  75%  { transform: translate3d(5vw,47vh,0) scale(.99); }
+  87%  { transform: translate3d(8vw,20vh,0) scale(1.025); }
+  100% { transform: translate3d(0,0,0) scale(.98); }
 }
-@keyframes auth-purple-page-drift {
-  0%   { transform: translate3d(0, 0, 0) scale(1); }
-  25%  { transform: translate3d(18vw, -18vh, 0) scale(1.035); }
-  50%  { transform: translate3d(38vw, -42vh, 0) scale(.97); }
-  76%  { transform: translate3d(22vw, -65vh, 0) scale(1.025); }
-  100% { transform: translate3d(48vw, -31vh, 0) scale(.99); }
+@keyframes auth-purple-wide-orbit {
+  0%   { transform: translate3d(0,0,0) scale(1); }
+  12%  { transform: translate3d(12vw,-12vh,0) scale(1.025); }
+  25%  { transform: translate3d(28vw,-26vh,0) scale(1.04); }
+  37%  { transform: translate3d(43vw,-42vh,0) scale(1.015); }
+  50%  { transform: translate3d(47vw,-61vh,0) scale(.98); }
+  62%  { transform: translate3d(30vw,-70vh,0) scale(.96); }
+  75%  { transform: translate3d(9vw,-55vh,0) scale(.99); }
+  87%  { transform: translate3d(-4vw,-28vh,0) scale(1.025); }
+  100% { transform: translate3d(0,0,0) scale(1); }
 }
-.auth-shell .auth-orb { pointer-events: none !important; }
 @media (max-width: 767px) {
-  .auth-shell .auth-orb-pink { animation-duration: 30s !important; }
-  .auth-shell .auth-orb-purple { animation-duration: 34s !important; }
+  .auth-shell .auth-orb-pink { animation-duration: 52s !important; }
+  .auth-shell .auth-orb-purple { animation-duration: 60s !important; }
 }
 @media (prefers-reduced-motion: reduce) {
   .auth-shell .auth-orb-pink,
