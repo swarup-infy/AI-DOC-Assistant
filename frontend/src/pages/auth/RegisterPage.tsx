@@ -33,246 +33,84 @@ export default function RegisterPage() {
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => setMounted(true));
-    return () => cancelAnimationFrame(frame);
-  }, []);
-
-  const {
-    register,
-    watch,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<RegisterFormData>({
-    resolver: zodResolver(registerSchema),
-    mode: "onTouched",
-  });
-
-  const password = watch("password") ?? "";
-
-  const passwordStrength = useMemo(() => {
-    let score = 0;
-    if (password.length >= 8) score += 1;
-    if (/[A-Z]/.test(password)) score += 1;
-    if (/[0-9]/.test(password)) score += 1;
-    if (/[^A-Za-z0-9]/.test(password)) score += 1;
-    return score;
-  }, [password]);
-
-  const strengthColor = [
-    "bg-red-500",
-    "bg-orange-500",
-    "bg-yellow-500",
-    "bg-emerald-500",
-  ][Math.max(passwordStrength - 1, 0)];
-
-  const strengthLabel = [
-    "Weak",
-    "Fair",
-    "Good",
-    "Strong",
-  ][Math.max(passwordStrength - 1, 0)];
-
-  const onSubmit = useCallback(
-    async (data: RegisterFormData) => {
-      setServerError("");
-
-      try {
-        await registerUser({
-          name: data.name,
-          email: data.email,
-          password: data.password,
-        });
-
-        navigate("/login", { replace: true });
-      } catch (error) {
-        setServerError(
-          error instanceof Error
-            ? error.message
-            : "Unable to create account."
-        );
-      }
-    },
-    [navigate]
-  );
-
-  return (
+    return (
     <AuthLayout>
-      <div className={`auth-content grid w-full items-center gap-8 lg:grid-cols-[minmax(0,1fr)_440px] lg:gap-12 xl:grid-cols-[minmax(0,1fr)_460px] xl:gap-16 ${mounted ? "auth-revealed" : "auth-pending"}`}>
-        <section className="auth-intro auth-reveal-item hidden lg:block">
-          <Logo size={48} />
-          <p className="auth-eyebrow mt-14">A quieter way to work</p>
-          <h1 className="auth-headline mt-5">
-            Keep it
-            <span>all together.</span>
-          </h1>
-          <p className="auth-tagline mt-5">
-            One thoughtful space for your documents.
-          </p>
-          <div className="auth-title-rule mt-8" aria-hidden="true">
-            <span />
+      <div className={`auth-content auth-split-layout auth-register-layout w-full ${mounted ? "auth-revealed" : "auth-pending"}`}>
+        <section className="auth-form-side auth-register-form">
+          <div className="auth-form-brand"><Logo size={38} /></div>
+          <div className="auth-form-heading">
+            <p className="auth-card-kicker">START YOUR WORKSPACE</p>
+            <h1 id="auth-title">Create your account</h1>
+            <p>A calmer, smarter home for all your documents.</p>
           </div>
+
+          {serverError && (
+            <div role="alert" className="mb-4 flex items-center gap-3 rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
+              <AlertCircle size={18} className="shrink-0" /><span>{serverError}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit(onSubmit)} className="auth-form-fields auth-register-fields">
+            <Input label="Full name" placeholder="Your name" autoComplete="name" icon={<User size={18} />}
+              error={errors.name?.message} {...register("name")} />
+            <Input label="Email address" type="email" placeholder="you@company.com" autoComplete="email" icon={<Mail size={18} />}
+              error={errors.email?.message} {...register("email")} />
+            <div className="relative">
+              <Input label="Password" type={showPassword ? "text" : "password"} placeholder="Create a password"
+                autoComplete="new-password" icon={<Lock size={18} />} error={errors.password?.message}
+                endAdornment={<button type="button" onClick={() => setShowPassword(v => !v)} aria-label={showPassword ? "Hide password" : "Show password"}
+                  className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground">{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button>}
+                {...register("password")} />
+            </div>
+            <div className="auth-password-strength">
+              <div className="auth-strength-track"><div className={`auth-strength-fill ${strengthColor}`} style={{width:`${passwordStrength * 25}%`}} /></div>
+              <span>Password strength: <strong>{password.length ? strengthLabel : "Not set"}</strong></span>
+            </div>
+            <div className="relative">
+              <Input label="Confirm password" type={showConfirmPassword ? "text" : "password"} placeholder="Re-enter your password"
+                autoComplete="new-password" icon={<Lock size={18} />} error={errors.confirmPassword?.message}
+                endAdornment={<button type="button" onClick={() => setShowConfirmPassword(v => !v)} aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+                  className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground">{showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button>}
+                {...register("confirmPassword")} />
+            </div>
+            <label className="auth-terms-check">
+              <input type="checkbox" className="mt-1 h-4 w-4 shrink-0 rounded accent-primary" required />
+              <span>I agree to the <Link to="/terms">Terms</Link> and <Link to="/privacy">Privacy Policy</Link>.</span>
+            </label>
+            <Button type="submit" loading={isSubmitting} iconRight={<ArrowRight size={18} />}
+              className="auth-primary-button h-12 w-full rounded-xl text-sm font-semibold">Create account</Button>
+          </form>
+          <p className="auth-switch-copy">Already have an account? <Link to="/login">Sign in</Link></p>
+          <div className="auth-legal-footer"><p>Your workspace, ready to grow with you.</p></div>
         </section>
 
-        <section className="flex justify-center">
-          <Card className="auth-panel auth-reveal-card w-full max-w-md rounded-[28px] p-7 shadow-2xl sm:p-9">
-            <div className="mb-8 text-center">
-              <Logo showWordmark={false} size={42} />
-              <h2 className="mt-5 text-3xl font-semibold tracking-tight sm:text-[2rem]">Create Account</h2>
-              <p className="mt-3 text-muted-foreground">
-                A home for your documents.
-              </p>
+        <aside className="auth-product-side" aria-label="AI Document Assistant workspace preview">
+          <div className="auth-preview-topbar">
+            <div className="auth-window-dots"><i /><i /><i /></div>
+            <div className="auth-address"><span className="auth-address-lock">⌑</span> workspace.ai-doc-assistant</div>
+            <span className="auth-preview-status"><span /> Private by design</span>
+          </div>
+          <div className="auth-preview-body">
+            <div className="auth-preview-copy">
+              <p className="auth-preview-kicker">YOUR KNOWLEDGE, CONNECTED</p>
+              <h2>Everything in one place.<br /><span>Clarity in every file.</span></h2>
+              <p>Bring your documents together and make the information inside them easier to find.</p>
             </div>
-
-            {serverError && (
-              <div className="mb-6 flex items-center gap-3 rounded-xl bg-destructive/10 p-4 text-sm text-destructive">
-                <AlertCircle size={18} />
-                {serverError}
+            <div className="auth-dashboard-card">
+              <div className="auth-dashboard-header">
+                <div><span className="auth-dashboard-label">YOUR AI WORKSPACE</span><h3>Built around your work</h3></div>
+                <span className="auth-dashboard-mark"><BrainCircuit size={19} /></span>
               </div>
-            )}
-
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-              <Input
-                label="Full Name"
-                placeholder="John Doe"
-                icon={<User size={18} />}
-                error={errors.name?.message}
-                autoComplete="name"
-                {...register("name")}
-              />
-
-              <Input
-                label="Email Address"
-                type="email"
-                placeholder="john@example.com"
-                autoComplete="email"
-                icon={<Mail size={18} />}
-                error={errors.email?.message}
-                {...register("email")}
-              />
-
-              <div className="relative">
-                <Input
-                  label="Password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Create a password"
-                  autoComplete="new-password"
-                  icon={<Lock size={18} />}
-                  error={errors.password?.message}
-                  {...register("password")}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((value) => !value)}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                  className="absolute right-4 top-[45px] text-muted-foreground hover:text-foreground"
-                >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
+              <div className="auth-feature-list">
+                <div><span className="auth-feature-icon auth-metric-pink"><FileText size={17} /></span><span><strong>All your documents</strong><small>Keep important files in one organized space</small></span><ArrowRight size={16} /></div>
+                <div><span className="auth-feature-icon auth-metric-teal"><Search size={17} /></span><span><strong>Semantic search</strong><small>Find the right detail without digging</small></span><ArrowRight size={16} /></div>
+                <div><span className="auth-feature-icon auth-metric-violet"><Sparkles size={17} /></span><span><strong>AI-powered answers</strong><small>Ask questions and explore your knowledge</small></span><ArrowRight size={16} /></div>
               </div>
-
-              <div>
-                <div className="mb-2 h-2 overflow-hidden rounded-full bg-muted">
-                  <div
-                    className={`h-full rounded-full transition-all ${strengthColor}`}
-                    style={{ width: `${passwordStrength * 25}%` }}
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Password strength:
-                  <span className="ml-1 font-semibold">
-                    {password.length ? strengthLabel : "Too Weak"}
-                  </span>
-                </p>
-              </div>
-
-              <div className="relative">
-                <Input
-                  label="Confirm Password"
-                  type={showConfirmPassword ? "text" : "password"}
-                  placeholder="Confirm password"
-                  autoComplete="new-password"
-                  icon={<Lock size={18} />}
-                  error={errors.confirmPassword?.message}
-                  {...register("confirmPassword")}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword((value) => !value)}
-                  aria-label={
-                    showConfirmPassword
-                      ? "Hide confirm password"
-                      : "Show confirm password"
-                  }
-                  className="absolute right-4 top-[45px] text-muted-foreground hover:text-foreground"
-                >
-                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
-
-              <label className="flex items-start gap-3 text-sm text-muted-foreground">
-                <input
-                  type="checkbox"
-                  className="mt-1 h-4 w-4 rounded accent-primary"
-                  required
-                />
-                <span>
-                  I agree to the
-                  <Link
-                    to="/terms"
-                    className="mx-1 font-medium text-primary hover:underline"
-                  >
-                    Terms
-                  </Link>
-                  and
-                  <Link
-                    to="/privacy"
-                    className="ml-1 font-medium text-primary hover:underline"
-                  >
-                    Privacy Policy
-                  </Link>
-                </span>
-              </label>
-
-              <Button
-                type="submit"
-                loading={isSubmitting}
-                iconRight={<ArrowRight size={18} />}
-                className="auth-primary-button h-12 w-full rounded-xl text-base font-semibold"
-              >
-                Create Account
-              </Button>
-            </form>
-
-            <div className="my-8 flex items-center gap-4">
-              <div className="h-px flex-1 bg-border" />
-              <span className="text-xs uppercase tracking-widest text-muted-foreground">
-                OR
-              </span>
-              <div className="h-px flex-1 bg-border" />
+              <div className="auth-preview-note"><span className="auth-live-dot">●</span> A more thoughtful way to work</div>
             </div>
-
-            <p className="text-center text-sm text-muted-foreground">
-              Already have an account?
-              <Link
-                to="/login"
-                className="ml-2 font-semibold text-primary hover:underline"
-              >
-                Sign In
-              </Link>
-            </p>
-
-            <div className="mt-8 rounded-2xl border border-border bg-muted/30 p-4">
-              <div className="flex items-center gap-3">
-                <BrainCircuit size={20} className="text-primary" />
-                <div>
-                  <p className="text-sm font-semibold">AI Ready</p>
-                  <p className="text-xs text-muted-foreground">
-                    Create your workspace and start chatting with documents instantly.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </Card>
-        </section>
+            <div className="auth-preview-footnote"><Sparkles size={14} /> Less searching. More knowing.</div>
+          </div>
+        </aside>
       </div>
     </AuthLayout>
   );
