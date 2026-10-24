@@ -2185,3 +2185,57 @@ ol {
 @media(prefers-reduced-motion:reduce) {
   .auth-shell .auth-orb { animation:none !important; }
 }
+
+
+/* Final auth motion + glass pass: slow full-viewport drift, clear glass blur. */
+.auth-shell { overflow:hidden; }
+.auth-shell .auth-orb {
+  position: fixed !important;
+  z-index: 1 !important;
+  contain: layout style;
+  will-change: transform;
+}
+.auth-shell .auth-orb-pink {
+  animation: auth-orb-slow-pink 26s cubic-bezier(.45,0,.55,1) infinite alternate !important;
+}
+.auth-shell .auth-orb-purple {
+  animation: auth-orb-slow-purple 31s cubic-bezier(.45,0,.55,1) infinite alternate !important;
+}
+@keyframes auth-orb-slow-pink {
+  0% { transform: translate3d(0,0,0) scale(.96); }
+  20% { transform: translate3d(-13vw,12vh,0) scale(1.02); }
+  48% { transform: translate3d(-26vw,34vh,0) scale(.98); }
+  74% { transform: translate3d(-8vw,62vh,0) scale(1.045); }
+  100% { transform: translate3d(-31vw,38vh,0) scale(1); }
+}
+@keyframes auth-orb-slow-purple {
+  0% { transform: translate3d(0,0,0) scale(1); }
+  24% { transform: translate3d(19vw,-18vh,0) scale(1.04); }
+  51% { transform: translate3d(42vw,-42vh,0) scale(.97); }
+  77% { transform: translate3d(24vw,-66vh,0) scale(1.025); }
+  100% { transform: translate3d(54vw,-32vh,0) scale(.99); }
+}
+/* Glass card inspired by the supplied reference, without compromising form legibility. */
+.auth-shell .auth-form-side {
+  position: relative !important;
+  z-index: 3 !important;
+  background: linear-gradient(135deg,rgba(255,255,255,.17),rgba(255,255,255,.055) 54%,rgba(12,13,22,.30)) !important;
+  border: 1px solid rgba(255,255,255,.46) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(125%) !important;
+  backdrop-filter: blur(24px) saturate(125%) !important;
+  box-shadow: 0 26px 80px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.10) !important;
+}
+.auth-shell .auth-grain { z-index: 0 !important; pointer-events:none !important; }
+.auth-shell > section { z-index: 2 !important; }
+@media(max-width:767px) {
+  .auth-shell .auth-orb-pink { animation-duration:32s !important; }
+  .auth-shell .auth-orb-purple { animation-duration:36s !important; }
+  .auth-shell .auth-form-side {
+    -webkit-backdrop-filter: blur(17px) saturate(115%) !important;
+    backdrop-filter: blur(17px) saturate(115%) !important;
+  }
+}
+@media(prefers-reduced-motion:reduce) {
+  .auth-shell .auth-orb-pink,
+  .auth-shell .auth-orb-purple { animation:none !important; }
+}
