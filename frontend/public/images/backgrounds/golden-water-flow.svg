@@ -38,17 +38,33 @@
         stroke="url(#liquidGold)" stroke-width="88"/>
   <path d="M-180 228 C155 488 292 38 610 248 S1010 658 1280 328 S1550 78 1770 248"
         stroke="url(#goldGloss)" stroke-width="5" opacity=".72"/>
+  <!-- Directional liquid highlights: light travels along the broad roads, not the whole image. -->
+  <path class="gold-current gold-current-a"
+    d="M-220 785 C120 495 245 1010 575 755 S1000 250 1275 410 S1570 820 1820 465"
+    stroke="url(#goldGloss)" stroke-width="16" stroke-dasharray="105 720" opacity=".72"/>
+  <path class="gold-current gold-current-b"
+    d="M-180 250 C155 510 292 60 610 270 S1010 680 1280 350 S1550 100 1770 270"
+    stroke="url(#goldGloss)" stroke-width="12" stroke-dasharray="78 640" opacity=".62"/>
+  <path class="gold-current gold-current-c"
+    d="M-130 555 C160 340 330 770 645 540 S1080 145 1330 260 S1580 570 1790 345"
+    stroke="#fff3b0" stroke-width="5" stroke-dasharray="54 560" opacity=".52"/>
   <!-- Reflective folds give the wide shapes a flowing, molten-gold finish -->
   <path d="M-130 555 C160 340 330 770 645 540 S1080 145 1330 260 S1580 570 1790 345"
         stroke="url(#goldGloss)" stroke-width="22" opacity=".34"/>
 </g>
 <style>
   svg { animation: liquid-gold-drift 10s ease-in-out infinite alternate; transform-origin: center; }
+  .gold-current { stroke-linecap: round; animation-timing-function: linear; animation-iteration-count: infinite; }
+  .gold-current-a { animation: gold-current-forward 5.8s infinite linear; }
+  .gold-current-b { animation: gold-current-reverse 7.2s infinite linear; }
+  .gold-current-c { animation: gold-current-forward 4.6s infinite linear; }
+  @keyframes gold-current-forward { from { stroke-dashoffset: 825; } to { stroke-dashoffset: 0; } }
+  @keyframes gold-current-reverse { from { stroke-dashoffset: 0; } to { stroke-dashoffset: 718; } }
   @keyframes liquid-gold-drift {
     0% { transform: translate3d(-1.2%, -.4%, 0) scale(1); }
     50% { transform: translate3d(.4%, .3%, 0) scale(1.018); }
     100% { transform: translate3d(1.2%, .7%, 0) scale(1.03); }
   }
-  @media (prefers-reduced-motion: reduce) { svg { animation: none; } }
+  @media (prefers-reduced-motion: reduce) { svg, .gold-current { animation: none !important; } }
 </style>
 </svg>
