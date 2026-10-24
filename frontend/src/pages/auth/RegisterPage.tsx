@@ -15,7 +15,6 @@ import {
 
 import AuthLayout from "../../layouts/AuthLayout";
 import Button from "../../components/ui/Button";
-import Card from "../../components/ui/Card";
 import Input from "../../components/ui/Input";
 import Logo from "../../components/ui/Logo";
 import {
