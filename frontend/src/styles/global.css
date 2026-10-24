@@ -2303,3 +2303,13 @@ ol {
   .auth-shell .auth-orb-pink,
   .auth-shell .auth-orb-purple { animation: none !important; }
 }
+
+/* Final auth cleanup: remove legacy static corner orbs.
+   The only visible circles should be the two animated AuthLayout elements. */
+.auth-shell::before,
+.auth-shell::after {
+  content: none !important;
+  display: none !important;
+  background: none !important;
+  box-shadow: none !important;
+}
