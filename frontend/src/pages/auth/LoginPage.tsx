@@ -75,9 +75,9 @@ export default function LoginPage() {
 
   return (
     <AuthLayout>
-      <div className="auth-content grid w-full items-center gap-12 lg:grid-cols-[1fr_440px] lg:gap-16 xl:grid-cols-[1fr_460px]">
+      <div className={`auth-content grid w-full items-center gap-8 lg:grid-cols-[minmax(0,1fr)_440px] lg:gap-12 xl:grid-cols-[minmax(0,1fr)_460px] xl:gap-16 ${mounted ? "auth-revealed" : "auth-pending"}`}>
         <section
-          className={`auth-intro hidden transition-all duration-700 ease-out lg:block ${
+          className={`auth-intro auth-reveal-item hidden transition-all duration-700 ease-out lg:block ${
             mounted ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0"
           }`}
         >
@@ -100,7 +100,7 @@ export default function LoginPage() {
 
         <section className="flex justify-center lg:justify-end">
           <Card
-            className={`auth-panel w-full max-w-md rounded-[28px] p-7 shadow-2xl transition-all duration-700 ease-out sm:p-9 ${
+            className={`auth-panel auth-reveal-card w-full max-w-md rounded-[28px] p-7 shadow-2xl transition-all duration-700 ease-out sm:p-9 ${
               mounted ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0"
             }`}
           >
