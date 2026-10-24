@@ -7,7 +7,7 @@ interface AuthLayoutProps {
 
 export default function AuthLayout({ children }: AuthLayoutProps) {
   return (
-    <main className={`app-shell relative min-h-screen overflow-hidden text-foreground ${styles.shell}`}>
+    <main className={`app-shell auth-shell relative min-h-screen overflow-hidden text-foreground ${styles.shell}`}>
       <div className={styles.pinkOrb} aria-hidden="true" />
       <div className={styles.purpleOrb} aria-hidden="true" />
       <section className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl items-center px-5 py-8 sm:px-8 lg:px-12">
