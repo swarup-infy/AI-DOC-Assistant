@@ -1631,58 +1631,22 @@ ol {
 }
 
 
-/* Keep the thick gold/purple flowing ribbons; remove only hair-thin gold orbital streaks. */
+/* Clean luxury auth background: static composition, animated highlights inside SVGs. */
 .auth-shell::after {
-  background-image: url("/images/backgrounds/golden-water-flow.svg"), url("/images/liquid-ribbon.svg") !important;
-  background-repeat: no-repeat, no-repeat !important;
-  background-size: 150% 125%, min(1240px, 100vw) auto !important;
-  background-position: 52% 50%, 67% 48% !important;
-  opacity: .92 !important;
-  mix-blend-mode: screen !important;
-  animation: auth-art-breathe 16s ease-in-out infinite alternate !important;
-}
-.auth-shell .auth-grain::before,
-.auth-shell .auth-grain::after {
-  background: none !important;
-  opacity: 0 !important;
-  animation: none !important;
-  filter: none !important;
-}
-:root[data-theme="light"] .auth-shell::after {
-  opacity: .64 !important;
-  mix-blend-mode: multiply !important;
-}
-:root[data-theme="light"] .auth-shell .auth-grain::before,
-:root[data-theme="light"] .auth-shell .auth-grain::after {
-  background: none !important;
-  opacity: 0 !important;
-  animation: none !important;
-}
-.auth-shell .orbital-particle-canvas {
-  opacity: .82;
-  contain: strict;
-}
-@media (max-width: 767px) {
-  .auth-shell::after {
-    background-size: 180% 135%, 150vw auto !important;
-    background-position: 50% 50%, 67% 48% !important;
-  }
-}
-
-
-/* Final auth background matching the clean reference: broad ribbons only.
-   Remove hairline gold strokes and concentric pseudo-line overlays; keep the
-   existing orbital canvas for subtle circles/triangles and the purple ribbon. */
-.auth-shell::after {
+  content: "";
   background-image:
-    url("/images/backgrounds/golden-water-flow.svg"),
-    url("/images/liquid-ribbon.svg") !important;
+    url("/images/backgrounds/golden-water-flow.svg?v=3"),
+    url("/images/liquid-ribbon.svg?v=3") !important;
   background-repeat: no-repeat, no-repeat !important;
   background-size: 150% 125%, min(1240px, 100vw) auto !important;
   background-position: 52% 50%, 67% 48% !important;
-  opacity: .92 !important;
+  opacity: .78 !important;
   mix-blend-mode: screen !important;
-  animation: auth-art-breathe 16s ease-in-out infinite alternate !important;
+  filter: none !important;
+  animation: none !important;
+  transform: none !important;
+  pointer-events: none !important;
+  will-change: auto !important;
 }
 .auth-shell .auth-grain::before,
 .auth-shell .auth-grain::after {
@@ -1692,199 +1656,34 @@ ol {
   animation: none !important;
   opacity: 0 !important;
 }
+.auth-shell .auth-grain canvas,
+.auth-shell .auth-grain .orbital-particle-canvas {
+  opacity: .52 !important;
+  filter: drop-shadow(0 0 2px rgba(121,200,200,.16)) !important;
+  pointer-events: none !important;
+}
 :root[data-theme="light"] .auth-shell::after {
-  opacity: .64 !important;
+  opacity: .42 !important;
   mix-blend-mode: multiply !important;
-}
-:root[data-theme="light"] .auth-shell .auth-grain::before,
-:root[data-theme="light"] .auth-shell .auth-grain::after {
-  content: none !important;
-  display: none !important;
-  background: none !important;
-  animation: none !important;
-  opacity: 0 !important;
-}
-.auth-shell .auth-grain canvas,
-.auth-shell .auth-grain .orbital-particle-canvas {
-  opacity: .16 !important;
-}
-@media (max-width: 767px) {
-  .auth-shell::after {
-    background-size: 180% 135%, 150vw auto !important;
-    background-position: 50% 50%, 67% 48% !important;
-  }
-}
-
-
-/* Final motion tuning: make the original geometry readable and move the broad
-   gold + purple ribbons independently, without bringing back hairline overlays. */
-.auth-shell::after {
-  background-size: 155% 132%, min(1320px, 108vw) auto !important;
-  animation: auth-ribbon-current 22s ease-in-out infinite alternate !important;
-  will-change: background-position, transform;
-}
-@keyframes auth-ribbon-current {
-  0% {
-    background-position: 44% 42%, 61% 44%;
-    transform: translate3d(-.6%, -.3%, 0) scale(1);
-  }
-  50% {
-    background-position: 52% 50%, 67% 48%;
-    transform: translate3d(.35%, .2%, 0) scale(1.012);
-  }
-  100% {
-    background-position: 60% 58%, 73% 53%;
-    transform: translate3d(.7%, .4%, 0) scale(1.025);
-  }
-}
-.auth-shell .auth-grain canvas,
-.auth-shell .auth-grain .orbital-particle-canvas {
-  opacity: .48 !important;
-  filter: drop-shadow(0 0 1px rgba(121, 200, 200, .16));
 }
 :root[data-theme="light"] .auth-shell .auth-grain canvas,
 :root[data-theme="light"] .auth-shell .auth-grain .orbital-particle-canvas {
   opacity: .58 !important;
-  filter: drop-shadow(0 0 1px rgba(2, 132, 199, .22));
+  filter: drop-shadow(0 0 2px rgba(2,132,199,.18)) !important;
 }
 @media (max-width: 767px) {
-  .auth-shell .auth-grain canvas,
-  .auth-shell .auth-grain .orbital-particle-canvas {
-    opacity: .30 !important;
-  }
-  :root[data-theme="light"] .auth-shell .auth-grain canvas,
-  :root[data-theme="light"] .auth-shell .auth-grain .orbital-particle-canvas {
-    opacity: .42 !important;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
   .auth-shell::after {
-    animation: none !important;
-    will-change: auto;
-  }
-}
-
-
-/* Brighter, faster auth atmosphere: vivid geometry and quicker broad-ribbon motion. */
-.auth-shell::after {
-  animation: auth-ribbon-bright 10s ease-in-out infinite alternate !important;
-  filter: saturate(1.28) brightness(1.22) drop-shadow(0 0 18px rgba(212,175,55,.14));
-  opacity: 1 !important;
-}
-@keyframes auth-ribbon-bright {
-  0% {
-    background-position: 38% 38%, 56% 42%;
-    transform: translate3d(-1%, -.5%, 0) scale(1);
-    filter: saturate(1.18) brightness(1.08) drop-shadow(0 0 12px rgba(212,175,55,.12));
-  }
-  50% {
-    background-position: 53% 50%, 68% 48%;
-    transform: translate3d(.4%, .2%, 0) scale(1.025);
-    filter: saturate(1.42) brightness(1.25) drop-shadow(0 0 24px rgba(212,175,55,.24));
-  }
-  100% {
-    background-position: 65% 62%, 77% 56%;
-    transform: translate3d(1%, .5%, 0) scale(1.045);
-    filter: saturate(1.5) brightness(1.3) drop-shadow(0 0 28px rgba(212,175,55,.28));
-  }
-}
-.auth-shell .auth-grain canvas,
-.auth-shell .auth-grain .orbital-particle-canvas {
-  opacity: .76 !important;
-  filter:
-    brightness(1.55)
-    saturate(1.35)
-    drop-shadow(0 0 2px rgba(121,200,200,.32))
-    drop-shadow(0 0 8px rgba(218,123,147,.16)) !important;
-}
-:root[data-theme="light"] .auth-shell .auth-grain canvas,
-:root[data-theme="light"] .auth-shell .auth-grain .orbital-particle-canvas {
-  opacity: .82 !important;
-  filter:
-    brightness(1.3)
-    saturate(1.5)
-    drop-shadow(0 0 2px rgba(2,132,199,.32))
-    drop-shadow(0 0 8px rgba(124,58,237,.16)) !important;
-}
-:root[data-theme="light"] .auth-shell::after {
-  filter: saturate(1.2) brightness(1.08) !important;
-}
-@media (max-width: 767px) {
-  .auth-shell .auth-grain canvas,
-  .auth-shell .auth-grain .orbital-particle-canvas {
+    background-size: 180% 135%, 150vw auto !important;
+    background-position: 50% 50%, 67% 48% !important;
     opacity: .48 !important;
   }
-  :root[data-theme="light"] .auth-shell .auth-grain canvas,
-  :root[data-theme="light"] .auth-shell .auth-grain .orbital-particle-canvas {
-    opacity: .58 !important;
+  .auth-shell .auth-grain canvas,
+  .auth-shell .auth-grain .orbital-particle-canvas {
+    opacity: .34 !important;
   }
 }
 @media (prefers-reduced-motion: reduce) {
   .auth-shell::after {
     animation: none !important;
-    filter: none !important;
   }
-}
-
-
-/* Shared auth entrance motion: compositor-friendly, short and responsive. */
-.auth-reveal-item,
-.auth-reveal-card {
-  opacity: 0;
-  transform: translate3d(0, 12px, 0);
-  transition:
-    opacity 520ms cubic-bezier(.2,.75,.2,1),
-    transform 620ms cubic-bezier(.2,.75,.2,1);
-  will-change: opacity, transform;
-}
-.auth-revealed .auth-reveal-item {
-  opacity: 1;
-  transform: translate3d(0, 0, 0);
-  transition-delay: 70ms;
-}
-.auth-revealed .auth-reveal-card {
-  opacity: 1;
-  transform: translate3d(0, 0, 0);
-  transition-delay: 150ms;
-}
-.auth-panel {
-  animation: auth-panel-arrive 650ms cubic-bezier(.2,.75,.2,1) both;
-}
-.auth-panel form > * {
-  animation: auth-control-arrive 440ms cubic-bezier(.2,.75,.2,1) both;
-}
-.auth-panel form > *:nth-child(2) { animation-delay: 45ms; }
-.auth-panel form > *:nth-child(3) { animation-delay: 90ms; }
-.auth-panel form > *:nth-child(4) { animation-delay: 135ms; }
-.auth-panel form > *:nth-child(5) { animation-delay: 180ms; }
-@keyframes auth-panel-arrive {
-  from { opacity: .7; transform: translate3d(0, 10px, 0) scale(.992); }
-  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
-}
-@keyframes auth-control-arrive {
-  from { opacity: .65; transform: translate3d(0, 6px, 0); }
-  to { opacity: 1; transform: translate3d(0, 0, 0); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .auth-reveal-item,
-  .auth-reveal-card,
-  .auth-panel,
-  .auth-panel form > * {
-    animation: none !important;
-    transition: none !important;
-    opacity: 1 !important;
-    transform: none !important;
-    will-change: auto !important;
-  }
-}
-
-
-/* Directional ribbon overlay v2: explicit asset versioning prevents stale cached SVG artwork. */
-.auth-shell::after {
-  background-image:
-    url("/images/backgrounds/golden-water-flow.svg?v=2"),
-    url("/images/liquid-ribbon.svg?v=2") !important;
-  animation: auth-ribbon-bright 10s ease-in-out infinite alternate !important;
-  background-repeat: no-repeat, no-repeat !important;
-  pointer-events: none !important;
 }
