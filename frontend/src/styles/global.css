@@ -1825,3 +1825,55 @@ ol {
     filter: none !important;
   }
 }
+
+
+/* Shared auth entrance motion: compositor-friendly, short and responsive. */
+.auth-reveal-item,
+.auth-reveal-card {
+  opacity: 0;
+  transform: translate3d(0, 12px, 0);
+  transition:
+    opacity 520ms cubic-bezier(.2,.75,.2,1),
+    transform 620ms cubic-bezier(.2,.75,.2,1);
+  will-change: opacity, transform;
+}
+.auth-revealed .auth-reveal-item {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  transition-delay: 70ms;
+}
+.auth-revealed .auth-reveal-card {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  transition-delay: 150ms;
+}
+.auth-panel {
+  animation: auth-panel-arrive 650ms cubic-bezier(.2,.75,.2,1) both;
+}
+.auth-panel form > * {
+  animation: auth-control-arrive 440ms cubic-bezier(.2,.75,.2,1) both;
+}
+.auth-panel form > *:nth-child(2) { animation-delay: 45ms; }
+.auth-panel form > *:nth-child(3) { animation-delay: 90ms; }
+.auth-panel form > *:nth-child(4) { animation-delay: 135ms; }
+.auth-panel form > *:nth-child(5) { animation-delay: 180ms; }
+@keyframes auth-panel-arrive {
+  from { opacity: .7; transform: translate3d(0, 10px, 0) scale(.992); }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+@keyframes auth-control-arrive {
+  from { opacity: .65; transform: translate3d(0, 6px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .auth-reveal-item,
+  .auth-reveal-card,
+  .auth-panel,
+  .auth-panel form > * {
+    animation: none !important;
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    will-change: auto !important;
+  }
+}
