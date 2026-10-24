@@ -1,8 +1,4 @@
-import { lazy, Suspense, type ReactNode } from "react";
-
-const OrbitalParticleField = lazy(
-  () => import("../components/OrbitalParticleField")
-);
+import { type ReactNode } from "react";
 
 interface AuthLayoutProps {
   children: ReactNode;
@@ -13,11 +9,6 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
     <main className="app-shell auth-shell relative min-h-screen overflow-hidden text-foreground">
       <div className="auth-orb auth-orb-pink" aria-hidden="true" />
       <div className="auth-orb auth-orb-purple" aria-hidden="true" />
-      <div className="auth-grain" aria-hidden="true">
-        <Suspense fallback={null}>
-          <OrbitalParticleField />
-        </Suspense>
-      </div>
       <section className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl items-center px-5 py-8 sm:px-8 lg:px-12">
         {children}
       </section>
