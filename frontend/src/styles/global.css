@@ -2241,38 +2241,34 @@ ol {
 }
 
 
-/* Motion correction: animate the CSS translate property independently from scale.
-   This avoids transform overrides from older auth styles and makes travel obvious. */
+/* Auth orb motion: animate transform itself for broad browser compatibility.
+   Keep transform declarations out of !important rules so keyframes can run. */
 .auth-shell .auth-orb-pink {
   animation: auth-pink-page-drift 24s ease-in-out infinite alternate !important;
-  transform: scale(1) !important;
 }
 .auth-shell .auth-orb-purple {
   animation: auth-purple-page-drift 29s ease-in-out infinite alternate !important;
-  transform: scale(1) !important;
 }
 @keyframes auth-pink-page-drift {
-  0%   { translate: 0 0; scale: .96; }
-  22%  { translate: -17vw 14vh; scale: 1.02; }
-  48%  { translate: -36vw 30vh; scale: .99; }
-  73%  { translate: -19vw 57vh; scale: 1.045; }
-  100% { translate: -42vw 35vh; scale: 1; }
+  0%   { transform: translate3d(0, 0, 0) scale(.96); }
+  22%  { transform: translate3d(-17vw, 14vh, 0) scale(1.02); }
+  48%  { transform: translate3d(-36vw, 30vh, 0) scale(.99); }
+  73%  { transform: translate3d(-19vw, 57vh, 0) scale(1.045); }
+  100% { transform: translate3d(-42vw, 35vh, 0) scale(1); }
 }
 @keyframes auth-purple-page-drift {
-  0%   { translate: 0 0; scale: 1; }
-  25%  { translate: 18vw -18vh; scale: 1.035; }
-  50%  { translate: 38vw -42vh; scale: .97; }
-  76%  { translate: 22vw -65vh; scale: 1.025; }
-  100% { translate: 48vw -31vh; scale: .99; }
+  0%   { transform: translate3d(0, 0, 0) scale(1); }
+  25%  { transform: translate3d(18vw, -18vh, 0) scale(1.035); }
+  50%  { transform: translate3d(38vw, -42vh, 0) scale(.97); }
+  76%  { transform: translate3d(22vw, -65vh, 0) scale(1.025); }
+  100% { transform: translate3d(48vw, -31vh, 0) scale(.99); }
 }
-/* Keep circles below the glass panel and allow their full movement area. */
-.auth-shell .auth-orb { pointer-events:none !important; }
-.auth-shell .auth-form-side { isolation:isolate; }
-@media(max-width:767px) {
-  .auth-shell .auth-orb-pink { animation-duration:30s !important; }
-  .auth-shell .auth-orb-purple { animation-duration:34s !important; }
+.auth-shell .auth-orb { pointer-events: none !important; }
+@media (max-width: 767px) {
+  .auth-shell .auth-orb-pink { animation-duration: 30s !important; }
+  .auth-shell .auth-orb-purple { animation-duration: 34s !important; }
 }
-@media(prefers-reduced-motion:reduce) {
+@media (prefers-reduced-motion: reduce) {
   .auth-shell .auth-orb-pink,
-  .auth-shell .auth-orb-purple { animation:none !important; translate:0 0 !important; }
+  .auth-shell .auth-orb-purple { animation: none !important; }
 }
