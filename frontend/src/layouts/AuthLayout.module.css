@@ -5,51 +5,55 @@
 }
 .pinkOrb,
 .purpleOrb {
-  position: fixed;
-  display: block;
-  z-index: 0;
-  width: clamp(180px, 22vw, 300px);
-  aspect-ratio: 1;
-  border-radius: 50%;
-  pointer-events: none;
-  transform-origin: center;
-  will-change: left, top;
+  position: fixed !important;
+  display: block !important;
+  z-index: 1 !important;
+  width: clamp(190px, 22vw, 300px) !important;
+  height: clamp(190px, 22vw, 300px) !important;
+  border-radius: 50% !important;
+  pointer-events: none !important;
+  opacity: .98;
+  will-change: transform;
+  backface-visibility: hidden;
+  transform: translate3d(0,0,0);
 }
-.pinkOrb {
-  left: 66vw;
-  top: -10vh;
-  background: #f52b83;
-  background-image: radial-gradient(circle at 34% 28%, #ff4c91 0%, #f5167b 70%);
+.shell .pinkOrb {
+  left: 64vw !important;
+  top: -7vh !important;
+  right: auto !important;
+  bottom: auto !important;
+  background: radial-gradient(circle at 34% 28%, #ff4c91 0%, #f5167b 72%) !important;
   box-shadow: 0 0 34px rgba(245, 43, 131, .24);
-  animation: pinkJourney 42s ease-in-out infinite alternate;
+  animation: pinkJourney 38s ease-in-out infinite alternate !important;
 }
-.purpleOrb {
-  left: 7vw;
-  top: 76vh;
-  background: #a91ce4;
-  background-image: radial-gradient(circle at 34% 28%, #c52be9 0%, #7838e8 78%);
+.shell .purpleOrb {
+  left: 6vw !important;
+  top: 72vh !important;
+  right: auto !important;
+  bottom: auto !important;
+  background: radial-gradient(circle at 34% 28%, #c52be9 0%, #7838e8 78%) !important;
   box-shadow: 0 0 38px rgba(169, 28, 228, .22);
-  animation: purpleJourney 48s ease-in-out infinite alternate;
+  animation: purpleJourney 44s ease-in-out infinite alternate !important;
 }
 @keyframes pinkJourney {
-  0% { left: 66vw; top: -10vh; }
-  22% { left: 50vw; top: 16vh; }
-  48% { left: 73vw; top: 43vh; }
-  74% { left: 48vw; top: 69vh; }
-  100% { left: 12vw; top: 52vh; }
+  0% { transform: translate3d(0,0,0) scale(.96); }
+  22% { transform: translate3d(-17vw,16vh,0) scale(1.02); }
+  48% { transform: translate3d(-42vw,34vh,0) scale(.98); }
+  74% { transform: translate3d(-18vw,65vh,0) scale(1.035); }
+  100% { transform: translate3d(-54vw,40vh,0) scale(1); }
 }
 @keyframes purpleJourney {
-  0% { left: 7vw; top: 76vh; }
-  24% { left: 18vw; top: 48vh; }
-  50% { left: 42vw; top: 66vh; }
-  76% { left: 55vw; top: 24vh; }
-  100% { left: 28vw; top: 4vh; }
+  0% { transform: translate3d(0,0,0) scale(1); }
+  24% { transform: translate3d(18vw,-18vh,0) scale(1.035); }
+  50% { transform: translate3d(43vw,-42vh,0) scale(.98); }
+  76% { transform: translate3d(26vw,-65vh,0) scale(1.025); }
+  100% { transform: translate3d(57vw,-32vh,0) scale(.99); }
 }
 @media (max-width: 767px) {
-  .pinkOrb, .purpleOrb { width: 155px; }
-  .pinkOrb { animation-duration: 48s; }
-  .purpleOrb { animation-duration: 54s; }
+  .pinkOrb, .purpleOrb { width: 155px !important; height: 155px !important; }
+  .shell .pinkOrb { animation-duration: 44s !important; }
+  .shell .purpleOrb { animation-duration: 50s !important; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .pinkOrb, .purpleOrb { animation: none; }
+  .pinkOrb, .purpleOrb { animation: none !important; }
 }
