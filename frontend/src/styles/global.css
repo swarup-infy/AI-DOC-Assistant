@@ -2239,3 +2239,40 @@ ol {
   .auth-shell .auth-orb-pink,
   .auth-shell .auth-orb-purple { animation:none !important; }
 }
+
+
+/* Motion correction: animate the CSS translate property independently from scale.
+   This avoids transform overrides from older auth styles and makes travel obvious. */
+.auth-shell .auth-orb-pink {
+  animation: auth-pink-page-drift 24s ease-in-out infinite alternate !important;
+  transform: scale(1) !important;
+}
+.auth-shell .auth-orb-purple {
+  animation: auth-purple-page-drift 29s ease-in-out infinite alternate !important;
+  transform: scale(1) !important;
+}
+@keyframes auth-pink-page-drift {
+  0%   { translate: 0 0; scale: .96; }
+  22%  { translate: -17vw 14vh; scale: 1.02; }
+  48%  { translate: -36vw 30vh; scale: .99; }
+  73%  { translate: -19vw 57vh; scale: 1.045; }
+  100% { translate: -42vw 35vh; scale: 1; }
+}
+@keyframes auth-purple-page-drift {
+  0%   { translate: 0 0; scale: 1; }
+  25%  { translate: 18vw -18vh; scale: 1.035; }
+  50%  { translate: 38vw -42vh; scale: .97; }
+  76%  { translate: 22vw -65vh; scale: 1.025; }
+  100% { translate: 48vw -31vh; scale: .99; }
+}
+/* Keep circles below the glass panel and allow their full movement area. */
+.auth-shell .auth-orb { pointer-events:none !important; }
+.auth-shell .auth-form-side { isolation:isolate; }
+@media(max-width:767px) {
+  .auth-shell .auth-orb-pink { animation-duration:30s !important; }
+  .auth-shell .auth-orb-purple { animation-duration:34s !important; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .auth-shell .auth-orb-pink,
+  .auth-shell .auth-orb-purple { animation:none !important; translate:0 0 !important; }
+}
