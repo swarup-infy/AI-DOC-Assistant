@@ -58,7 +58,11 @@ export async function uploadDocument(
 
   const { data } = await API.post<UploadResponse>(
     "/upload/file",
-    formData
+    formData,
+    {
+      // OCR + embedding generation can take longer than a normal API request.
+      timeout: 120000,
+    }
   );
 
   return data;
