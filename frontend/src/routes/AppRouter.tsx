@@ -1,12 +1,12 @@
 import { lazy, Suspense, type ReactNode } from "react";
+import LoginPage from "../pages/auth/LoginPage";
+import RegisterPage from "../pages/auth/RegisterPage";
 import { Link, Navigate, Route, Routes } from "react-router-dom";
 import { ArrowLeft, FileQuestion, Loader2, Sparkles } from "lucide-react";
 
 import ProtectedRoute from "./ProtectedRoute";
 import { getAccessToken } from "../services/authService";
 
-const LoginPage = lazy(() => import("../pages/auth/LoginPage"));
-const RegisterPage = lazy(() => import("../pages/auth/RegisterPage"));
 const TermsPage = lazy(() => import("../pages/TermsPage"));
 const PrivacyPage = lazy(() => import("../pages/PrivacyPage"));
 const DashboardPage = lazy(() => import("../pages/dashboard/DashboardPage"));
