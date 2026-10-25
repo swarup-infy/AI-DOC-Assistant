@@ -46,7 +46,8 @@ def upload_file(
         File(
             description=(
                 "Document to upload. Supported formats are "
-                "PDF, DOCX, TXT, CSV, XLSX, and XLS."
+                "PDF, DOCX, TXT, CSV, XLSX, XLS, and common image formats " 
+                "(PNG, JPG/JPEG, WEBP, BMP, and TIFF). Images are processed using OCR."
             ),
         ),
     ],
