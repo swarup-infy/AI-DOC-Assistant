@@ -44,6 +44,13 @@ SUPPORTED_EXTENSIONS = frozenset(
         "csv",
         "xlsx",
         "xls",
+        "png",
+        "jpg",
+        "jpeg",
+        "webp",
+        "bmp",
+        "tif",
+        "tiff",
     }
 )
 
