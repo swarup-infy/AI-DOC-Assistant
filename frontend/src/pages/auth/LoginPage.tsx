@@ -7,12 +7,8 @@ import {
   ArrowRight,
   Eye,
   EyeOff,
-  FileText,
-  BrainCircuit,
   Lock,
   Mail,
-  Search,
-  Sparkles,
 } from "lucide-react";
 
 import AuthLayout from "../../layouts/AuthLayout";
