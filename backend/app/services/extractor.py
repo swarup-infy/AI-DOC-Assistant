@@ -5,6 +5,8 @@ from pathlib import Path
 
 import fitz
 import pandas as pd
+import pytesseract
+from PIL import Image, UnidentifiedImageError
 from docx import Document
 from docx.table import Table
 from docx.text.paragraph import Paragraph
@@ -271,6 +273,45 @@ def extract_excel_text(file_path: str) -> str:
 
 
 # ==========================================================
+# Image OCR
+# ==========================================================
+
+
+def extract_image_text(file_path: str) -> str:
+    """
+    Extract searchable text from an image using Tesseract OCR.
+    Supported image formats are validated by Pillow before OCR.
+    """
+    path = _validate_file(file_path)
+    logger.info("Running OCR on image: %s", path)
+
+    try:
+        with Image.open(path) as image:
+            image.verify()
+
+        with Image.open(path) as image:
+            # Convert unusual color modes to a format Tesseract handles well.
+            if image.mode not in ("RGB", "L"):
+                image = image.convert("RGB")
+            text = pytesseract.image_to_string(image).strip()
+
+        logger.info("Image OCR completed: %s (%d characters)", path, len(text))
+        return text
+
+    except (UnidentifiedImageError, OSError) as exc:
+        logger.warning("Invalid or unreadable image upload: %s", path)
+        raise ValueError("The uploaded image is invalid or cannot be read.") from exc
+    except pytesseract.TesseractNotFoundError as exc:
+        logger.exception("Tesseract OCR is not installed on this server.")
+        raise RuntimeError(
+            "Image text extraction is unavailable because OCR is not installed."
+        ) from exc
+    except Exception:
+        logger.exception("Failed to extract text from image: %s", path)
+        raise
+
+
+# ==========================================================
 # Generic Extraction
 # ==========================================================
 
@@ -282,6 +323,13 @@ _EXTRACTORS: dict[str, Extractor] = {
     ".csv": extract_csv_text,
     ".xlsx": extract_excel_text,
     ".xls": extract_excel_text,
+    ".png": extract_image_text,
+    ".jpg": extract_image_text,
+    ".jpeg": extract_image_text,
+    ".webp": extract_image_text,
+    ".bmp": extract_image_text,
+    ".tif": extract_image_text,
+    ".tiff": extract_image_text,
 }
 
 
