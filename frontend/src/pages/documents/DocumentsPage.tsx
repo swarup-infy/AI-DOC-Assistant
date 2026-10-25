@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
   CheckCircle2,
+  FileImage,
   FileSpreadsheet,
   FileText,
   FileUp,
@@ -25,7 +26,7 @@ interface Document {
   uploaded_at: string;
 }
 
-const ACCEPTED_TYPES = ".pdf,.docx,.csv,.xls,.xlsx";
+const ACCEPTED_TYPES = ".pdf,.docx,.txt,.csv,.xls,.xlsx,.png,.jpg,.jpeg,.webp,.bmp,.tif,.tiff";
 const MAX_FILE_SIZE = 20 * 1024 * 1024;
 
 function formatFileSize(bytes: number): string {
@@ -36,7 +37,10 @@ function formatFileSize(bytes: number): string {
 
 function getFileIcon(filename: string) {
   const extension = filename.split(".").pop()?.toLowerCase();
-  return extension === "csv" || extension === "xls" || extension === "xlsx"
+  if (["png", "jpg", "jpeg", "webp", "bmp", "tif", "tiff"].includes(extension ?? "")) {
+    return FileImage;
+  }
+  return ["csv", "xls", "xlsx"].includes(extension ?? "")
     ? FileSpreadsheet
     : FileText;
 }
@@ -74,7 +78,7 @@ export default function DocumentsPage() {
     const accepted = ACCEPTED_TYPES.split(",").includes(extension);
 
     if (!accepted) {
-      setMessage("Please choose a PDF, DOCX, CSV, XLS, or XLSX file.");
+      setMessage("Choose PDF, DOCX, TXT, CSV, XLS/XLSX, or an image (PNG, JPG, WEBP, BMP, TIFF).");
       setMessageType("error");
       return false;
     }
@@ -123,7 +127,15 @@ export default function DocumentsPage() {
       clearSelectedFile();
     } catch (error) {
       console.error(error);
-      setMessage("Upload failed. Please try again.");
+      const apiError = error as {
+        response?: { data?: { detail?: string } };
+        message?: string;
+      };
+      setMessage(
+        apiError.response?.data?.detail ||
+        apiError.message ||
+        "Upload failed. Check your connection and try again."
+      );
       setMessageType("error");
     } finally {
       setLoading(false);
@@ -177,7 +189,7 @@ export default function DocumentsPage() {
           <div className="border-b border-border px-5 py-5 sm:px-6">
             <h3 className="text-base font-semibold text-foreground">Add a document</h3>
             <p className="mt-1 text-sm text-muted-foreground">
-              PDF, DOCX, CSV, XLS and XLSX up to 20 MB.
+              PDF, DOCX, TXT, spreadsheets, and images (PNG, JPG, WEBP, TIFF) up to 20 MB. Images are OCR-processed for AI search.
             </p>
           </div>
 
