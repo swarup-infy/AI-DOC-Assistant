@@ -527,9 +527,15 @@ def process_other_document(
     Extract, clean, and chunk a supported non-PDF document.
     """
 
-    text = extract_text(
-        str(file_path)
-    )
+    try:
+        text = extract_text(
+            str(file_path)
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
+        ) from exc
 
     cleaned_text = clean_text(
         text
