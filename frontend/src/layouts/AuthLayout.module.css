@@ -27,8 +27,8 @@
   animation: pinkJourney 38s ease-in-out infinite alternate !important;
 }
 .shell .purpleOrb {
-  left: 6vw !important;
-  top: 72vh !important;
+  left: 32vw !important;
+  top: 46vh !important;
   right: auto !important;
   bottom: auto !important;
   background: radial-gradient(circle at 34% 28%, #c52be9 0%, #7838e8 78%) !important;
@@ -44,10 +44,10 @@
 }
 @keyframes purpleJourney {
   0% { transform: translate3d(0,0,0) scale(1); }
-  24% { transform: translate3d(18vw,-18vh,0) scale(1.035); }
-  50% { transform: translate3d(43vw,-42vh,0) scale(.98); }
-  76% { transform: translate3d(26vw,-65vh,0) scale(1.025); }
-  100% { transform: translate3d(57vw,-32vh,0) scale(.99); }
+  24% { transform: translate3d(12vw,-10vh,0) scale(1.035); }
+  50% { transform: translate3d(24vw,-24vh,0) scale(.98); }
+  76% { transform: translate3d(8vw,12vh,0) scale(1.025); }
+  100% { transform: translate3d(-18vw,-8vh,0) scale(.99); }
 }
 @media (max-width: 767px) {
   .pinkOrb, .purpleOrb { width: 155px !important; height: 155px !important; }
