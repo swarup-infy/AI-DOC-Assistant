@@ -62,6 +62,11 @@ class User(Base):
         server_default=func.now(),
     )
 
+    avatar_url = Column(
+        String(2800000),
+        nullable=True,
+    )
+
     updated_at = Column(
         DateTime(timezone=True),
         nullable=False,
