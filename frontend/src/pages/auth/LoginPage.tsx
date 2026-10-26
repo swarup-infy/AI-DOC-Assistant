@@ -58,6 +58,7 @@ export default function LoginPage() {
               name: response.user.username,
               email: response.user.email,
               created_at: response.user.created_at,
+              avatar_url: response.user.avatar_url ?? null,
             }
           : undefined;
 
