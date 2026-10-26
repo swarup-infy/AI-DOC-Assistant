@@ -7,7 +7,6 @@ import {
   type ChangeEvent,
 } from "react";
 import {
-  LogOut,
   Menu,
   Moon,
   Search,
@@ -48,7 +47,7 @@ const iconButtonClass =
 
 function Navbar({ onMenuClick }: NavbarProps) {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
 
   const [search, setSearch] = useState("");
   const [theme, setTheme] = useState<Theme>(getInitialTheme);
@@ -98,12 +97,6 @@ function Navbar({ onMenuClick }: NavbarProps) {
   const handleProfile = useCallback(() => {
     navigate("/profile");
   }, [navigate]);
-
-  const handleLogout = useCallback(() => {
-    if (!window.confirm("Are you sure you want to logout?")) return;
-    logout();
-    navigate("/login", { replace: true });
-  }, [logout, navigate]);
 
   const displayName = useMemo(() => user?.name ?? "Profile", [user]);
 
@@ -176,7 +169,13 @@ function Navbar({ onMenuClick }: NavbarProps) {
           title="Profile"
           className="hidden h-10 items-center gap-2.5 rounded-xl border border-border bg-card/70 px-3 transition-all hover:border-primary/30 hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary sm:flex"
         >
-          <UserCircle size={20} className="text-muted-foreground" />
+          {user?.avatar_url ? (
+            <img src={user.avatar_url} alt="" className="h-7 w-7 rounded-full border border-border object-cover" />
+          ) : (
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+              {(displayName.trim()[0] || "U").toUpperCase()}
+            </span>
+          )}
           <div className="hidden text-left lg:block">
             <p className="text-[10px] leading-3 text-muted-foreground">Welcome</p>
             <p className="max-w-[130px] truncate text-xs font-semibold text-foreground" title={displayName}>
@@ -185,16 +184,7 @@ function Navbar({ onMenuClick }: NavbarProps) {
           </div>
         </button>
 
-        <button
-          type="button"
-          onClick={handleLogout}
-          aria-label="Logout"
-          title="Logout"
-          className="inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-3.5 text-sm font-semibold text-primary-foreground shadow-md shadow-primary/20 transition-all hover:opacity-90 hover:shadow-lg hover:shadow-primary/25 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-primary"
-        >
-          <LogOut size={17} />
-          <span className="hidden md:inline">Logout</span>
-        </button>
+
       </div>
     </div>
   );
