@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
-import { Calendar, Camera, CheckCircle2, ImagePlus, Mail, Save, Shield, User, type LucideIcon } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Calendar, Camera, CheckCircle2, ImagePlus, LogOut, Mail, Save, Shield, Trash2, User, type LucideIcon } from "lucide-react";
 
 import DashboardLayout from "../../layouts/DashboardLayout";
 import { useAuth } from "../../hooks/useAuth";
@@ -9,7 +10,8 @@ const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
 const ACCEPTED_AVATAR_TYPES = ["image/png", "image/jpeg", "image/webp"];
 
 export default function ProfilePage() {
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, logout } = useAuth();
+  const navigate = useNavigate();
   const [name, setName] = useState(user?.name ?? "");
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -57,11 +59,29 @@ export default function ProfilePage() {
       const dataUrl = await readFileAsDataUrl(file);
       const updated = await updateProfile({ avatar_url: dataUrl });
       updateUser(updated);
+      setSaved(true);
     } catch (cause) {
       setError(getErrorMessage(cause, "Could not upload your profile picture. Please try again."));
     } finally {
       setUploadingAvatar(false);
     }
+  }
+
+  async function handleRemoveAvatar() {
+    try {
+      setError("");
+      const updated = await updateProfile({ avatar_url: null });
+      updateUser(updated);
+      setSaved(true);
+    } catch (cause) {
+      setError(getErrorMessage(cause, "Could not remove your profile picture."));
+    }
+  }
+
+  function handleLogout() {
+    if (!window.confirm("Are you sure you want to log out?")) return;
+    logout();
+    navigate("/login", { replace: true });
   }
 
   const initials = (user?.name ?? "User").split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("");
@@ -92,6 +112,7 @@ export default function ProfilePage() {
               <ImagePlus size={14} />{uploadingAvatar ? "Uploading picture..." : user?.avatar_url ? "Change profile picture" : "Add profile picture"}
             </button>
             <p className="mt-1 text-xs text-muted-foreground">PNG, JPG or WebP · up to 2 MB</p>
+            {user?.avatar_url && <button type="button" onClick={() => void handleRemoveAvatar()} className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-destructive transition hover:underline"><Trash2 size={13} />Remove photo</button>}
             <h3 className="mt-4 text-lg font-semibold text-foreground">{user?.name || "User"}</h3>
             <p className="mt-1 break-all text-sm text-muted-foreground">{user?.email || "—"}</p>
             <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-success/20 bg-success/10 px-3 py-1.5 text-xs font-semibold text-success"><CheckCircle2 size={14} /> Active account</div>
@@ -104,6 +125,32 @@ export default function ProfilePage() {
               <div><label htmlFor="profile-email" className="mb-2 block text-sm font-semibold text-foreground">Email address</label><div className="relative"><Mail size={17} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" /><input id="profile-email" value={user?.email ?? ""} readOnly className="h-12 w-full rounded-xl border border-border bg-muted/40 pl-11 pr-4 text-sm text-muted-foreground outline-none" /></div><p className="mt-2 text-xs text-muted-foreground">Email changes are managed by account security settings.</p></div>
               <div className="grid gap-3 sm:grid-cols-2"><InfoCard icon={Shield} title="Account type" value="Standard user" /><InfoCard icon={Calendar} title="Member since" value={user?.created_at ? new Date(user.created_at).toLocaleDateString(undefined, { month: "short", year: "numeric" }) : "Your account"} /></div>
               <div className="flex flex-wrap items-center gap-3 pt-2"><button type="button" onClick={() => void handleSave()} disabled={saving || !name.trim() || name.trim() === user?.name} className="inline-flex h-11 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-md shadow-primary/20 transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"><Save size={17} />{saving ? "Saving..." : "Save changes"}</button>{saved && <span className="inline-flex items-center gap-2 text-sm font-medium text-success"><CheckCircle2 size={16} />Saved</span>}</div>
+            </div>
+          </article>
+        </section>
+
+        <section className="grid gap-4 lg:grid-cols-2">
+          <article className="surface rounded-2xl p-5 sm:p-6">
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><Shield size={19} /></div>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-base font-semibold text-foreground">Account & privacy</h3>
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">Your profile picture and display name are saved to your account. Your email address remains read-only here.</p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <button type="button" onClick={() => navigate("/privacy")} className="rounded-lg border border-border px-3 py-2 text-xs font-semibold text-foreground transition hover:bg-accent">Privacy policy</button>
+                  <button type="button" onClick={() => navigate("/terms")} className="rounded-lg border border-border px-3 py-2 text-xs font-semibold text-foreground transition hover:bg-accent">Terms of service</button>
+                </div>
+              </div>
+            </div>
+          </article>
+          <article className="surface rounded-2xl p-5 sm:p-6">
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-destructive/10 text-destructive"><LogOut size={19} /></div>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-base font-semibold text-foreground">Sign out</h3>
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">End this session on the current device. You can sign in again at any time.</p>
+                <button type="button" onClick={handleLogout} className="mt-4 inline-flex h-10 items-center gap-2 rounded-xl border border-destructive/25 px-4 text-sm font-semibold text-destructive transition hover:bg-destructive/10"><LogOut size={16} />Log out</button>
+              </div>
             </div>
           </article>
         </section>
