@@ -5,10 +5,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   AlertCircle,
   ArrowRight,
+  BrainCircuit,
   Eye,
   EyeOff,
+  FileText,
   Lock,
   Mail,
+  Search,
+  Sparkles,
 } from "lucide-react";
 
 import AuthLayout from "../../layouts/AuthLayout";
