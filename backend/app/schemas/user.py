@@ -168,3 +168,16 @@ class TokenResponse(BaseModel):
     model_config = ConfigDict(
         frozen=True,
     )
+
+class UserProfileUpdate(BaseModel):
+    """Fields a signed-in user may change on their own profile."""
+
+    username: str | None = Field(default=None, min_length=3, max_length=100)
+    avatar_url: str | None = Field(default=None, max_length=2_800_000)
+
+    @field_validator("username", mode="before")
+    @classmethod
+    def normalize_profile_username(cls, value: object) -> object:
+        return value.strip() if isinstance(value, str) else value
+
+    model_config = ConfigDict(extra="forbid")
