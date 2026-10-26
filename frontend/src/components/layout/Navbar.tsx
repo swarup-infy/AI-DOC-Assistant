@@ -11,7 +11,6 @@ import {
   Moon,
   Search,
   Sun,
-  UserCircle,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
