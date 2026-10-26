@@ -6,7 +6,6 @@ import {
   Clock3,
   FileText,
   HardDrive,
-  UserCircle,
   MessageSquare,
   Search,
   Sparkles,
