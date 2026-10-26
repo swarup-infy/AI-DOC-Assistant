@@ -6,6 +6,7 @@ from sqlalchemy import (
     DateTime,
     Integer,
     String,
+    Text,
     func,
 )
 from sqlalchemy.orm import relationship
@@ -63,7 +64,7 @@ class User(Base):
     )
 
     avatar_url = Column(
-        String(2800000),
+        Text,
         nullable=True,
     )
 
