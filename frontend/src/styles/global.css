@@ -2416,3 +2416,71 @@ ol {
   .app-shell::after,
   .aurora-bg::after { animation: none !important; }
 }
+
+
+/* Final ribbon background pass: keep the artwork visible behind page content,
+   without relying on negative stacking layers that can be hidden by isolation. */
+.app-shell,
+.aurora-bg {
+  position: relative !important;
+  isolation: isolate !important;
+  overflow-x: clip;
+  background: #030507 !important;
+  color: #eef6ff;
+}
+.app-shell::before,
+.aurora-bg::before {
+  content: "" !important;
+  display: block !important;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 0 !important;
+  pointer-events: none !important;
+  background:
+    radial-gradient(ellipse at 50% 45%, rgba(6, 33, 41, .30), transparent 58%),
+    linear-gradient(135deg, #030507 0%, #06090d 54%, #020405 100%) !important;
+}
+.app-shell::after,
+.aurora-bg::after {
+  content: "" !important;
+  display: block !important;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 0 !important;
+  pointer-events: none !important;
+  background: url("/images/liquid-ribbon.svg") center center / cover no-repeat !important;
+  opacity: .88 !important;
+  animation: cyan-ribbon-breathe 34s ease-in-out infinite alternate !important;
+}
+.app-shell > *,
+.aurora-bg > * {
+  position: relative;
+  z-index: 1;
+}
+@keyframes cyan-ribbon-breathe {
+  from { transform: translate3d(-.6%, 0, 0) scale(1); opacity: .72; }
+  to { transform: translate3d(.6%, -.3%, 0) scale(1.018); opacity: .94; }
+}
+:root[data-theme="light"] .app-shell,
+:root[data-theme="light"] .aurora-bg {
+  background: #030507 !important;
+  color: #eef6ff;
+}
+:root[data-theme="light"] .app-shell::before,
+:root[data-theme="light"] .aurora-bg::before {
+  background:
+    radial-gradient(ellipse at 50% 45%, rgba(6, 33, 41, .30), transparent 58%),
+    linear-gradient(135deg, #030507 0%, #06090d 54%, #020405 100%) !important;
+}
+@media (max-width: 767px) {
+  .app-shell::after,
+  .aurora-bg::after {
+    background-size: auto 115% !important;
+    background-position: 52% center !important;
+    opacity: .62 !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-shell::after,
+  .aurora-bg::after { animation: none !important; }
+}
