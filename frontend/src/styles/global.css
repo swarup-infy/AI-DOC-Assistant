@@ -2350,3 +2350,69 @@ ol {
     radial-gradient(ellipse at 88% 84%, rgba(34,211,238,.12), transparent 38rem),
     linear-gradient(145deg, #f8fafc 0%, #f1f6fc 58%, #edf6fb 100%) !important;
 }
+
+
+/* Cinematic black + cyan ribbon background — inspired by the supplied reference.
+   Replaces legacy ornamental mandala patterns without changing page layout. */
+.app-shell,
+.aurora-bg {
+  position: relative;
+  isolation: isolate;
+  background-color: #05070a !important;
+}
+.app-shell::before,
+.aurora-bg::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 48% 45%, rgba(7, 28, 34, .34), transparent 55%),
+    linear-gradient(135deg, #030405 0%, #070b0e 54%, #020405 100%) !important;
+}
+.app-shell::after,
+.aurora-bg::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: .95;
+  background-image: url("/images/liquid-ribbon.svg");
+  background-repeat: no-repeat;
+  background-size: min(1100px, 100vw) auto;
+  background-position: 58% 46%;
+  animation: app-cyan-ribbon-drift 28s ease-in-out infinite alternate;
+}
+@keyframes app-cyan-ribbon-drift {
+  0% { transform: translate3d(-1.2%, .2%, 0) scale(1); }
+  50% { transform: translate3d(.8%, -.8%, 0) scale(1.025); }
+  100% { transform: translate3d(1.4%, .5%, 0) scale(1.01); }
+}
+:root[data-theme="light"] .app-shell,
+:root[data-theme="light"] .aurora-bg {
+  background-color: #05070a !important;
+}
+:root[data-theme="light"] .app-shell::before,
+:root[data-theme="light"] .aurora-bg::before {
+  background:
+    radial-gradient(ellipse at 48% 45%, rgba(7, 28, 34, .34), transparent 55%),
+    linear-gradient(135deg, #030405 0%, #070b0e 54%, #020405 100%) !important;
+}
+:root[data-theme="light"] .app-shell::after,
+:root[data-theme="light"] .aurora-bg::after {
+  opacity: .95;
+}
+@media (max-width: 767px) {
+  .app-shell::after,
+  .aurora-bg::after {
+    background-size: 155vw auto;
+    background-position: 55% 48%;
+    opacity: .78;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-shell::after,
+  .aurora-bg::after { animation: none !important; }
+}
