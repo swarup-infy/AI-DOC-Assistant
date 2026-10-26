@@ -6,6 +6,7 @@ import {
   Clock3,
   FileText,
   HardDrive,
+  UserCircle,
   MessageSquare,
   Search,
   Sparkles,
@@ -82,7 +83,12 @@ export default function DashboardPage() {
               <span className="inline-flex items-center gap-2 rounded-full border border-white/45 bg-white/45 px-3 py-1.5 text-xs font-semibold text-slate-800 backdrop-blur-md">
                 <Sparkles size={14} /> AI DOCUMENT STUDIO
               </span>
-              <span className="rounded-full border border-white/50 bg-white/45 px-3 py-1.5 text-xs font-semibold text-slate-700 backdrop-blur-md">WORKSPACE · READY</span>
+              <div className="flex items-center gap-2">
+                <span className="rounded-full border border-white/50 bg-white/45 px-3 py-1.5 text-xs font-semibold text-slate-700 backdrop-blur-md">WORKSPACE · READY</span>
+                <button type="button" onClick={() => navigate("/profile")} aria-label="Open profile" title="Open profile" className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border-2 border-white/70 bg-white/65 text-slate-700 shadow-sm backdrop-blur-md transition hover:scale-105">
+                  {user?.avatar_url ? <img src={user.avatar_url} alt="Your profile" className="h-full w-full object-cover" /> : <span className="text-sm font-bold">{(user?.name?.trim()[0] || "U").toUpperCase()}</span>}
+                </button>
+              </div>
             </div>
             <div className="grid flex-1 items-center gap-6 py-8 lg:grid-cols-[1fr_0.9fr]">
               <div className="max-w-xl">
