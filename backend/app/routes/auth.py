@@ -1,6 +1,7 @@
 ﻿from __future__ import annotations
 
 from typing import Annotated
+import re
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
@@ -16,6 +17,7 @@ from app.schemas.user import (
     TokenResponse,
     UserCreate,
     UserResponse,
+    UserProfileUpdate,
 )
 from app.services.auth_service import (
     AuthService,
@@ -234,3 +236,55 @@ def get_me(
     return UserResponse.model_validate(
         current_user
     )
+
+
+@router.put(
+    "/me",
+    response_model=UserResponse,
+    summary="Update current user profile",
+    description="Update the authenticated user's display name and profile picture.",
+)
+def update_me(
+    payload: UserProfileUpdate,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+) -> UserResponse:
+    """Persist profile changes for the authenticated user only."""
+    if "username" in payload.model_fields_set:
+        username = (payload.username or "").strip()
+        if len(username) < 3:
+            raise HTTPException(status_code=422, detail="Name must contain at least 3 characters.")
+        duplicate = db.query(User).filter(
+            User.username == username,
+            User.id != current_user.id,
+        ).first()
+        if duplicate:
+            raise HTTPException(status_code=409, detail="That name is already in use.")
+        current_user.username = username
+
+    if "avatar_url" in payload.model_fields_set:
+        avatar = payload.avatar_url
+        if avatar is not None:
+            if len(avatar) > 2_800_000 or not re.fullmatch(
+                r"data:image/(?:png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}",
+                avatar,
+            ):
+                raise HTTPException(
+                    status_code=422,
+                    detail="Profile picture must be a PNG, JPEG, or WebP image under 2 MB.",
+                )
+        current_user.avatar_url = avatar
+
+    try:
+        db.add(current_user)
+        db.commit()
+        db.refresh(current_user)
+    except SQLAlchemyError as exc:
+        db.rollback()
+        logger.exception("Database error while updating profile. user_id=%d.", current_user.id)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unable to save profile changes.",
+        ) from exc
+
+    return UserResponse.model_validate(current_user)
