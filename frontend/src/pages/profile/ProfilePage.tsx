@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { Calendar, Camera, CheckCircle2, ImagePlus, Mail, Save, Shield, User, type LucideIcon } from "lucide-react";
 
 import DashboardLayout from "../../layouts/DashboardLayout";
@@ -36,7 +36,7 @@ export default function ProfilePage() {
     }
   }
 
-  async function handleAvatarChange(event: React.ChangeEvent<HTMLInputElement>) {
+  async function handleAvatarChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) return;
