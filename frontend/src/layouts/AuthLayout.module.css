@@ -46,29 +46,29 @@
   top: -7vh;
   background: radial-gradient(circle at 34% 28%, #ff5b9b 0%, #ff347f 42%, #ff4b68 76%, rgba(255, 75, 104, .82) 100%);
   box-shadow: 0 0 44px rgba(245, 43, 131, .24), 0 0 100px rgba(245, 43, 131, .18);
-  animation: pinkJourney 38s ease-in-out infinite alternate;
+  animation: pinkJourney 34s cubic-bezier(.45,0,.2,1) infinite alternate;
 }
 .shell .purpleOrb {
   left: 32vw;
   top: 46vh;
   background: radial-gradient(circle at 34% 28%, #e64cff 0%, #b52bf2 44%, #7638e8 82%, rgba(118, 56, 232, .82) 100%);
   box-shadow: 0 0 48px rgba(169, 28, 228, .25), 0 0 104px rgba(169, 28, 228, .16);
-  animation: purpleJourney 44s ease-in-out infinite alternate;
+  animation: purpleJourney 38s cubic-bezier(.45,0,.2,1) infinite alternate;
 }
 
 @keyframes pinkJourney {
   0% { transform: translate3d(0,0,0) scale(.96); }
-  22% { transform: translate3d(-17vw,16vh,0) scale(1.02); }
-  48% { transform: translate3d(-42vw,34vh,0) scale(.98); }
-  74% { transform: translate3d(-18vw,65vh,0) scale(1.035); }
-  100% { transform: translate3d(-54vw,40vh,0) scale(1); }
+  25% { transform: translate3d(-18vw,12vh,0) scale(1.015); }
+  50% { transform: translate3d(-34vw,36vh,0) scale(.985); }
+  75% { transform: translate3d(-17vw,62vh,0) scale(1.025); }
+  100% { transform: translate3d(-55vw,43vh,0) scale(1); }
 }
 @keyframes purpleJourney {
   0% { transform: translate3d(0,0,0) scale(1); }
-  24% { transform: translate3d(12vw,-10vh,0) scale(1.035); }
-  50% { transform: translate3d(24vw,-24vh,0) scale(.98); }
-  76% { transform: translate3d(8vw,12vh,0) scale(1.025); }
-  100% { transform: translate3d(-18vw,-8vh,0) scale(.99); }
+  25% { transform: translate3d(15vw,-13vh,0) scale(1.025); }
+  50% { transform: translate3d(32vw,-31vh,0) scale(.985); }
+  75% { transform: translate3d(17vw,-15vh,0) scale(1.025); }
+  100% { transform: translate3d(-27vw,-8vh,0) scale(1); }
 }
 @keyframes ribbonDrift {
   from { transform: translate3d(-.4%, 0, 0) scale(1); opacity: .45; }
@@ -91,4 +91,41 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .pinkOrb, .purpleOrb, .backgroundRibbons::after { animation: none !important; }
+}
+
+
+/* Glassmorphism cards for both login and registration forms. */
+.authGlassCard {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,.115), rgba(255,255,255,.045) 52%, rgba(255,255,255,.025)) !important;
+  border: 1px solid rgba(226,239,255,.22) !important;
+  box-shadow:
+    0 30px 85px rgba(0,0,0,.38),
+    inset 0 1px 0 rgba(255,255,255,.13),
+    inset 0 -1px 0 rgba(255,255,255,.035) !important;
+  -webkit-backdrop-filter: blur(26px) saturate(145%);
+  backdrop-filter: blur(26px) saturate(145%);
+}
+.authGlassCard::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    radial-gradient(ellipse at 8% 0%, rgba(255,255,255,.08), transparent 42%),
+    linear-gradient(115deg, rgba(255,255,255,.035), transparent 40%, rgba(34,211,238,.025));
+}
+@media (max-width: 767px) {
+  .authGlassCard {
+    -webkit-backdrop-filter: blur(18px) saturate(125%);
+    backdrop-filter: blur(18px) saturate(125%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .shell .pinkOrb, .shell .purpleOrb { animation: none !important; }
 }
