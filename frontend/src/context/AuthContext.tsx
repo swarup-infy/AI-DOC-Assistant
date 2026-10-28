@@ -85,11 +85,26 @@ export function AuthProvider({
 
   const login = useCallback(
     async (token: string) => {
+      // Save the token immediately; don't block navigation on a second request.
       saveAccessToken(token);
 
-      await refreshUser();
+      const cachedUser = getCurrentUser();
+      if (cachedUser) {
+        setUser(cachedUser);
+      }
+
+      // Refresh profile data in the background after successful authentication.
+      void getProfile()
+        .then((profile) => {
+          saveUser(profile);
+          setUser(profile);
+        })
+        .catch(() => {
+          // A transient profile failure should not turn valid credentials into
+          // a failed login. Protected API requests will still validate the token.
+        });
     },
-    [refreshUser]
+    []
   );
 
   useEffect(() => {
