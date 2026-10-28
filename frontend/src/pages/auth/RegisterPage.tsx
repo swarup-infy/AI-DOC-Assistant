@@ -147,7 +147,7 @@ export default function RegisterPage() {
         </section>
 
         <section className="flex justify-center">
-          <Card className="auth-enter-delay w-full max-w-md rounded-3xl border border-border/80 bg-card/85 p-8 shadow-2xl backdrop-blur-xl sm:p-10">
+          <Card className="auth-enter-delay w-full max-w-md rounded-3xl border border-border/80 bg-card/85 p-8 shadow-2xl backdrop-blur-xl sm:p-10 authGlassCard">
             <div className="mb-8 text-center">
               <Logo showWordmark={false} size={42} />
               <h2 className="mt-6 text-4xl font-bold">Create Account</h2>
