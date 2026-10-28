@@ -16,7 +16,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
       (import.meta.env.PROD
         ? "https://ai-doc-assistant-aw9f.onrender.com/api"
         : "http://127.0.0.1:8000/api");
-    const apiRoot = apiUrl.replace(/\\/api\\/?$/, "");
+    const apiRoot = apiUrl.replace(/\/api\/?$/, "");
 
     void fetch(`${apiRoot}/health`, {
       method: "GET",
