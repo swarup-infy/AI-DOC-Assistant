@@ -25,7 +25,7 @@ interface AuthContextType {
   loading: boolean;
   isAuthenticated: boolean;
 
-  login: (token: string) => void;
+  login: (token: string) => Promise<void>;
   logout: () => void;
 
   refreshUser: () => Promise<void>;
@@ -83,21 +83,21 @@ export function AuthProvider({
     }
   }, [logout]);
 
-  const login = useCallback((token: string) => {
-    // Authentication should not wait for an extra profile request.
+  const login = useCallback(async (token: string) => {
     saveAccessToken(token);
 
-    // Use cached details immediately; fetch the newest profile after navigation.
+    // Load cached account details first, so the UI can respond immediately.
     const cachedUser = getCurrentUser();
     if (cachedUser) setUser(cachedUser);
 
+    // Refresh in the background instead of delaying the transition to dashboard.
     void getProfile()
       .then((profile) => {
         saveUser(profile);
         setUser(profile);
       })
       .catch(() => {
-        // Sign-in already succeeded. Profile refresh can be retried later.
+        // The token is stored; a temporary profile-read failure won't block login.
       });
   }, []);
 
