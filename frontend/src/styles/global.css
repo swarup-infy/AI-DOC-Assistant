@@ -391,67 +391,23 @@ ol {
 }
 
 
-/* Editorial, tactile authentication surfaces */
+
+/* Auth routes share the app's clean dark visual system. Animated orbs and cyan
+   ribbons are isolated in AuthLayout.module.css to prevent layered artifacts. */
 .auth-shell {
+  position: relative;
   isolation: isolate;
-  background:
-    radial-gradient(ellipse at 8% 10%, rgba(218,123,147,.16), transparent 32rem),
-    radial-gradient(ellipse at 92% 88%, rgba(55,110,111,.19), transparent 34rem),
-    #101416;
+  min-height: 100svh;
+  overflow: hidden;
+  background: #030507 !important;
 }
-.auth-shell::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  opacity: .12;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.86' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E");
-  mix-blend-mode: soft-light;
-}
-.auth-grid {
-  background-image: linear-gradient(to right, rgba(255,255,255,.055) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,.055) 1px, transparent 1px);
-  background-size: 48px 48px;
-  mask-image: linear-gradient(to bottom, black, transparent 88%);
-}
-.auth-enter { animation: auth-enter .8s cubic-bezier(.2,.75,.2,1) both; }
-.auth-enter-delay { animation: auth-enter .9s .12s cubic-bezier(.2,.75,.2,1) both; }
-@keyframes auth-enter { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes auth-drift { 0%,100% { transform: translate3d(0,0,0) rotate(0); } 50% { transform: translate3d(0,-10px,0) rotate(2deg); } }
-.auth-art-drift { animation: auth-drift 9s ease-in-out infinite; }
-.auth-node { filter: drop-shadow(0 0 8px rgba(218,123,147,.24)); }
+.auth-grid { display: none !important; }
+.auth-art-drift { animation: none; }
+.auth-node { filter: none; }
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; }
-}
-
-
-/* Reference palette and restrained editorial texture */
-.auth-shell {
-  background:
-    radial-gradient(ellipse at 75% 18%, rgba(218,123,147,.18), transparent 30rem),
-    radial-gradient(ellipse at 12% 88%, rgba(55,110,111,.25), transparent 34rem),
-    var(--bg);
-}
-:root {
-  --color-slate-canvas: #2F4454;
-  --color-burgundy: #2E151B;
-  --color-dusty-rose: #DA7B93;
-  --color-muted-teal: #376E6F;
-  --color-deep-teal: #1C3334;
-  --color-text-main: #F4F3F0;
-  --color-text-secondary: #B7C1C8;
-  --color-input: #263945;
-  --color-error-surface: #351C22;
-  --color-success-soft: #9BC8B5;
-}
-
-
-/* Authentication backdrop is handled by AuthLayout.module.css.
-   This guard prevents legacy app-level pseudo-art from appearing on auth routes. */
-.app-shell.auth-shell::before,
-.app-shell.auth-shell::after {
-  content: none !important;
-  display: none !important;
-  background: none !important;
-  box-shadow: none !important;
+  .auth-shell *, .auth-shell *::before, .auth-shell *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
 }
