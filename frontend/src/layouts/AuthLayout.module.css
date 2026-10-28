@@ -26,6 +26,7 @@
   animation: ribbonDrift 24s ease-in-out infinite alternate;
 }
 
+/* Keep position and colour on separate animations so neither overrides the other. */
 .pinkOrb,
 .purpleOrb {
   position: fixed;
@@ -36,7 +37,7 @@
   border-radius: 50%;
   pointer-events: none;
   opacity: .98;
-  will-change: left, top;
+  will-change: left, top, background, filter;
   backface-visibility: hidden;
   mix-blend-mode: screen;
 }
@@ -44,28 +45,45 @@
 .shell .pinkOrb {
   left: 64vw;
   top: 2vh;
-  background: linear-gradient(115deg, #ff087e 4%, #ff326e 52%, #ff625f 100%);
+  background: linear-gradient(135deg, #ff087e, #ff326e, #ff625f, #ff087e);
+  background-size: 300% 300%;
   box-shadow: 0 0 30px rgba(255, 28, 123, .48), 0 0 85px rgba(255, 28, 123, .34);
-  animation: pinkCornerTravel 10s ease-in-out infinite alternate;
+  animation: pinkCornerTravel 10s ease-in-out infinite alternate,
+             pinkColorShift 7s linear infinite;
 }
 
 .shell .purpleOrb {
   left: 3vw;
   top: 72vh;
-  background: linear-gradient(140deg, #db20ff 0%, #ae24ed 54%, #812cf0 100%);
+  background: linear-gradient(135deg, #db20ff, #812cf0, #367dff, #db20ff);
+  background-size: 300% 300%;
   box-shadow: 0 0 32px rgba(190, 34, 255, .48), 0 0 90px rgba(190, 34, 255, .34);
-  animation: purpleCornerTravel 11s ease-in-out infinite alternate;
+  animation: purpleCornerTravel 11s ease-in-out infinite alternate,
+             purpleColorShift 8s linear infinite;
 }
 
-/* Animate actual screen coordinates so the travel is obvious on every browser. */
+/* Move corner-to-corner and reverse smoothly. */
 @keyframes pinkCornerTravel {
-  0%   { left: 64vw; top: 2vh; }
-  100% { left: 3vw; top: 72vh; }
+  0% { left: 64vw; top: 2vh; transform: scale(.96); }
+  100% { left: 3vw; top: 72vh; transform: scale(1.06); }
 }
 
 @keyframes purpleCornerTravel {
-  0%   { left: 3vw; top: 72vh; }
-  100% { left: 64vw; top: 2vh; }
+  0% { left: 3vw; top: 72vh; transform: scale(1.04); }
+  100% { left: 64vw; top: 2vh; transform: scale(.96); }
+}
+
+/* Continuously rotate through vivid gradients while the circles travel. */
+@keyframes pinkColorShift {
+  0% { background-position: 0% 50%; filter: hue-rotate(0deg); }
+  50% { background-position: 100% 50%; filter: hue-rotate(35deg); }
+  100% { background-position: 0% 50%; filter: hue-rotate(0deg); }
+}
+
+@keyframes purpleColorShift {
+  0% { background-position: 0% 50%; filter: hue-rotate(0deg); }
+  50% { background-position: 100% 50%; filter: hue-rotate(65deg); }
+  100% { background-position: 0% 50%; filter: hue-rotate(0deg); }
 }
 
 .authGlassCard {
