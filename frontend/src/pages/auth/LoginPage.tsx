@@ -440,7 +440,7 @@ const {
 
           <Card
 
-            className="auth-enter-delay w-full max-w-md rounded-2xl border border-border/80 bg-card/85 p-6 shadow-2xl shadow-black/20 backdrop-blur-2xl transition-all duration-700 ease-out sm:p-7 translate-y-0 opacity-100"
+            className="auth-enter-delay w-full max-w-md rounded-2xl border border-border/80 bg-card/85 p-6 shadow-2xl shadow-black/20 backdrop-blur-2xl transition-all duration-700 ease-out sm:p-7 translate-y-0 opacity-100 authGlassCard"
 
           >
 
