@@ -26,7 +26,6 @@
   animation: ribbonDrift 24s ease-in-out infinite alternate;
 }
 
-/* Keep position and colour on separate animations so neither overrides the other. */
 .pinkOrb,
 .purpleOrb {
   position: fixed;
@@ -36,8 +35,8 @@
   height: clamp(165px, 20vw, 285px);
   border-radius: 50%;
   pointer-events: none;
-  opacity: .98;
-  will-change: left, top, background, filter;
+  opacity: .99;
+  will-change: transform, filter, background-position;
   backface-visibility: hidden;
   mix-blend-mode: screen;
 }
@@ -47,43 +46,45 @@
   top: 2vh;
   background: linear-gradient(135deg, #ff087e, #ff326e, #ff625f, #ff087e);
   background-size: 300% 300%;
-  box-shadow: 0 0 30px rgba(255, 28, 123, .48), 0 0 85px rgba(255, 28, 123, .34);
-  animation: pinkCornerTravel 10s ease-in-out infinite alternate,
-             pinkColorShift 7s linear infinite;
+  box-shadow: 0 0 34px rgba(255, 28, 123, .55), 0 0 95px rgba(255, 28, 123, .38);
+  animation:
+    pinkCornerTravel 4s ease-in-out infinite alternate,
+    pinkColorShift 3.5s linear infinite;
 }
 
 .shell .purpleOrb {
   left: 3vw;
   top: 72vh;
-  background: linear-gradient(135deg, #db20ff, #812cf0, #367dff, #db20ff);
+  background: linear-gradient(135deg, #db20ff, #812cf0, #367dff, #25e0d3, #db20ff);
   background-size: 300% 300%;
-  box-shadow: 0 0 32px rgba(190, 34, 255, .48), 0 0 90px rgba(190, 34, 255, .34);
-  animation: purpleCornerTravel 11s ease-in-out infinite alternate,
-             purpleColorShift 8s linear infinite;
+  box-shadow: 0 0 36px rgba(190, 34, 255, .55), 0 0 100px rgba(190, 34, 255, .4);
+  animation:
+    purpleCornerTravel 4.5s ease-in-out infinite alternate,
+    purpleColorShift 4s linear infinite;
 }
 
-/* Move corner-to-corner and reverse smoothly. */
+/* GPU-friendly transforms make the corner-to-corner travel visibly animate. */
 @keyframes pinkCornerTravel {
-  0% { left: 64vw; top: 2vh; transform: scale(.96); }
-  100% { left: 3vw; top: 72vh; transform: scale(1.06); }
+  from { transform: translate3d(0, 0, 0) scale(.94); }
+  to   { transform: translate3d(-58vw, 70vh, 0) scale(1.06); }
 }
 
 @keyframes purpleCornerTravel {
-  0% { left: 3vw; top: 72vh; transform: scale(1.04); }
-  100% { left: 64vw; top: 2vh; transform: scale(.96); }
+  from { transform: translate3d(0, 0, 0) scale(1.04); }
+  to   { transform: translate3d(60vw, -68vh, 0) scale(.94); }
 }
 
-/* Continuously rotate through vivid gradients while the circles travel. */
+/* Gradient hues keep cycling while the circles move. */
 @keyframes pinkColorShift {
   0% { background-position: 0% 50%; filter: hue-rotate(0deg); }
-  50% { background-position: 100% 50%; filter: hue-rotate(35deg); }
-  100% { background-position: 0% 50%; filter: hue-rotate(0deg); }
+  50% { background-position: 100% 50%; filter: hue-rotate(90deg); }
+  100% { background-position: 0% 50%; filter: hue-rotate(180deg); }
 }
 
 @keyframes purpleColorShift {
   0% { background-position: 0% 50%; filter: hue-rotate(0deg); }
-  50% { background-position: 100% 50%; filter: hue-rotate(65deg); }
-  100% { background-position: 0% 50%; filter: hue-rotate(0deg); }
+  50% { background-position: 100% 50%; filter: hue-rotate(120deg); }
+  100% { background-position: 0% 50%; filter: hue-rotate(240deg); }
 }
 
 .authGlassCard {
@@ -134,11 +135,19 @@
   .shell .purpleOrb { width: 155px; height: 155px; }
   .backgroundRibbons::after { opacity: .06; background-size: auto 115%; }
   .authGlassCard { -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); }
+  @keyframes pinkCornerTravel {
+    from { transform: translate3d(0, 0, 0) scale(.94); }
+    to { transform: translate3d(-58vw, 66vh, 0) scale(1.04); }
+  }
+  @keyframes purpleCornerTravel {
+    from { transform: translate3d(0, 0, 0) scale(1.04); }
+    to { transform: translate3d(60vw, -64vh, 0) scale(.94); }
+  }
 }
 
+/* Keep motion visible even when reduced-motion is requested, but slow it down. */
 @media (prefers-reduced-motion: reduce) {
-  .pinkOrb, .purpleOrb, .backgroundRibbons::after, .auth-enter-delay {
-    animation: none !important;
-    transition: none !important;
-  }
+  .pinkOrb { animation-duration: 12s, 10s !important; }
+  .purpleOrb { animation-duration: 13s, 11s !important; }
+  .backgroundRibbons::after, .auth-enter-delay { animation: none !important; }
 }
