@@ -444,3 +444,14 @@ ol {
   --color-error-surface: #351C22;
   --color-success-soft: #9BC8B5;
 }
+
+
+/* Authentication backdrop is handled by AuthLayout.module.css.
+   This guard prevents legacy app-level pseudo-art from appearing on auth routes. */
+.app-shell.auth-shell::before,
+.app-shell.auth-shell::after {
+  content: none !important;
+  display: none !important;
+  background: none !important;
+  box-shadow: none !important;
+}
