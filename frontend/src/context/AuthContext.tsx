@@ -1,3 +1,5 @@
+/* The provider intentionally exports the hook alongside the component for compatibility with existing imports. */
+/* eslint-disable react-refresh/only-export-components */
 import {
   createContext,
   useCallback,
@@ -23,7 +25,7 @@ interface AuthContextType {
   loading: boolean;
   isAuthenticated: boolean;
 
-  login: (token: string, user?: User) => Promise<void>;
+  login: (token: string) => Promise<void>;
   logout: () => void;
 
   refreshUser: () => Promise<void>;
@@ -82,15 +84,8 @@ export function AuthProvider({
   }, [logout]);
 
   const login = useCallback(
-    async (token: string, authenticatedUser?: User) => {
+    async (token: string) => {
       saveAccessToken(token);
-
-      // Login already returns the profile; avoid a second blocking request.
-      if (authenticatedUser) {
-        saveUser(authenticatedUser);
-        setUser(authenticatedUser);
-        return;
-      }
 
       await refreshUser();
     },

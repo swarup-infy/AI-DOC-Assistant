@@ -6,7 +6,6 @@ from sqlalchemy import (
     DateTime,
     Integer,
     String,
-    Text,
     func,
 )
 from sqlalchemy.orm import relationship
@@ -61,11 +60,6 @@ class User(Base):
         DateTime(timezone=True),
         nullable=False,
         server_default=func.now(),
-    )
-
-    avatar_url = Column(
-        Text,
-        nullable=True,
     )
 
     updated_at = Column(

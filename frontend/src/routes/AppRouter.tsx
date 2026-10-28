@@ -1,14 +1,14 @@
 import { lazy, Suspense, type ReactNode } from "react";
-import LoginPage from "../pages/auth/LoginPage";
-import RegisterPage from "../pages/auth/RegisterPage";
 import { Link, Navigate, Route, Routes } from "react-router-dom";
 import { ArrowLeft, FileQuestion, Loader2, Sparkles } from "lucide-react";
 
 import ProtectedRoute from "./ProtectedRoute";
 import { getAccessToken } from "../services/authService";
 
-const TermsPage = lazy(() => import("../pages/TermsPage"));
-const PrivacyPage = lazy(() => import("../pages/PrivacyPage"));
+const LoginPage = lazy(() => import("../pages/auth/LoginPage"));
+const RegisterPage = lazy(() => import("../pages/auth/RegisterPage"));
+const TermsPage = lazy(() => import("../pages/legal/TermsPage"));
+const PrivacyPage = lazy(() => import("../pages/legal/PrivacyPage"));
 const DashboardPage = lazy(() => import("../pages/dashboard/DashboardPage"));
 const DocumentsPage = lazy(() => import("../pages/documents/DocumentsPage"));
 const ChatPage = lazy(() => import("../pages/chat/ChatPage"));
@@ -21,6 +21,8 @@ interface AppRoute { path: string; element: ReactNode; }
 const publicRoutes: AppRoute[] = [
   { path: "/login", element: <LoginPage /> },
   { path: "/register", element: <RegisterPage /> },
+  { path: "/terms", element: <TermsPage /> },
+  { path: "/privacy", element: <PrivacyPage /> },
 ];
 
 const protectedRoutes: AppRoute[] = [
@@ -68,9 +70,6 @@ export default function AppRouter() {
       <Routes>
         <Route path="/" element={<RootRedirect />} />
         {publicRoutes.map((route) => <Route key={route.path} path={route.path} element={route.element} />)}
-        {/* Legal pages are explicit public routes for reliable direct navigation. */}
-        <Route path="/privacy" element={<PrivacyPage />} />
-        <Route path="/terms" element={<TermsPage />} />
         <Route element={<ProtectedRoute />}>
           {protectedRoutes.map((route) => <Route key={route.path} path={route.path} element={route.element} />)}
         </Route>

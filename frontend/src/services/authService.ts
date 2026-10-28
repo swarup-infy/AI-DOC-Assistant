@@ -23,21 +23,12 @@ export interface User {
   email: string;
   role?: string;
   created_at?: string;
-  avatar_url?: string | null;
 }
 
 export interface LoginResponse {
   access_token: string;
   token_type: string;
-  user?: {
-    id: number;
-    username: string;
-    email: string;
-    is_active: boolean;
-    created_at?: string;
-    updated_at?: string;
-    avatar_url?: string | null;
-  };
+  user?: User;
 }
 
 //
@@ -153,7 +144,6 @@ export async function loginUser(
     "/auth/login",
     body,
     {
-      timeout: 90000,
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
@@ -190,39 +180,19 @@ export async function registerUser(payload: RegisterRequest) {
 //
 
 export async function getProfile(): Promise<User> {
-  const { data } = await api.get<Record<string, unknown>>("/auth/me");
-  const user: User = {
-    id: Number(data.id),
-    name: String(data.username ?? data.name ?? "User"),
-    email: String(data.email ?? ""),
-    role: typeof data.role === "string" ? data.role : undefined,
-    created_at: typeof data.created_at === "string" ? data.created_at : undefined,
-    avatar_url: typeof data.avatar_url === "string" ? data.avatar_url : null,
-  };
-  saveUser(user);
-  return user;
+  const { data } = await api.get<User>("/auth/me");
+
+  return data;
 }
 
 export async function updateProfile(
   payload: Partial<User>
 ): Promise<User> {
-  const body: { username?: string; avatar_url?: string | null } = {};
-  if (typeof payload.name === "string") body.username = payload.name.trim();
-  if (Object.prototype.hasOwnProperty.call(payload, "avatar_url")) {
-    body.avatar_url = payload.avatar_url ?? null;
-  }
+  const { data } = await api.put<User>("/auth/me", payload);
 
-  const { data } = await api.put<Record<string, unknown>>("/auth/me", body);
-  const user: User = {
-    id: Number(data.id),
-    name: String(data.username ?? data.name ?? "User"),
-    email: String(data.email ?? ""),
-    role: typeof data.role === "string" ? data.role : undefined,
-    created_at: typeof data.created_at === "string" ? data.created_at : undefined,
-    avatar_url: typeof data.avatar_url === "string" ? data.avatar_url : null,
-  };
-  saveUser(user);
-  return user;
+  saveUser(data);
+
+  return data;
 }
 
 //
