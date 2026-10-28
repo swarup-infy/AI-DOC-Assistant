@@ -1,40 +1,60 @@
 .shell {
+  position: relative;
   isolation: isolate;
-  background: #08080d;
   min-height: 100svh;
+  overflow: hidden;
+  background: #030507;
 }
+
+/* Match the application's cyan ribbon backdrop while keeping the two
+   large animated orbs as separate elements above it. */
+.backgroundRibbons {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 50% 46%, rgba(6, 33, 41, .28), transparent 58%),
+    linear-gradient(135deg, #030507 0%, #06090d 54%, #020405 100%);
+}
+.backgroundRibbons::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("/images/liquid-ribbon.svg") center / cover no-repeat;
+  opacity: .56;
+  animation: ribbonDrift 34s ease-in-out infinite alternate;
+}
+
 .pinkOrb,
 .purpleOrb {
-  position: fixed !important;
-  display: block !important;
-  z-index: 1 !important;
-  width: clamp(190px, 22vw, 300px) !important;
-  height: clamp(190px, 22vw, 300px) !important;
-  border-radius: 50% !important;
-  pointer-events: none !important;
-  opacity: .98;
+  position: fixed;
+  display: block;
+  z-index: 1;
+  width: clamp(190px, 22vw, 300px);
+  height: clamp(190px, 22vw, 300px);
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: .9;
   will-change: transform;
   backface-visibility: hidden;
-  transform: translate3d(0,0,0);
+  filter: blur(.3px);
 }
 .shell .pinkOrb {
-  left: 64vw !important;
-  top: -7vh !important;
-  right: auto !important;
-  bottom: auto !important;
-  background: radial-gradient(circle at 34% 28%, #ff4c91 0%, #f5167b 72%) !important;
-  box-shadow: 0 0 34px rgba(245, 43, 131, .24);
-  animation: pinkJourney 38s ease-in-out infinite alternate !important;
+  left: 64vw;
+  top: -7vh;
+  background: radial-gradient(circle at 34% 28%, #ff4c91 0%, #f5167b 72%);
+  box-shadow: 0 0 52px rgba(245, 43, 131, .30);
+  animation: pinkJourney 38s ease-in-out infinite alternate;
 }
 .shell .purpleOrb {
-  left: 32vw !important;
-  top: 46vh !important;
-  right: auto !important;
-  bottom: auto !important;
-  background: radial-gradient(circle at 34% 28%, #c52be9 0%, #7838e8 78%) !important;
-  box-shadow: 0 0 38px rgba(169, 28, 228, .22);
-  animation: purpleJourney 44s ease-in-out infinite alternate !important;
+  left: 32vw;
+  top: 46vh;
+  background: radial-gradient(circle at 34% 28%, #d23df5 0%, #7838e8 78%);
+  box-shadow: 0 0 58px rgba(169, 28, 228, .32);
+  animation: purpleJourney 44s ease-in-out infinite alternate;
 }
+
 @keyframes pinkJourney {
   0% { transform: translate3d(0,0,0) scale(.96); }
   22% { transform: translate3d(-17vw,16vh,0) scale(1.02); }
@@ -49,11 +69,24 @@
   76% { transform: translate3d(8vw,12vh,0) scale(1.025); }
   100% { transform: translate3d(-18vw,-8vh,0) scale(.99); }
 }
+@keyframes ribbonDrift {
+  from { transform: translate3d(-.4%, 0, 0) scale(1); opacity: .45; }
+  to { transform: translate3d(.4%, -.25%, 0) scale(1.015); opacity: .65; }
+}
 @media (max-width: 767px) {
-  .pinkOrb, .purpleOrb { width: 155px !important; height: 155px !important; }
-  .shell .pinkOrb { animation-duration: 44s !important; }
-  .shell .purpleOrb { animation-duration: 50s !important; }
+  .pinkOrb, .purpleOrb {
+    width: 155px;
+    height: 155px;
+    opacity: .78;
+  }
+  .shell .pinkOrb { left: 61vw; top: -3vh; animation-duration: 44s; }
+  .shell .purpleOrb { left: 12vw; top: 54vh; animation-duration: 50s; }
+  .backgroundRibbons::after {
+    background-size: auto 115%;
+    background-position: 52% center;
+    opacity: .4;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
-  .pinkOrb, .purpleOrb { animation: none !important; }
+  .pinkOrb, .purpleOrb, .backgroundRibbons::after { animation: none !important; }
 }
