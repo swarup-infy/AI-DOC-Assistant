@@ -7,8 +7,7 @@ interface AuthLayoutProps {
 
 export default function AuthLayout({ children }: AuthLayoutProps) {
   useEffect(() => {
-    // Start waking a sleeping hosted API while the user reads the form.
-    // This request is intentionally non-blocking and never affects rendering.
+    // Warm the API without blocking the auth form.
     if (!["/login", "/register"].includes(window.location.pathname)) return;
 
     const apiUrl =
@@ -23,7 +22,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
       cache: "no-store",
       signal: AbortSignal.timeout(8000),
     }).catch(() => {
-      // The login form remains usable if the API is unavailable.
+      // Authentication remains usable if the API is sleeping or unavailable.
     });
   }, []);
 
@@ -32,7 +31,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
       <div className={styles.backgroundRibbons} aria-hidden="true" />
       <div className={styles.pinkOrb} aria-hidden="true" />
       <div className={styles.purpleOrb} aria-hidden="true" />
-      <section className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl items-center px-5 py-8 sm:px-8 lg:px-12">
+      <section className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl items-center justify-center px-5 py-8 sm:px-8 lg:px-12">
         {children}
       </section>
     </main>
