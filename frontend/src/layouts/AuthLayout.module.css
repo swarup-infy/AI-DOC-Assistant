@@ -47,7 +47,7 @@
   background: linear-gradient(135deg, #ff087e, #ff326e, #ff625f, #ff087e);
   background-size: 300% 300%;
   box-shadow: 0 0 38px rgba(255, 28, 123, .7), 0 0 110px rgba(255, 28, 123, .5);
-  animation: pinkCornerTravel 18s ease-in-out infinite alternate, pinkColorShift 14s linear infinite !important;
+  animation: pinkCornerTravel 36s linear infinite, pinkColorShift 14s linear infinite !important;
 }
 
 .shell .purpleOrb {
@@ -56,23 +56,31 @@
   background: linear-gradient(135deg, #db20ff, #812cf0, #367dff, #25e0d3, #db20ff);
   background-size: 300% 300%;
   box-shadow: 0 0 40px rgba(190, 34, 255, .7), 0 0 115px rgba(190, 34, 255, .5);
-  animation: purpleCornerTravel 21s ease-in-out infinite alternate, purpleColorShift 17s linear infinite !important;
+  animation: purpleCornerTravel 42s linear infinite, purpleColorShift 17s linear infinite !important;
 }
 
 @keyframes pinkCornerTravel {
   0% { transform: translate3d(68vw, 2vh, 0) scale(.9); }
-  25% { transform: translate3d(45vw, 25vh, 0) scale(1.08); }
-  50% { transform: translate3d(25vw, 48vh, 0) scale(.96); }
-  75% { transform: translate3d(8vw, 65vh, 0) scale(1.1); }
-  100% { transform: translate3d(0, 72vh, 0) scale(1); }
+  12.5% { transform: translate3d(45vw, 25vh, 0) scale(1.08); }
+  25% { transform: translate3d(25vw, 48vh, 0) scale(.96); }
+  37.5% { transform: translate3d(8vw, 65vh, 0) scale(1.1); }
+  50% { transform: translate3d(0, 72vh, 0) scale(1); }
+  62.5% { transform: translate3d(8vw, 65vh, 0) scale(1.1); }
+  75% { transform: translate3d(25vw, 48vh, 0) scale(.96); }
+  87.5% { transform: translate3d(45vw, 25vh, 0) scale(1.08); }
+  100% { transform: translate3d(68vw, 2vh, 0) scale(.9); }
 }
 
 @keyframes purpleCornerTravel {
   0% { transform: translate3d(0, 72vh, 0) scale(1.05); }
-  25% { transform: translate3d(18vw, 53vh, 0) scale(.92); }
-  50% { transform: translate3d(38vw, 35vh, 0) scale(1.1); }
-  75% { transform: translate3d(55vw, 16vh, 0) scale(.96); }
-  100% { transform: translate3d(68vw, 2vh, 0) scale(1.04); }
+  12.5% { transform: translate3d(18vw, 53vh, 0) scale(.92); }
+  25% { transform: translate3d(38vw, 35vh, 0) scale(1.1); }
+  37.5% { transform: translate3d(55vw, 16vh, 0) scale(.96); }
+  50% { transform: translate3d(68vw, 2vh, 0) scale(1.04); }
+  62.5% { transform: translate3d(55vw, 16vh, 0) scale(.96); }
+  75% { transform: translate3d(38vw, 35vh, 0) scale(1.1); }
+  87.5% { transform: translate3d(18vw, 53vh, 0) scale(.92); }
+  100% { transform: translate3d(0, 72vh, 0) scale(1.05); }
 }
 
 @keyframes pinkColorShift {
@@ -140,7 +148,7 @@
 @media (prefers-reduced-motion: reduce) {
   /* Preserve a slower decorative motion for reduced-motion preferences. */
   .pinkOrb, .purpleOrb {
-    animation-duration: 18s, 14s !important;
+    animation-duration: 36s, 14s !important;
   }
   .backgroundRibbons::after, .auth-enter-delay { animation: none !important; }
 }
