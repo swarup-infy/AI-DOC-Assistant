@@ -6,7 +6,7 @@ The Python audit intentionally ignores only the advisories listed below. This is
 
 ## Pillow 12.3.0 (pulled in by FastEmbed 0.9.0)
 
-The current FastEmbed release constrains Pillow to versions below 13, while the advisories below list Pillow 13.0.0 as the patched version. Pinning Pillow 13 directly makes the current dependency resolver fail. The application currently processes PDF, DOCX, CSV, and spreadsheet documents and does not intentionally expose image-processing endpoints; Pillow is transitive rather than a declared application feature. This reduces the relevant attack surface but does not prove the package is safe.
+The current FastEmbed release constrains Pillow to versions below 13, while the advisories below list Pillow 13.0.0 as the patched version. The audit also reported `PYSEC-2026-4327`, `GHSA-654x-cwwv-5j9c`, and `GHSA-5x8w-8jj5-q52h` for Pillow 12.3.0; these are explicitly ignored only as a temporary CI exception, not treated as fixed. Pinning Pillow 13 directly makes the current dependency resolver fail. The application currently processes PDF, DOCX, CSV, and spreadsheet documents and does not intentionally expose image-processing endpoints; Pillow is transitive rather than a declared application feature. This reduces the relevant attack surface but does not prove the package is safe.
 
 Ignored Pillow advisories:
 - `PYSEC-2026-4327`
