@@ -25,7 +25,7 @@ interface AuthContextType {
   loading: boolean;
   isAuthenticated: boolean;
 
-  login: (token: string) => Promise<void>;
+  login: (token: string) => void;
   logout: () => void;
 
   refreshUser: () => Promise<void>;
@@ -83,29 +83,23 @@ export function AuthProvider({
     }
   }, [logout]);
 
-  const login = useCallback(
-    async (token: string) => {
-      // Save the token immediately; don't block navigation on a second request.
-      saveAccessToken(token);
+  const login = useCallback((token: string) => {
+    // Authentication should not wait for an extra profile request.
+    saveAccessToken(token);
 
-      const cachedUser = getCurrentUser();
-      if (cachedUser) {
-        setUser(cachedUser);
-      }
+    // Use cached details immediately; fetch the newest profile after navigation.
+    const cachedUser = getCurrentUser();
+    if (cachedUser) setUser(cachedUser);
 
-      // Refresh profile data in the background after successful authentication.
-      void getProfile()
-        .then((profile) => {
-          saveUser(profile);
-          setUser(profile);
-        })
-        .catch(() => {
-          // A transient profile failure should not turn valid credentials into
-          // a failed login. Protected API requests will still validate the token.
-        });
-    },
-    []
-  );
+    void getProfile()
+      .then((profile) => {
+        saveUser(profile);
+        setUser(profile);
+      })
+      .catch(() => {
+        // Sign-in already succeeded. Profile refresh can be retried later.
+      });
+  }, []);
 
   useEffect(() => {
     let mounted = true;
