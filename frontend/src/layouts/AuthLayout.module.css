@@ -100,14 +100,15 @@
   isolation: isolate;
   overflow: hidden;
   background:
-    linear-gradient(135deg, rgba(255,255,255,.115), rgba(255,255,255,.045) 52%, rgba(255,255,255,.025)) !important;
-  border: 1px solid rgba(226,239,255,.22) !important;
+    linear-gradient(135deg, rgba(255,255,255,.22) 0%, rgba(255,255,255,.105) 45%, rgba(255,255,255,.055) 100%) !important;
+  border: 1px solid rgba(255,255,255,.48) !important;
   box-shadow:
-    0 30px 85px rgba(0,0,0,.38),
-    inset 0 1px 0 rgba(255,255,255,.13),
-    inset 0 -1px 0 rgba(255,255,255,.035) !important;
-  -webkit-backdrop-filter: blur(26px) saturate(145%);
-  backdrop-filter: blur(26px) saturate(145%);
+    0 28px 90px rgba(0,0,0,.42),
+    0 1px 0 rgba(255,255,255,.45) inset,
+    1px 0 0 rgba(255,255,255,.12) inset,
+    0 -1px 0 rgba(255,255,255,.07) inset !important;
+  -webkit-backdrop-filter: blur(34px) saturate(155%);
+  backdrop-filter: blur(34px) saturate(155%);
 }
 .authGlassCard::before {
   content: "";
@@ -117,8 +118,8 @@
   pointer-events: none;
   border-radius: inherit;
   background:
-    radial-gradient(ellipse at 8% 0%, rgba(255,255,255,.08), transparent 42%),
-    linear-gradient(115deg, rgba(255,255,255,.035), transparent 40%, rgba(34,211,238,.025));
+    radial-gradient(ellipse at 8% 0%, rgba(255,255,255,.14), transparent 42%),
+    linear-gradient(115deg, rgba(255,255,255,.055), transparent 40%, rgba(34,211,238,.035));
 }
 @media (max-width: 767px) {
   .authGlassCard {
@@ -128,4 +129,28 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .shell .pinkOrb, .shell .purpleOrb { animation: none !important; }
+}
+
+/* Soft, continuous movement between opposite corners. */
+.shell .pinkOrb {
+  will-change: transform;
+  animation: pinkJourney 28s ease-in-out infinite alternate;
+}
+.shell .purpleOrb {
+  will-change: transform;
+  animation: purpleJourney 32s ease-in-out infinite alternate;
+}
+@keyframes pinkJourney {
+  0% { transform: translate3d(0, 0, 0) scale(.98); }
+  50% { transform: translate3d(-24vw, 34vh, 0) scale(1.025); }
+  100% { transform: translate3d(-52vw, 66vh, 0) scale(1); }
+}
+@keyframes purpleJourney {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(24vw, -26vh, 0) scale(1.03); }
+  100% { transform: translate3d(48vw, -48vh, 0) scale(.98); }
+}
+@media (max-width: 767px) {
+  .shell .pinkOrb { animation-duration: 34s; }
+  .shell .purpleOrb { animation-duration: 38s; }
 }
