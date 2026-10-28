@@ -5,8 +5,8 @@ import { ArrowLeft, FileQuestion, Loader2, Sparkles } from "lucide-react";
 import ProtectedRoute from "./ProtectedRoute";
 import { getAccessToken } from "../services/authService";
 
-const LoginPage = lazy(() => import("../pages/auth/LoginPage"));
-const RegisterPage = lazy(() => import("../pages/auth/RegisterPage"));
+import LoginPage from "../pages/auth/LoginPage";
+import RegisterPage from "../pages/auth/RegisterPage";
 const TermsPage = lazy(() => import("../pages/legal/TermsPage"));
 const PrivacyPage = lazy(() => import("../pages/legal/PrivacyPage"));
 const DashboardPage = lazy(() => import("../pages/dashboard/DashboardPage"));
