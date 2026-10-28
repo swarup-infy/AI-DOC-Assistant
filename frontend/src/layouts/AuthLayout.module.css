@@ -1,0 +1,59 @@
+.shell {
+  isolation: isolate;
+  background: #08080d;
+  min-height: 100svh;
+}
+.pinkOrb,
+.purpleOrb {
+  position: fixed !important;
+  display: block !important;
+  z-index: 1 !important;
+  width: clamp(190px, 22vw, 300px) !important;
+  height: clamp(190px, 22vw, 300px) !important;
+  border-radius: 50% !important;
+  pointer-events: none !important;
+  opacity: .98;
+  will-change: transform;
+  backface-visibility: hidden;
+  transform: translate3d(0,0,0);
+}
+.shell .pinkOrb {
+  left: 64vw !important;
+  top: -7vh !important;
+  right: auto !important;
+  bottom: auto !important;
+  background: radial-gradient(circle at 34% 28%, #ff4c91 0%, #f5167b 72%) !important;
+  box-shadow: 0 0 34px rgba(245, 43, 131, .24);
+  animation: pinkJourney 38s ease-in-out infinite alternate !important;
+}
+.shell .purpleOrb {
+  left: 32vw !important;
+  top: 46vh !important;
+  right: auto !important;
+  bottom: auto !important;
+  background: radial-gradient(circle at 34% 28%, #c52be9 0%, #7838e8 78%) !important;
+  box-shadow: 0 0 38px rgba(169, 28, 228, .22);
+  animation: purpleJourney 44s ease-in-out infinite alternate !important;
+}
+@keyframes pinkJourney {
+  0% { transform: translate3d(0,0,0) scale(.96); }
+  22% { transform: translate3d(-17vw,16vh,0) scale(1.02); }
+  48% { transform: translate3d(-42vw,34vh,0) scale(.98); }
+  74% { transform: translate3d(-18vw,65vh,0) scale(1.035); }
+  100% { transform: translate3d(-54vw,40vh,0) scale(1); }
+}
+@keyframes purpleJourney {
+  0% { transform: translate3d(0,0,0) scale(1); }
+  24% { transform: translate3d(12vw,-10vh,0) scale(1.035); }
+  50% { transform: translate3d(24vw,-24vh,0) scale(.98); }
+  76% { transform: translate3d(8vw,12vh,0) scale(1.025); }
+  100% { transform: translate3d(-18vw,-8vh,0) scale(.99); }
+}
+@media (max-width: 767px) {
+  .pinkOrb, .purpleOrb { width: 155px !important; height: 155px !important; }
+  .shell .pinkOrb { animation-duration: 44s !important; }
+  .shell .purpleOrb { animation-duration: 50s !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pinkOrb, .purpleOrb { animation: none !important; }
+}

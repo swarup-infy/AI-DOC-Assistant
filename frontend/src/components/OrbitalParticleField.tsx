@@ -1,0 +1,362 @@
+import { useEffect, useRef } from "react";
+
+type Point = { x: number; y: number };
+type Orbit = {
+  x: number; y: number; rx: number; ry: number; rotation: number;
+  speed: number; phase: number; depth: number; arc: number; start: number;
+};
+type Triangle = { points: [Point, Point, Point]; rotation: number; speed: number; depth: number; phase: number };
+type Particle = {
+  path: number; angle: number; speed: number; direction: number; size: number;
+  depth: number; phase: number; pulse: number; trail: Point[]; trailLimit: number;
+  mode: number; modeTimer: number;
+};
+
+const COLORS = {
+  teal: "#79c8c8",
+  tealBright: "#b1eeee",
+  rose: "#da7b93",
+  ivory: "#f4f3f0",
+  line: "rgba(121, 200, 200, 0.20)",
+};
+const CONFIG = {
+  particleCount: 36,
+  orbitCount: 12,
+  triangleCount: 8,
+  trailLength: 6,
+  glow: 1,
+  lineOpacity: 1,
+  pointerParallax: 0.012,
+};
+
+const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+const seeded = (seed: number) => {
+  const n = Math.sin(seed * 127.1 + 311.7) * 43758.5453;
+  return n - Math.floor(n);
+};
+
+export default function OrbitalParticleField() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext("2d", { alpha: true });
+    if (!canvas || !ctx) return;
+
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const isLightMode = () => document.documentElement.dataset.theme === "light";
+    const palette = () => isLightMode()
+      ? {
+          teal: "#0284c7",
+          tealBright: "#38bdf8",
+          rose: "#db2777",
+          ivory: "#475569",
+          line: "rgba(2, 132, 199, 0.30)",
+          orbit: "rgba(2, 132, 199, 0.28)",
+          orbitAccent: "rgba(219, 39, 119, 0.20)",
+          triangle: "rgba(124, 58, 237, 0.28)",
+          trail: "rgba(2, 132, 199, 0.42)",
+          trailAccent: "rgba(219, 39, 119, 0.42)",
+          node: "rgba(2, 132, 199, 0.32)",
+        }
+      : {
+          teal: COLORS.teal,
+          tealBright: COLORS.tealBright,
+          rose: COLORS.rose,
+          ivory: COLORS.ivory,
+          line: COLORS.line,
+          orbit: "",
+          orbitAccent: "",
+          triangle: "",
+          trail: "",
+          trailAccent: "",
+          node: "",
+        };
+    let width = 1;
+    let height = 1;
+    let dpr = 1;
+    let raf = 0;
+    let lastTime = 0;
+    let elapsed = 0;
+    let hidden = document.hidden;
+    let pointerX = 0;
+    let pointerY = 0;
+    let targetX = 0;
+    let targetY = 0;
+    let frameSamples = 0;
+    let sampleTime = 0;
+    let qualityScale = 1;
+    let orbits: Orbit[] = [];
+    let triangles: Triangle[] = [];
+    let particles: Particle[] = [];
+    let reduced = reducedMotion.matches;
+
+    const resize = () => {
+      const rect = canvas.getBoundingClientRect();
+      width = Math.max(1, rect.width);
+      height = Math.max(1, rect.height);
+      dpr = Math.min(window.devicePixelRatio || 1, 1.35);
+      canvas.width = Math.round(width * dpr);
+      canvas.height = Math.round(height * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      buildScene();
+    };
+
+    const buildScene = () => {
+      const shortSide = Math.min(width, height);
+      const count = width < 600 ? 9 : CONFIG.orbitCount;
+      orbits = Array.from({ length: count }, (_, i) => {
+        const s = i + 1;
+        const rx = shortSide * (0.055 + seeded(s * 2) * (width < 600 ? 0.15 : 0.23));
+        const ry = rx * (0.55 + seeded(s * 5) * 0.65);
+        return {
+          x: width * (0.07 + seeded(s * 7) * 0.86),
+          y: height * (0.08 + seeded(s * 11) * 0.84),
+          rx, ry, rotation: seeded(s * 13) * Math.PI,
+          speed: (0.18 + seeded(s * 17) * 0.24) * (i % 2 ? -1 : 1),
+          phase: seeded(s * 19) * Math.PI * 2,
+          depth: 0.22 + seeded(s * 23) * 0.65,
+          arc: seeded(s * 29) > 0.66 ? Math.PI * (1.25 + seeded(s * 31) * 0.6) : Math.PI * 2,
+          start: seeded(s * 37) * Math.PI * 2,
+        };
+      });
+      triangles = Array.from({ length: width < 600 ? 5 : CONFIG.triangleCount }, (_, i) => {
+        const s = i + 91;
+        const cx = width * (0.08 + seeded(s * 2) * 0.84);
+        const cy = height * (0.08 + seeded(s * 3) * 0.84);
+        const radius = shortSide * (0.035 + seeded(s * 5) * 0.09);
+        const angle = seeded(s * 7) * Math.PI * 2;
+        const points: [Point, Point, Point] = [0, 1, 2].map((j) => ({
+          x: cx + Math.cos(angle + j * Math.PI * 2 / 3) * radius,
+          y: cy + Math.sin(angle + j * Math.PI * 2 / 3) * radius,
+        })) as [Point, Point, Point];
+        return { points, rotation: angle, speed: (seeded(s * 11) - 0.5) * 0.12, depth: 0.24 + seeded(s * 13) * 0.62, phase: seeded(s * 17) * Math.PI * 2 };
+      });
+      particles = Array.from({ length: Math.round(CONFIG.particleCount * (width < 600 ? 0.58 : 1) * qualityScale) }, (_, i) => ({
+        path: i % Math.max(1, orbits.length),
+        angle: seeded(i + 101) * Math.PI * 2,
+        speed: 0.42 + seeded(i + 211) * (i % 7 === 0 ? 0.82 : 0.48),
+        direction: i % 3 === 0 ? -1 : 1,
+        size: 0.7 + seeded(i + 307) * (i % 6 === 0 ? 1.8 : 0.8),
+        depth: 0.25 + seeded(i + 401) * 0.7,
+        phase: seeded(i + 503) * 12,
+        pulse: seeded(i + 601) * Math.PI * 2,
+        trail: [],
+        trailLimit: i % 7 === 0 ? CONFIG.trailLength + 3 : CONFIG.trailLength,
+        mode: i % 7 === 0 ? 1 : 0,
+        modeTimer: seeded(i + 701) * 5,
+      }));
+    };
+
+    const onPointerMove = (event: PointerEvent) => {
+      if (reduced || event.pointerType === "touch") return;
+      targetX = (event.clientX / Math.max(1, window.innerWidth) - 0.5) * width * CONFIG.pointerParallax;
+      targetY = (event.clientY / Math.max(1, window.innerHeight) - 0.5) * height * CONFIG.pointerParallax;
+    };
+    const onVisibility = () => {
+      hidden = document.hidden;
+      if (!hidden) { lastTime = 0; raf = requestAnimationFrame(draw); }
+      else cancelAnimationFrame(raf);
+    };
+    const onMotionChange = (event: MediaQueryListEvent) => {
+      reduced = event.matches;
+      if (reduced) { targetX = 0; targetY = 0; }
+    };
+
+    const rotatePoint = (p: Point, cx: number, cy: number, angle: number): Point => {
+      const x = p.x - cx; const y = p.y - cy;
+      return { x: cx + x * Math.cos(angle) - y * Math.sin(angle), y: cy + x * Math.sin(angle) + y * Math.cos(angle) };
+    };
+    const orbitCenter = (o: Orbit, index: number, time: number): Point => ({
+      x: o.x + Math.sin(time * (0.42 + o.depth * 0.28) + o.phase) * Math.min(width, height) * 0.035
+        + Math.cos(time * 0.24 + index) * 10,
+      y: o.y + Math.cos(time * (0.36 + o.depth * 0.24) + o.phase) * Math.min(width, height) * 0.028
+        + Math.sin(time * 0.28 + index * 0.7) * 8,
+    });
+    const orbitPoint = (o: Orbit, angle: number, index: number, time: number): Point => {
+      const center = orbitCenter(o, index, time);
+      const a = angle + o.rotation + time * o.speed;
+      const breathe = 1 + Math.sin(time * 1.45 + o.phase) * 0.075;
+      return { x: center.x + Math.cos(a) * o.rx * breathe, y: center.y + Math.sin(a) * o.ry * breathe };
+    };
+    const draw = (timestamp: number) => {
+      if (hidden) return;
+      if (!lastTime) lastTime = timestamp;
+      const dt = Math.min(0.05, Math.max(0, (timestamp - lastTime) / 1000));
+      lastTime = timestamp;
+      elapsed += dt;
+      frameSamples++;
+      sampleTime += dt;
+      if (sampleTime > 2.5) {
+        const fps = frameSamples / sampleTime;
+        if (fps < 38 && qualityScale > 0.55) { qualityScale = 0.55; buildScene(); }
+        else if (fps > 55 && qualityScale < 1) { qualityScale = 1; buildScene(); }
+        frameSamples = 0; sampleTime = 0;
+      }
+
+      ctx.clearRect(0, 0, width, height);
+      const colors = palette();
+      const pointerEase = 1 - Math.exp(-4.2 * dt);
+      pointerX = lerp(pointerX, reduced ? 0 : targetX, pointerEase);
+      pointerY = lerp(pointerY, reduced ? 0 : targetY, pointerEase);
+      const motion = reduced ? 0.12 : 1;
+      const ox = pointerX;
+      const oy = pointerY;
+
+      // Distant orbital layer.
+      for (let orbitIndex = 0; orbitIndex < orbits.length; orbitIndex++) {
+        const o = orbits[orbitIndex];
+        const center = orbitCenter(o, orbitIndex, reduced ? elapsed * 0.12 : elapsed);
+        const cx = center.x + ox * o.depth;
+        const cy = center.y + oy * o.depth;
+        const orbitTurn = reduced ? 0 : elapsed * o.speed;
+        const breathe = reduced ? 1 : 1 + Math.sin(elapsed * 1.45 + o.phase) * 0.075;
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(o.rotation + orbitTurn + (reduced ? 0 : Math.sin(elapsed * 0.65 + o.phase) * 0.22));
+        ctx.beginPath();
+        ctx.ellipse(0, 0, o.rx * breathe, o.ry * breathe, 0, o.start, o.start + o.arc);
+        ctx.strokeStyle = isLightMode() ? `rgba(2, 132, 199, ${o.depth * 0.30 * CONFIG.lineOpacity})` : `rgba(121, 200, 200, ${o.depth * 0.16 * CONFIG.lineOpacity})`;
+        ctx.lineWidth = o.depth > 0.65 ? 0.9 : 0.65;
+        ctx.stroke();
+        if (o.depth > 0.62) {
+          ctx.beginPath();
+          ctx.ellipse(0, 0, o.rx * breathe * 0.88, o.ry * breathe * 0.88, 0, 0, Math.PI * 2);
+          ctx.strokeStyle = isLightMode() ? "rgba(219,39,119,0.20)" : "rgba(218,123,147,0.10)";
+          ctx.lineWidth = 0.6;
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      // Wireframe triangles, with slow independent rotation.
+      for (const t of triangles) {
+        const cx = (t.points[0].x + t.points[1].x + t.points[2].x) / 3;
+        const cy = (t.points[0].y + t.points[1].y + t.points[2].y) / 3;
+        const rot = reduced ? 0 : Math.sin(elapsed * 0.48 + t.phase) * 0.22 + elapsed * t.speed * 2.4;
+        const floatX = reduced ? 0 : Math.sin(elapsed * 0.24 + t.phase) * Math.min(width, height) * 0.025;
+        const floatY = reduced ? 0 : Math.cos(elapsed * 0.2 + t.phase) * Math.min(width, height) * 0.022;
+        const pulseScale = reduced ? 1 : 1 + Math.sin(elapsed * 0.8 + t.phase) * 0.08;
+        const pts = t.points.map((p) => {
+          const rotated = rotatePoint(p, cx, cy, rot);
+          return { x: cx + (rotated.x - cx) * pulseScale + floatX, y: cy + (rotated.y - cy) * pulseScale + floatY };
+        });
+        ctx.beginPath();
+        ctx.moveTo(pts[0].x + ox * t.depth, pts[0].y + oy * t.depth);
+        ctx.lineTo(pts[1].x + ox * t.depth, pts[1].y + oy * t.depth);
+        ctx.lineTo(pts[2].x + ox * t.depth, pts[2].y + oy * t.depth);
+        ctx.closePath();
+        ctx.strokeStyle = isLightMode() ? `rgba(124,58,237,${0.18 + t.depth * 0.18})` : `rgba(218,123,147,${0.10 + t.depth * 0.13})`;
+        ctx.lineWidth = t.depth > 0.65 ? 0.9 : 0.6;
+        ctx.stroke();
+        if (t.depth > 0.66 && t.phase > 1.5) {
+          ctx.beginPath();
+          ctx.moveTo(lerp(pts[0].x, pts[1].x, .5), lerp(pts[0].y, pts[1].y, .5));
+          ctx.lineTo(lerp(pts[1].x, pts[2].x, .5), lerp(pts[1].y, pts[2].y, .5));
+          ctx.strokeStyle = isLightMode() ? "rgba(2,132,199,0.26)" : "rgba(121,200,200,0.11)";
+          ctx.stroke();
+        }
+      }
+
+      // Sparse constellations connect nearby orbit centers, not every object.
+      for (let i = 0; i < orbits.length; i++) {
+        const a = orbits[i];
+        const nearestIndex = (i + 3) % orbits.length;
+        const nearest = orbits[nearestIndex];
+        const aCenter = orbitCenter(a, i, reduced ? elapsed * 0.12 : elapsed);
+        const bCenter = orbitCenter(nearest, nearestIndex, reduced ? elapsed * 0.12 : elapsed);
+        const ax = aCenter.x + ox * a.depth; const ay = aCenter.y + oy * a.depth;
+        const bx = bCenter.x + ox * nearest.depth; const by = bCenter.y + oy * nearest.depth;
+        const dist = Math.hypot(ax - bx, ay - by);
+        if (dist < Math.min(width, height) * 0.5) {
+          ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by);
+          ctx.strokeStyle = colors.line; ctx.lineWidth = 0.65; ctx.stroke();
+        }
+      }
+
+      // Traveling motes, trails and local energy pulses.
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+        const orbit = orbits[p.path % orbits.length];
+        const behavior = p.mode === 1 ? (0.45 + 0.55 * Math.sin(elapsed * 1.8 + p.phase)) : 1;
+        const speedBoost = p.mode === 1 && !reduced ? 1 + Math.max(0, Math.sin(elapsed * 2.1 + p.phase)) * 1.7 : 1;
+        if (!reduced) {
+          p.angle += dt * p.speed * p.direction * speedBoost * motion;
+          p.modeTimer += dt;
+          if (p.mode === 1 && p.modeTimer > 4 + p.phase % 3) { p.modeTimer = 0; p.direction *= -1; }
+        }
+        const point = orbitPoint(orbit, p.angle + Math.sin(elapsed * 1.1 + p.phase) * 0.11, p.path % orbits.length, reduced ? elapsed * 0.12 : elapsed);
+        const x = point.x + ox * p.depth;
+        const y = point.y + oy * p.depth;
+        p.trail.push({ x, y });
+        if (p.trail.length > p.trailLimit) p.trail.shift();
+        if (p.trail.length > 1) {
+          for (let j = 1; j < p.trail.length; j++) {
+            const prev = p.trail[j - 1]; const cur = p.trail[j];
+            const tailAlpha = (j / p.trail.length) * 0.26 * p.depth;
+            ctx.beginPath(); ctx.moveTo(prev.x, prev.y); ctx.lineTo(cur.x, cur.y);
+            ctx.strokeStyle = p.mode === 1 ? (isLightMode() ? `rgba(219,39,119,${tailAlpha * 1.6})` : `rgba(218,123,147,${tailAlpha})`) : (isLightMode() ? `rgba(2,132,199,${tailAlpha * 1.6})` : `rgba(121,200,200,${tailAlpha})`);
+            ctx.lineWidth = (j / p.trail.length) * (p.mode === 1 ? 1.6 : 0.9);
+            ctx.stroke();
+          }
+        }
+        const pulse = 0.65 + 0.35 * Math.sin(elapsed * 2.1 + p.pulse);
+        const radius = p.size * (p.mode === 1 ? 1.35 : 1) * (0.85 + pulse * 0.2);
+        ctx.save();
+        ctx.globalCompositeOperation = "lighter";
+        ctx.globalAlpha = p.depth * (p.mode === 1 ? behavior : 0.75);
+        ctx.fillStyle = p.mode === 1 ? colors.rose : colors.tealBright;
+        ctx.shadowColor = p.mode === 1 ? colors.rose : colors.teal;
+        ctx.shadowBlur = (p.mode === 1 ? 12 : 8) * CONFIG.glow;
+        ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.fill();
+        ctx.shadowBlur = 0; ctx.fillStyle = colors.ivory;
+        ctx.beginPath(); ctx.arc(x, y, Math.max(0.45, radius * 0.36), 0, Math.PI * 2); ctx.fill();
+        if (p.mode === 1) {
+          const wingAngle = Math.atan2(Math.cos(p.angle), -Math.sin(p.angle));
+          ctx.strokeStyle = isLightMode() ? "rgba(219,39,119,0.55)" : "rgba(218,123,147,0.36)";
+          ctx.lineWidth = 0.6;
+          ctx.beginPath();
+          ctx.moveTo(x - Math.cos(wingAngle) * 3, y - Math.sin(wingAngle) * 3);
+          ctx.lineTo(x + Math.cos(wingAngle) * 3, y + Math.sin(wingAngle) * 3);
+          ctx.stroke();
+        }
+        ctx.restore();
+
+        // A subtle pulse at selected orbit intersections.
+        if (i % 9 === 0 && Math.abs(Math.sin(p.angle * 1.6)) > 0.992) {
+          ctx.beginPath(); ctx.arc(x, y, 3 + (1 - Math.abs(Math.sin(p.angle))) * 8, 0, Math.PI * 2);
+          ctx.strokeStyle = isLightMode() ? "rgba(2,132,199,0.32)" : "rgba(121,200,200,0.16)"; ctx.lineWidth = 0.7; ctx.stroke();
+        }
+      }
+
+      // Quiet node lights at selected orbital centers.
+      for (let i = 0; i < orbits.length; i++) {
+        const center = orbitCenter(orbits[i], i, reduced ? elapsed * 0.12 : elapsed);
+        const pulse = reduced ? 0.3 : Math.max(0, Math.sin(elapsed * 1.25 + i * 1.7));
+        if (pulse > 0.72) {
+          ctx.beginPath(); ctx.arc(center.x + ox * 0.3, center.y + oy * 0.3, 2 + pulse * 4, 0, Math.PI * 2);
+          ctx.strokeStyle = isLightMode() ? `rgba(2,132,199,${(pulse - 0.7) * 0.55})` : `rgba(121,200,200,${(pulse - 0.7) * 0.35})`; ctx.lineWidth = 0.8; ctx.stroke();
+        }
+      }
+      raf = requestAnimationFrame(draw);
+    };
+
+    const resizeObserver = new ResizeObserver(resize);
+    resizeObserver.observe(canvas);
+    resize();
+    window.addEventListener("pointermove", onPointerMove, { passive: true });
+    document.addEventListener("visibilitychange", onVisibility);
+    reducedMotion.addEventListener("change", onMotionChange);
+    if (!hidden) raf = requestAnimationFrame(draw);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      resizeObserver.disconnect();
+      window.removeEventListener("pointermove", onPointerMove);
+      document.removeEventListener("visibilitychange", onVisibility);
+      reducedMotion.removeEventListener("change", onMotionChange);
+    };
+  }, []);
+
+  return <canvas ref={canvasRef} className="orbital-particle-canvas" aria-hidden="true" />;
+}

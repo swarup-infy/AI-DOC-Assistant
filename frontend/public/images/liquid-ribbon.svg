@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 900" fill="none">
+  <defs>
+    <linearGradient id="cyan" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#27E8F4" stop-opacity=".04"/>
+      <stop offset=".48" stop-color="#27E8F4" stop-opacity=".8"/>
+      <stop offset="1" stop-color="#4C8DFF" stop-opacity=".16"/>
+    </linearGradient>
+    <linearGradient id="cyan2" x1="0" y1="1" x2="1" y2="0">
+      <stop stop-color="#06B6D4" stop-opacity=".06"/>
+      <stop offset=".52" stop-color="#22D3EE" stop-opacity=".62"/>
+      <stop offset="1" stop-color="#60A5FA" stop-opacity=".08"/>
+    </linearGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="5"/>
+    </filter>
+  </defs>
+  <g stroke-linecap="round">
+    <path d="M-140 180C80 100 150 35 290 -70S520 -50 535 105 470 300 620 388 860 460 1030 370 1150 170 1320 175 1490 280 1570 250" stroke="#00D9F5" stroke-opacity=".2" stroke-width="7" filter="url(#glow)"/>
+    <path d="M-140 180C80 100 150 35 290 -70S520 -50 535 105 470 300 620 388 860 460 1030 370 1150 170 1320 175 1490 280 1570 250" stroke="url(#cyan)" stroke-width="1.6"/>
+    <path d="M-80 460C100 310 170 250 300 300S490 530 650 595 900 650 1010 520 1110 315 1230 330 1450 510 1550 470" stroke="#00D9F5" stroke-opacity=".18" stroke-width="6" filter="url(#glow)"/>
+    <path d="M-80 460C100 310 170 250 300 300S490 530 650 595 900 650 1010 520 1110 315 1230 330 1450 510 1550 470" stroke="url(#cyan2)" stroke-width="1.25"/>
+    <path d="M180 -120C110 65 90 220 190 360S430 560 400 720 280 920 245 1020" stroke="#21D8F1" stroke-opacity=".6" stroke-width="1.15"/>
+    <path d="M370 -100C260 80 270 230 370 360S590 550 555 705 465 870 500 1000" stroke="url(#cyan2)" stroke-width="1.2"/>
+    <path d="M850 -100C730 55 780 215 900 310S1090 420 1080 575 970 800 1040 1010" stroke="#25D6EF" stroke-opacity=".44" stroke-width="1.25"/>
+    <path d="M1070 -80C980 90 1000 210 1110 300S1330 400 1300 580 1200 790 1270 980" stroke="url(#cyan)" stroke-width="1.1"/>
+    <path d="M450 -50C580 110 700 160 870 180S1190 210 1510 100" stroke="#27D7E9" stroke-opacity=".46" stroke-width="1.25"/>
+    <path d="M-100 700C140 600 250 650 410 760S720 900 890 790 1130 630 1300 700 1500 800 1600 740" stroke="url(#cyan)" stroke-width="1.4"/>
+    <path d="M620 -100C520 60 590 230 740 330S980 450 970 600 820 800 850 1000" stroke="#29D9EF" stroke-opacity=".28" stroke-width="1"/>
+  </g>
+</svg>

@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 720" fill="none">
+<defs>
+ <linearGradient id="a" x1="0" y1="0" x2="720" y2="720" gradientUnits="userSpaceOnUse"><stop stop-color="#38bdf8"/><stop offset=".48" stop-color="#818cf8"/><stop offset="1" stop-color="#f472b6"/></linearGradient>
+ <pattern id="lattice" width="180" height="180" patternUnits="userSpaceOnUse">
+  <path d="M90 0 180 90 90 180 0 90Z" stroke="url(#a)" stroke-opacity=".65" stroke-width="1.2"/>
+  <path d="M90 24 156 90 90 156 24 90Z" stroke="url(#a)" stroke-opacity=".42"/>
+  <path d="M90 48 132 90 90 132 48 90Z" stroke="url(#a)" stroke-opacity=".52"/>
+  <circle cx="90" cy="90" r="29" stroke="url(#a)" stroke-opacity=".7"/>
+  <circle cx="90" cy="90" r="17" stroke="url(#a)" stroke-opacity=".55" stroke-dasharray="3 5"/>
+  <path d="M90 60 97 83 120 90 97 97 90 120 83 97 60 90 83 83Z" stroke="url(#a)" stroke-opacity=".65"/>
+  <circle cx="0" cy="0" r="12" stroke="url(#a)" stroke-opacity=".5"/>
+  <circle cx="180" cy="0" r="12" stroke="url(#a)" stroke-opacity=".5"/>
+  <circle cx="0" cy="180" r="12" stroke="url(#a)" stroke-opacity=".5"/>
+  <circle cx="180" cy="180" r="12" stroke="url(#a)" stroke-opacity=".5"/>
+  <path d="M0 0 180 180M180 0 0 180" stroke="url(#a)" stroke-opacity=".2"/>
+ </pattern>
+ <radialGradient id="v"><stop stop-color="#818cf8" stop-opacity=".2"/><stop offset="1" stop-color="#818cf8" stop-opacity="0"/></radialGradient>
+</defs>
+<rect width="720" height="720" fill="url(#lattice)"/>
+<rect width="720" height="720" fill="url(#v)"/>
+<g stroke="url(#a)" stroke-opacity=".34">
+ <circle cx="360" cy="360" r="305"/><circle cx="360" cy="360" r="270" stroke-dasharray="2 8"/>
+ <circle cx="360" cy="360" r="225"/><circle cx="360" cy="360" r="180" stroke-dasharray="4 7"/>
+ <path d="M360 0V720M0 360H720M105 105 615 615M615 105 105 615"/>
+</g>
+</svg>
