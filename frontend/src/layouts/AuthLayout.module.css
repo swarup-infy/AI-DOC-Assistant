@@ -31,8 +31,8 @@
   position: fixed;
   z-index: 1;
   display: block;
-  width: clamp(210px, 20vw, 285px);
-  height: clamp(210px, 20vw, 285px);
+  width: clamp(165px, 20vw, 285px);
+  height: clamp(165px, 20vw, 285px);
   border-radius: 50%;
   pointer-events: none;
   opacity: .96;
@@ -46,7 +46,7 @@
   top: 2vh;
   background: linear-gradient(115deg, #ff087e 4%, #ff326e 52%, #ff625f 100%);
   box-shadow: 0 0 24px rgba(255, 28, 123, .38), 0 0 70px rgba(255, 28, 123, .28);
-  animation: pinkJourney 20s cubic-bezier(.42, 0, .25, 1) infinite alternate;
+  animation: pinkCornerTravel 16s cubic-bezier(.45, 0, .25, 1) infinite;
 }
 
 .shell .purpleOrb {
@@ -54,19 +54,19 @@
   top: 62vh;
   background: linear-gradient(140deg, #db20ff 0%, #ae24ed 54%, #812cf0 100%);
   box-shadow: 0 0 28px rgba(190, 34, 255, .38), 0 0 86px rgba(190, 34, 255, .28);
-  animation: purpleJourney 23s cubic-bezier(.42, 0, .25, 1) infinite alternate;
+  animation: purpleCornerTravel 19s cubic-bezier(.45, 0, .25, 1) infinite;
 }
 
-@keyframes pinkJourney {
-  0% { transform: translate3d(0, 0, 0) scale(.98); }
-  50% { transform: translate3d(-12vw, 10vh, 0) scale(1.035); }
-  100% { transform: translate3d(-21vw, 23vh, 0) scale(1); }
+/* Pink travels from the upper-right area to the lower-left, then returns. */
+@keyframes pinkCornerTravel {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(.98); }
+  48%, 52% { transform: translate3d(-55vw, 70vh, 0) scale(1.04); }
 }
 
-@keyframes purpleJourney {
-  0% { transform: translate3d(0, 0, 0) scale(1); }
-  50% { transform: translate3d(7vw, -6vh, 0) scale(1.04); }
-  100% { transform: translate3d(14vw, -14vh, 0) scale(.98); }
+/* Violet travels in the opposite direction, from lower-left to upper-right. */
+@keyframes purpleCornerTravel {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  48%, 52% { transform: translate3d(65vw, -58vh, 0) scale(1.04); }
 }
 
 .authGlassCard {
@@ -113,8 +113,8 @@
 }
 
 @media (max-width: 767px) {
-  .shell .pinkOrb { left: 62vw; top: 3vh; width: 180px; height: 180px; }
-  .shell .purpleOrb { left: 3vw; top: 73vh; width: 165px; height: 165px; }
+  .shell .pinkOrb { left: 62vw; top: 3vh; width: 165px; height: 165px; }
+  .shell .purpleOrb { left: 3vw; top: 73vh; width: 155px; height: 155px; }
   .backgroundRibbons::after { opacity: .06; background-size: auto 115%; }
   .authGlassCard { -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); }
 }
