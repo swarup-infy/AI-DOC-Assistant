@@ -5,14 +5,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   AlertCircle,
   ArrowRight,
-  BrainCircuit,
-  Check,
   Eye,
   EyeOff,
   Lock,
   Mail,
-  ShieldCheck,
-  Sparkles,
   User,
 } from "lucide-react";
 
@@ -21,18 +17,8 @@ import Button from "../../components/ui/Button";
 import Card from "../../components/ui/Card";
 import Input from "../../components/ui/Input";
 import Logo from "../../components/ui/Logo";
-import {
-  registerSchema,
-  type RegisterFormData,
-} from "../../types/auth";
+import { registerSchema, type RegisterFormData } from "../../types/auth";
 import { registerUser } from "../../services/authService";
-
-const features = [
-  "Secure cloud storage",
-  "AI powered document search",
-  "Chat with your documents",
-  "Enterprise-grade encryption",
-];
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -51,7 +37,6 @@ export default function RegisterPage() {
   });
 
   const password = watch("password") ?? "";
-
   const passwordStrength = useMemo(() => {
     let score = 0;
     if (password.length >= 8) score += 1;
@@ -61,253 +46,137 @@ export default function RegisterPage() {
     return score;
   }, [password]);
 
-  const strengthColor = [
-    "bg-red-500",
-    "bg-orange-500",
-    "bg-yellow-500",
-    "bg-emerald-500",
-  ][Math.max(passwordStrength - 1, 0)];
+  const strengthColor = ["bg-red-500", "bg-orange-500", "bg-yellow-500", "bg-emerald-500"][
+    Math.max(passwordStrength - 1, 0)
+  ];
+  const strengthLabel = ["Weak", "Fair", "Good", "Strong"][
+    Math.max(passwordStrength - 1, 0)
+  ];
 
-  const strengthLabel = [
-    "Weak",
-    "Fair",
-    "Good",
-    "Strong",
-  ][Math.max(passwordStrength - 1, 0)];
-
-  const onSubmit = useCallback(
-    async (data: RegisterFormData) => {
-      setServerError("");
-
-      try {
-        await registerUser({
-          name: data.name,
-          email: data.email,
-          password: data.password,
-        });
-
-        navigate("/login", { replace: true });
-      } catch (error) {
-        setServerError(
-          error instanceof Error
-            ? error.message
-            : "Unable to create account."
-        );
-      }
-    },
-    [navigate]
-  );
+  const onSubmit = useCallback(async (data: RegisterFormData) => {
+    setServerError("");
+    try {
+      await registerUser({ name: data.name, email: data.email, password: data.password });
+      navigate("/login", { replace: true });
+    } catch (error) {
+      setServerError(error instanceof Error ? error.message : "Unable to create account.");
+    }
+  }, [navigate]);
 
   return (
     <AuthLayout>
-      <div className="grid items-center gap-12 lg:grid-cols-[1.1fr_1fr]">
-        <section className="auth-enter-delay hidden lg:block">
-          <Logo size={56} />
-
-          <div className="mt-10 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-xs font-semibold text-primary">
-            <Sparkles size={14} />
-            Start for free
+      <section className="w-full max-w-[640px]">
+        <Card className="auth-enter-delay authGlassCard w-full rounded-[24px] border border-white/35 bg-card/20 px-6 py-7 shadow-2xl backdrop-blur-2xl sm:px-10 sm:py-9 md:px-12">
+          <div className="mb-5 flex justify-center sm:justify-start">
+            <Logo size={36} />
           </div>
 
-          <h1 className="mt-6 max-w-xl text-6xl font-black leading-tight">
-            Create your
-            <span className="block bg-gradient-to-r from-[#DA7B93] via-[#376E6F] to-[#8db5b1] bg-clip-text text-transparent">
-              AI Workspace
-            </span>
-          </h1>
+          <header className="mb-6">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.24em] text-primary">AI Document Assistant</p>
+            <h1 id="auth-title" className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">Create your account</h1>
+            <p className="mt-2 text-sm leading-6 text-white/75">Build your AI workspace and start exploring your documents.</p>
+          </header>
 
-          <p className="mt-6 max-w-lg text-lg leading-8 text-muted-foreground">
-            Upload, organize, search and chat with your documents using
-            cutting-edge AI.
-          </p>
+          {serverError && (
+            <div role="alert" className="mb-5 flex items-start gap-3 rounded-xl border border-rose-300/25 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
+              <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
+              <span>{serverError}</span>
+            </div>
+          )}
 
-          <div className="mt-12 space-y-5">
-            {features.map((item) => (
-              <div
-                key={item}
-                className="flex items-center gap-4 rounded-2xl border border-border bg-card/50 p-5 backdrop-blur"
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <Input
+              label="Full Name"
+              autoComplete="name"
+              placeholder="Your name"
+              icon={<User className="h-5 w-5" />}
+              error={errors.name?.message}
+              {...register("name")}
+              className="!border-white/45 !bg-black/10 !text-white placeholder:!text-white/40 focus:!border-pink-400"
+            />
+            <Input
+              label="Email Address"
+              type="email"
+              autoComplete="email"
+              placeholder="you@example.com"
+              icon={<Mail className="h-5 w-5" />}
+              error={errors.email?.message}
+              {...register("email")}
+              className="!border-white/45 !bg-black/10 !text-white placeholder:!text-white/40 focus:!border-pink-400"
+            />
+            <div className="relative">
+              <Input
+                label="Password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="new-password"
+                placeholder="Create a password"
+                icon={<Lock className="h-5 w-5" />}
+                error={errors.password?.message}
+                {...register("password")}
+                className="!border-white/45 !bg-black/10 !text-white placeholder:!text-white/40 focus:!border-pink-400"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((value) => !value)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                className="absolute right-4 top-[45px] z-10 rounded-md p-1 text-white/70 transition hover:text-white"
               >
-                <div className="rounded-xl bg-primary/10 p-3">
-                  <Check size={18} className="text-primary" />
-                </div>
-                <span className="font-medium">{item}</span>
-              </div>
-            ))}
-          </div>
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
 
-          <div className="mt-12 flex items-center gap-4 rounded-2xl border border-primary/20 bg-primary/5 p-6">
-            <ShieldCheck size={30} className="text-primary" />
             <div>
-              <h3 className="font-semibold">Enterprise Security</h3>
-              <p className="text-sm text-muted-foreground">
-                AES-256 encryption with secure AI processing.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <section className="flex justify-center">
-          <Card className="auth-enter-delay w-full max-w-md rounded-3xl border border-border/80 bg-card/85 p-8 shadow-2xl backdrop-blur-xl sm:p-10 authGlassCard">
-            <div className="mb-8 text-center">
-              <Logo showWordmark={false} size={42} />
-              <h2 className="mt-6 text-4xl font-bold">Create Account</h2>
-              <p className="mt-3 text-muted-foreground">
-                Start using AI Document Assistant today.
+              <div className="mb-2 h-1.5 overflow-hidden rounded-full bg-black/20">
+                <div
+                  className={`h-full rounded-full transition-all duration-300 ${strengthColor}`}
+                  style={{ width: `${passwordStrength * 25}%` }}
+                />
+              </div>
+              <p className="text-xs text-white/70">
+                Password strength: <span className="font-semibold text-white">{password.length ? strengthLabel : "Not entered"}</span>
               </p>
             </div>
 
-            {serverError && (
-              <div className="mb-6 flex items-center gap-3 rounded-xl bg-destructive/10 p-4 text-sm text-destructive">
-                <AlertCircle size={18} />
-                {serverError}
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+            <div className="relative">
               <Input
-                label="Full Name"
-                placeholder="John Doe"
-                icon={<User size={18} />}
-                error={errors.name?.message}
-                autoComplete="name"
-                {...register("name")}
+                label="Confirm Password"
+                type={showConfirmPassword ? "text" : "password"}
+                autoComplete="new-password"
+                placeholder="Confirm your password"
+                icon={<Lock className="h-5 w-5" />}
+                error={errors.confirmPassword?.message}
+                {...register("confirmPassword")}
+                className="!border-white/45 !bg-black/10 !text-white placeholder:!text-white/40 focus:!border-pink-400"
               />
-
-              <Input
-                label="Email Address"
-                type="email"
-                placeholder="john@example.com"
-                autoComplete="email"
-                icon={<Mail size={18} />}
-                error={errors.email?.message}
-                {...register("email")}
-              />
-
-              <div className="relative">
-                <Input
-                  label="Password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Create a password"
-                  autoComplete="new-password"
-                  icon={<Lock size={18} />}
-                  error={errors.password?.message}
-                  {...register("password")}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((value) => !value)}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                  className="absolute right-4 top-[45px] text-muted-foreground hover:text-foreground"
-                >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
-
-              <div>
-                <div className="mb-2 h-2 overflow-hidden rounded-full bg-muted">
-                  <div
-                    className={`h-full rounded-full transition-all ${strengthColor}`}
-                    style={{ width: `${passwordStrength * 25}%` }}
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Password strength:
-                  <span className="ml-1 font-semibold">
-                    {password.length ? strengthLabel : "Too Weak"}
-                  </span>
-                </p>
-              </div>
-
-              <div className="relative">
-                <Input
-                  label="Confirm Password"
-                  type={showConfirmPassword ? "text" : "password"}
-                  placeholder="Confirm password"
-                  autoComplete="new-password"
-                  icon={<Lock size={18} />}
-                  error={errors.confirmPassword?.message}
-                  {...register("confirmPassword")}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword((value) => !value)}
-                  aria-label={
-                    showConfirmPassword
-                      ? "Hide confirm password"
-                      : "Show confirm password"
-                  }
-                  className="absolute right-4 top-[45px] text-muted-foreground hover:text-foreground"
-                >
-                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
-
-              <label className="flex items-start gap-3 text-sm text-muted-foreground">
-                <input
-                  type="checkbox"
-                  className="mt-1 h-4 w-4 rounded accent-primary" aria-label="Agree to Terms of Service and Privacy Notice"
-                  required
-                />
-                <span>
-                  I agree to the
-                  <Link
-                    to="/terms"
-                    className="mx-1 font-medium text-primary hover:underline"
-                  >
-                    Terms
-                  </Link>
-                  and
-                  <Link
-                    to="/privacy"
-                    className="ml-1 font-medium text-primary hover:underline"
-                  >
-                    Privacy Policy
-                  </Link>
-                </span>
-              </label>
-
-              <Button
-                type="submit"
-                loading={isSubmitting}
-                iconRight={<ArrowRight size={18} />}
-                className="h-12 w-full rounded-xl text-base font-semibold"
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword((value) => !value)}
+                aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+                className="absolute right-4 top-[45px] z-10 rounded-md p-1 text-white/70 transition hover:text-white"
               >
-                Create Account
-              </Button>
-            </form>
+                {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
 
-            <div className="my-8 flex items-center gap-4">
-              <div className="h-px flex-1 bg-border" />
-              <span className="text-xs uppercase tracking-widest text-muted-foreground">
-                OR
+            <label className="flex items-start gap-3 text-sm text-white/75">
+              <input type="checkbox" className="mt-1 h-4 w-4 shrink-0 rounded accent-pink-500" aria-label="Agree to Terms of Service and Privacy Notice" required />
+              <span>
+                I agree to the <Link to="/terms" className="mx-1 font-semibold text-pink-300 hover:underline">Terms</Link>
+                and <Link to="/privacy" className="ml-1 font-semibold text-pink-300 hover:underline">Privacy Policy</Link>
               </span>
-              <div className="h-px flex-1 bg-border" />
-            </div>
+            </label>
 
-            <p className="text-center text-sm text-muted-foreground">
-              Already have an account?
-              <Link
-                to="/login"
-                className="ml-2 font-semibold text-primary hover:underline"
-              >
-                Sign In
-              </Link>
-            </p>
+            <Button type="submit" loading={isSubmitting} iconRight={<ArrowRight size={18} />} className="auth-submit h-12 w-full rounded-xl bg-[#ff174d] text-base font-bold text-white shadow-lg shadow-rose-950/30 hover:!bg-[#ff3564]">
+              Create Account
+            </Button>
+          </form>
 
-            <div className="mt-8 rounded-2xl border border-border bg-muted/30 p-4">
-              <div className="flex items-center gap-3">
-                <BrainCircuit size={20} className="text-primary" />
-                <div>
-                  <p className="text-sm font-semibold">AI Ready</p>
-                  <p className="text-xs text-muted-foreground">
-                    Create your workspace and start chatting with documents instantly.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </Card>
-        </section>
-      </div>
+          <p className="mt-6 text-center text-sm text-white/75">
+            Already have an account?
+            <Link to="/login" className="ml-2 font-bold text-pink-400 transition hover:text-pink-300 hover:underline">Sign in</Link>
+          </p>
+        </Card>
+      </section>
     </AuthLayout>
   );
 }
