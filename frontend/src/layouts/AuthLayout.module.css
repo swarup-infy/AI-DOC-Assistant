@@ -3,113 +3,82 @@
   isolation: isolate;
   min-height: 100svh;
   overflow: hidden;
-  background: #030507;
+  background: #08070b;
 }
 
-/* Match the application's cyan ribbon backdrop while keeping the two
-   large animated orbs as separate elements above it. */
 .backgroundRibbons {
   position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(ellipse at 50% 46%, rgba(6, 33, 41, .28), transparent 58%),
-    linear-gradient(135deg, #030507 0%, #06090d 54%, #020405 100%);
+    radial-gradient(ellipse at 50% 48%, rgba(45, 23, 38, .2), transparent 62%),
+    linear-gradient(135deg, #08070b 0%, #0a080d 52%, #060609 100%);
 }
+
 .backgroundRibbons::after {
   content: "";
   position: absolute;
   inset: 0;
+  pointer-events: none;
   background: url("/images/liquid-ribbon.svg") center / cover no-repeat;
-  opacity: .56;
-  animation: none;
+  opacity: .12;
+  animation: ribbonDrift 24s ease-in-out infinite alternate;
 }
 
 .pinkOrb,
 .purpleOrb {
   position: fixed;
-  display: block;
   z-index: 1;
-  width: clamp(190px, 20vw, 280px);
-  height: clamp(190px, 20vw, 280px);
+  display: block;
+  width: clamp(210px, 20vw, 285px);
+  height: clamp(210px, 20vw, 285px);
   border-radius: 50%;
   pointer-events: none;
-  opacity: .84;
+  opacity: .96;
   will-change: transform;
   backface-visibility: hidden;
-  filter: blur(8px);
   mix-blend-mode: screen;
 }
+
 .shell .pinkOrb {
   left: 64vw;
-  top: -7vh;
-  background: radial-gradient(circle at 34% 28%, #ff5b9b 0%, #ff347f 42%, #ff4b68 76%, rgba(255, 75, 104, .82) 100%);
-  box-shadow: 0 0 44px rgba(245, 43, 131, .24), 0 0 100px rgba(245, 43, 131, .18);
-  animation: pinkJourney 34s cubic-bezier(.45,0,.2,1) infinite alternate;
+  top: 2vh;
+  background: linear-gradient(115deg, #ff087e 4%, #ff326e 52%, #ff625f 100%);
+  box-shadow: 0 0 24px rgba(255, 28, 123, .38), 0 0 70px rgba(255, 28, 123, .28);
+  animation: pinkJourney 20s cubic-bezier(.42, 0, .25, 1) infinite alternate;
 }
+
 .shell .purpleOrb {
-  left: 32vw;
-  top: 46vh;
-  background: radial-gradient(circle at 34% 28%, #e64cff 0%, #b52bf2 44%, #7638e8 82%, rgba(118, 56, 232, .82) 100%);
-  box-shadow: 0 0 48px rgba(169, 28, 228, .25), 0 0 104px rgba(169, 28, 228, .16);
-  animation: purpleJourney 38s cubic-bezier(.45,0,.2,1) infinite alternate;
+  left: 12vw;
+  top: 62vh;
+  background: linear-gradient(140deg, #db20ff 0%, #ae24ed 54%, #812cf0 100%);
+  box-shadow: 0 0 28px rgba(190, 34, 255, .38), 0 0 86px rgba(190, 34, 255, .28);
+  animation: purpleJourney 23s cubic-bezier(.42, 0, .25, 1) infinite alternate;
 }
 
 @keyframes pinkJourney {
-  0% { transform: translate3d(0,0,0) scale(.96); }
-  25% { transform: translate3d(-18vw,12vh,0) scale(1.015); }
-  50% { transform: translate3d(-34vw,36vh,0) scale(.985); }
-  75% { transform: translate3d(-17vw,62vh,0) scale(1.025); }
-  100% { transform: translate3d(-55vw,43vh,0) scale(1); }
+  0% { transform: translate3d(0, 0, 0) scale(.98); }
+  50% { transform: translate3d(-12vw, 10vh, 0) scale(1.035); }
+  100% { transform: translate3d(-21vw, 23vh, 0) scale(1); }
 }
+
 @keyframes purpleJourney {
-  0% { transform: translate3d(0,0,0) scale(1); }
-  25% { transform: translate3d(15vw,-13vh,0) scale(1.025); }
-  50% { transform: translate3d(32vw,-31vh,0) scale(.985); }
-  75% { transform: translate3d(17vw,-15vh,0) scale(1.025); }
-  100% { transform: translate3d(-27vw,-8vh,0) scale(1); }
-}
-@keyframes ribbonDrift {
-  from { transform: translate3d(-.4%, 0, 0) scale(1); opacity: .45; }
-  to { transform: translate3d(.4%, -.25%, 0) scale(1.015); opacity: .65; }
-}
-@media (max-width: 767px) {
-  .pinkOrb, .purpleOrb {
-    width: 155px;
-    height: 155px;
-    opacity: .72;
-    filter: blur(6px);
-  }
-  .shell .pinkOrb { left: 61vw; top: -3vh; animation-duration: 44s; }
-  .shell .purpleOrb { left: 12vw; top: 54vh; animation-duration: 50s; }
-  .backgroundRibbons::after {
-    background-size: auto 115%;
-    background-position: 52% center;
-    opacity: .4;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .pinkOrb, .purpleOrb, .backgroundRibbons::after { animation: none !important; }
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(7vw, -6vh, 0) scale(1.04); }
+  100% { transform: translate3d(14vw, -14vh, 0) scale(.98); }
 }
 
-
-/* Glassmorphism cards for both login and registration forms. */
 .authGlassCard {
   position: relative;
   isolation: isolate;
-  overflow: hidden;
-  background:
-    linear-gradient(135deg, rgba(255,255,255,.22) 0%, rgba(255,255,255,.105) 45%, rgba(255,255,255,.055) 100%) !important;
-  border: 1px solid rgba(255,255,255,.48) !important;
-  box-shadow:
-    0 22px 64px rgba(0,0,0,.38),
-    0 1px 0 rgba(255,255,255,.45) inset,
-    1px 0 0 rgba(255,255,255,.12) inset,
-    0 -1px 0 rgba(255,255,255,.07) inset !important;
-  -webkit-backdrop-filter: blur(24px) saturate(145%);
-  backdrop-filter: blur(24px) saturate(145%);
+  background: linear-gradient(135deg, rgba(255,255,255,.25) 0%, rgba(255,255,255,.12) 48%, rgba(255,255,255,.055) 100%) !important;
+  border: 1px solid rgba(255,255,255,.55) !important;
+  box-shadow: 0 22px 64px rgba(0,0,0,.42), 0 1px 0 rgba(255,255,255,.42) inset !important;
+  -webkit-backdrop-filter: blur(26px) saturate(145%);
+  backdrop-filter: blur(26px) saturate(145%);
 }
+
 .authGlassCard::before {
   content: "";
   position: absolute;
@@ -117,44 +86,42 @@
   z-index: -1;
   pointer-events: none;
   border-radius: inherit;
-  background:
-    radial-gradient(ellipse at 8% 0%, rgba(255,255,255,.14), transparent 42%),
-    linear-gradient(115deg, rgba(255,255,255,.055), transparent 40%, rgba(34,211,238,.035));
+  background: radial-gradient(ellipse at 8% 0%, rgba(255,255,255,.13), transparent 42%);
 }
+
+.auth-submit {
+  transition: transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
+}
+
+.auth-submit:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 28px rgba(255, 23, 77, .28);
+}
+
+.auth-enter-delay {
+  animation: authCardEntrance 650ms cubic-bezier(.2,.8,.2,1) both;
+}
+
+@keyframes authCardEntrance {
+  from { opacity: 0; transform: translateY(14px) scale(.99); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes ribbonDrift {
+  from { transform: scale(1); opacity: .08; }
+  to { transform: scale(1.035); opacity: .16; }
+}
+
 @media (max-width: 767px) {
-  .authGlassCard {
-    -webkit-backdrop-filter: blur(18px) saturate(125%);
-    backdrop-filter: blur(18px) saturate(125%);
+  .shell .pinkOrb { left: 62vw; top: 3vh; width: 180px; height: 180px; }
+  .shell .purpleOrb { left: 3vw; top: 73vh; width: 165px; height: 165px; }
+  .backgroundRibbons::after { opacity: .06; background-size: auto 115%; }
+  .authGlassCard { -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pinkOrb, .purpleOrb, .backgroundRibbons::after, .auth-enter-delay {
+    animation: none !important;
+    transition: none !important;
   }
-}
-@media (prefers-reduced-motion: reduce) {
-  .shell .pinkOrb, .shell .purpleOrb { animation: none !important; }
-}
-
-/* Soft, continuous movement between opposite corners. */
-.shell .pinkOrb {
-  will-change: transform;
-  animation: pinkJourney 24s cubic-bezier(.42,0,.25,1) infinite alternate;
-}
-.shell .purpleOrb {
-  will-change: transform;
-  animation: purpleJourney 28s cubic-bezier(.42,0,.25,1) infinite alternate;
-}
-@keyframes pinkJourney {
-  0% { transform: translate3d(0, 0, 0) scale(.98); }
-  50% { transform: translate3d(-25vw, 35vh, 0) scale(1.025); }
-  100% { transform: translate3d(-48vw, 58vh, 0) scale(1); }
-}
-@keyframes purpleJourney {
-  0% { transform: translate3d(0, 0, 0) scale(1); }
-  50% { transform: translate3d(24vw, -25vh, 0) scale(1.03); }
-  100% { transform: translate3d(42vw, -42vh, 0) scale(.98); }
-}
-@media (max-width: 767px) {
-  .shell .pinkOrb { animation-duration: 24s; }
-  .shell .purpleOrb { animation-duration: 27s; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .pinkOrb, .purpleOrb, .backgroundRibbons::after { animation: none !important; }
 }
