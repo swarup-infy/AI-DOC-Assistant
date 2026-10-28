@@ -69,6 +69,6 @@ xlrd==2.0.2
 
 
 # Testing and security tooling
-pytest==9.0.3
+pytest==9.1.1
 httpx==0.28.1
 pip-audit==2.9.0
