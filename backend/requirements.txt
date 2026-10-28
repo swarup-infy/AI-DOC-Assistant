@@ -23,7 +23,7 @@ email-validator==2.3.0
 
 SQLAlchemy==2.0.51
 alembic==1.18.5
-psycopg2-binary==2.9.12
+psycopg2-binary==2.9.13
 
 
 # ==========================================================
