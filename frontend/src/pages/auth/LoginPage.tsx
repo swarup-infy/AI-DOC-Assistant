@@ -103,9 +103,9 @@ const features = [
 
     icon: Bot,
 
-    title: "Smart Document Analysis",
+    title: "Document AI",
 
-    description: "Understand PDFs instantly.",
+    description: "Summarize files fast.",
 
   },
 
@@ -113,9 +113,9 @@ const features = [
 
     icon: FileSearch,
 
-    title: "Semantic Search",
+    title: "Smart Search",
 
-    description: "Find information in seconds.",
+    description: "Find answers quickly.",
 
   },
 
@@ -123,9 +123,9 @@ const features = [
 
     icon: BrainCircuit,
 
-    title: "Groq Powered AI Chat",
+    title: "AI Chat",
 
-    description: "Lightning-fast intelligent responses.",
+    description: "Ask. Explore. Understand.",
 
   },
 
@@ -256,11 +256,11 @@ const {
 
         >
 
-          <Logo size={52} />
+          <Logo size={42} />
 
 
 
-          <div className="mt-8 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-1.5 text-xs font-medium text-primary">
+          <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[11px] font-medium text-primary">
 
             <Sparkles className="h-4 w-4" />
 
@@ -270,7 +270,7 @@ const {
 
 
 
-          <h1 className="mt-6 max-w-xl text-5xl font-black leading-[1.05] tracking-tight text-foreground xl:text-6xl">
+          <h1 className="mt-5 max-w-lg text-4xl font-extrabold leading-[1.04] tracking-tight text-foreground xl:text-5xl">
 
             Your documents,
 
@@ -284,19 +284,15 @@ const {
 
 
 
-          <p className="mt-5 max-w-md text-lg leading-8 text-muted-foreground">
+          <p className="mt-4 max-w-sm text-base leading-7 text-muted-foreground">
 
-            Upload, search, summarize, and chat
-
-            with your documents using powerful AI
-
-            — built for teams that move fast.
+            Search, summarize, and chat with your files using AI.
 
           </p>
 
 
 
-          <div className="pointer-events-none mt-10 hidden max-w-md xl:block">
+          <div className="pointer-events-none mt-5 hidden max-w-sm xl:block">
 
             <svg
 
@@ -360,7 +356,7 @@ const {
 
 
 
-          <div className="mt-10 space-y-4">
+          <div className="mt-5 space-y-2.5">
 
             {features.map(
 
@@ -394,11 +390,11 @@ const {
 
                 >
 
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
 
                     <Icon
 
-                      className="h-5 w-5 text-primary"
+                      className="h-4 w-4 text-primary"
 
                     />
 
@@ -408,7 +404,7 @@ const {
 
                   <div>
 
-                    <h3 className="text-sm font-semibold text-foreground">
+                    <h3 className="text-[13px] font-semibold text-foreground">
 
                       {title}
 
@@ -416,7 +412,7 @@ const {
 
 
 
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs text-muted-foreground">
 
                       {description}
 
@@ -444,7 +440,7 @@ const {
 
           <Card
 
-            className="auth-enter-delay w-full max-w-lg rounded-3xl border border-border/80 bg-card/85 p-8 shadow-2xl shadow-black/20 backdrop-blur-2xl transition-all duration-700 ease-out sm:p-10 translate-y-0 opacity-100"
+            className="auth-enter-delay w-full max-w-md rounded-2xl border border-border/80 bg-card/85 p-6 shadow-2xl shadow-black/20 backdrop-blur-2xl transition-all duration-700 ease-out sm:p-7 translate-y-0 opacity-100"
 
           >
 
@@ -456,13 +452,13 @@ const {
 
 
 
-            <div className="mb-7 text-center">
+            <div className="mb-5 text-center">
 
               <h2
 
                 id="auth-title"
 
-                className="text-3xl font-bold text-foreground sm:text-4xl"
+                className="text-2xl font-bold text-foreground sm:text-3xl"
 
               >
 
@@ -500,7 +496,7 @@ const {
 
               onSubmit={handleSubmit(onSubmit)}
 
-              className="space-y-5"
+              className="space-y-4"
 
             >
 
@@ -634,7 +630,7 @@ const {
 
                 }
 
-                className="h-14 w-full rounded-2xl text-base font-semibold"
+                className="h-12 w-full rounded-xl text-sm font-semibold"
 
               >
 
@@ -646,7 +642,7 @@ const {
 
 
 
-            <p className="mt-6 text-center text-sm text-muted-foreground">
+            <p className="mt-5 text-center text-xs text-muted-foreground">
 
               Don't have an account?
 
@@ -668,7 +664,7 @@ const {
 
 
 
-            <div className="mt-6 flex items-center justify-center gap-2 border-t border-border/40 pt-5 text-xs text-muted-foreground">
+            <div className="mt-5 flex items-center justify-center gap-2 border-t border-border/40 pt-4 text-[11px] text-muted-foreground">
 
               <Lock className="h-3.5 w-3.5" />
 
