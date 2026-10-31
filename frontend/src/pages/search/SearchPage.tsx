@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { FileText, Loader2, Search, AlertCircle } from "lucide-react";
 
 import DashboardLayout from "../../layouts/DashboardLayout";
@@ -21,11 +22,23 @@ interface SearchResponse {
 }
 
 export default function SearchPage() {
-  const [query, setQuery] = useState("");
+  const location = useLocation();
+  const initialQuery = (location.state as { query?: string } | null)?.query ?? "";
+  const [query, setQuery] = useState(initialQuery);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const [results, setResults] = useState<SearchResult[]>([]);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    const nextQuery = (location.state as { query?: string } | null)?.query ?? "";
+    if (nextQuery.trim()) {
+      setQuery(nextQuery);
+      setSearched(false);
+      setResults([]);
+      setError("");
+    }
+  }, [location.key, location.state]);
 
   async function handleSearch() {
     const searchText = query.trim();
