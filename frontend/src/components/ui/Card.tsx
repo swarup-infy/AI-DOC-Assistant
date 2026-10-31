@@ -10,12 +10,12 @@ interface CardProps extends HTMLAttributes<HTMLDivElement> {
 
 const variants: Record<CardVariant, string> = {
   surface: "rounded-2xl border border-border bg-card text-card-foreground shadow-sm",
-  glass: "rounded-2xl border border-border bg-card/75 text-card-foreground shadow-lg backdrop-blur-xl",
+  glass: "rounded-2xl border border-border bg-card text-card-foreground shadow-sm",
   outline: "rounded-2xl border border-border bg-transparent text-card-foreground",
 };
 
 const Card = forwardRef<HTMLDivElement, CardProps>(({ variant = "surface", hoverable = false, className, ...props }, ref) => (
-  <div ref={ref} className={cn("overflow-hidden transition-all duration-200", variants[variant], hoverable && "cursor-pointer hover:-translate-y-0.5 hover:border-border-strong hover:shadow-md", className)} {...props} />
+  <div ref={ref} className={cn("overflow-hidden transition-all duration-200", variants[variant], hoverable && "cursor-pointer hover:border-border-strong hover:bg-muted/40", className)} {...props} />
 ));
 Card.displayName = "Card";
 export default Card;
