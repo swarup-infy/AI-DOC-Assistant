@@ -14,31 +14,31 @@
   --font-sans: Inter, "Segoe UI", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  --bg: #2F4454;
-  --bg-elevated: #263945;
-  --surface: #263945;
-  --surface-2: #243641;
-  --surface-3: #1C3334;
-  --card: rgba(28, 51, 52, 0.88);
-  --card-solid: #263945;
-  --muted: #263945;
-  --accent: #2E151B;
+  --bg: #08070b;
+  --bg-elevated: #111018;
+  --surface: #111018;
+  --surface-2: #17131b;
+  --surface-3: #211720;
+  --card: rgba(17, 14, 22, 0.92);
+  --card-solid: #111018;
+  --muted: #1b1721;
+  --accent: #30202b;
 
-  --fg: #F4F3F0;
-  --fg-muted: #B7C1C8;
-  --fg-dim: #93A1AA;
+  --fg: #f8f6fa;
+  --fg-muted: #c7bfcc;
+  --fg-dim: #a49aaa;
 
-  --border: rgba(244, 243, 240, 0.18);
-  --border-strong: rgba(244, 243, 240, 0.28);
-  --ring: rgba(218, 123, 147, 0.55);
+  --border: rgba(248, 246, 250, 0.14);
+  --border-strong: rgba(248, 246, 250, 0.24);
+  --ring: rgba(255, 70, 151, 0.62);
 
-  --primary: #DA7B93;
-  --primary-hover: #e493a8;
-  --primary-active: #b95f79;
+  --primary: #ff4f98;
+  --primary-hover: #ff78b0;
+  --primary-active: #df347e;
   --primary-fg: #ffffff;
 
-  --secondary: #376E6F;
-  --secondary-hover: #4f8585;
+  --secondary: #8b5cf6;
+  --secondary-hover: #a78bfa;
   --secondary-fg: #ffffff;
 
   --success: #34d399;
@@ -46,8 +46,8 @@
   --danger: #fb7185;
   --info: #38bdf8;
 
-  --gradient-brand: linear-gradient(135deg, #DA7B93 0%, #DA7B93 45%, #376E6F 100%);
-  --gradient-text: linear-gradient(90deg, #ffffff 0%, #DA7B93 52%, #8db5b1 100%);
+  --gradient-brand: linear-gradient(135deg, #ff4f98 0%, #b44cff 52%, #7c5cff 100%);
+  --gradient-text: linear-gradient(90deg, #ffffff 0%, #ff78b0 52%, #b69aff 100%);
 
   --radius-xs: 6px;
   --radius-sm: 10px;
@@ -61,7 +61,7 @@
   --shadow-sm: 0 6px 18px -8px rgba(0, 0, 0, 0.5);
   --shadow-md: 0 18px 45px -18px rgba(0, 0, 0, 0.65);
   --shadow-lg: 0 30px 80px -25px rgba(0, 0, 0, 0.75);
-  --shadow-glow: 0 0 0 1px rgba(218, 123, 147, 0.18), 0 14px 38px -12px rgba(55, 110, 111, 0.25);
+  --shadow-glow: 0 0 0 1px rgba(255, 79, 152, 0.2), 0 14px 38px -12px rgba(180, 76, 255, 0.22);
 
   --ease-standard: cubic-bezier(0.2, 0.75, 0.2, 1);
   --ease-spring: cubic-bezier(0.34, 1.35, 0.64, 1);
@@ -402,6 +402,39 @@ ol {
 }
 
 
+
+
+
+/* Accessible text and control colors for the dark workspace theme. */
+.app-shell {
+  color: var(--fg);
+}
+
+.app-shell :where(h1, h2, h3, h4, h5, h6, strong, b) {
+  color: var(--fg);
+}
+
+.app-shell :where(p, li, label, small, figcaption) {
+  color: inherit;
+}
+
+.app-shell :where(input, textarea, select) {
+  color: var(--fg);
+  caret-color: var(--primary);
+}
+
+.app-shell :where(input, textarea, select)::placeholder {
+  color: var(--fg-muted);
+  opacity: 1;
+}
+
+.app-shell :where(button, a) {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.app-shell :where(button:disabled, input:disabled, textarea:disabled, select:disabled) {
+  cursor: not-allowed;
+}
 
 /* Auth routes share the app's clean dark visual system. Animated orbs and cyan
    ribbons are isolated in AuthLayout.module.css to prevent layered artifacts. */
