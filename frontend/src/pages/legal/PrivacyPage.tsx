@@ -1,8 +1,6 @@
 import { Link } from "react-router-dom";
 import { ArrowLeft, ShieldCheck } from "lucide-react";
-import AuthLayout from "../../layouts/AuthLayout";
-import Card from "../../components/ui/Card";
-import Logo from "../../components/ui/Logo";
+import DashboardLayout from "../../layouts/DashboardLayout";
 
 const sections = [
   ["Information processed", "The service may process account details such as name and email, authentication data, uploaded documents, extracted text, questions, answers, and technical logs needed to operate the application."],
@@ -15,17 +13,14 @@ const sections = [
 
 export default function PrivacyPage() {
   return (
-    <AuthLayout>
-      <div className="mx-auto w-full max-w-3xl">
-        <div className="mb-7 flex items-center justify-between gap-4">
-          <Link to="/register" className="inline-flex items-center gap-2 text-sm text-muted-foreground transition hover:text-foreground"><ArrowLeft size={16} /> Back to registration</Link>
-          <Logo size={38} />
-        </div>
-        <Card className="rounded-3xl border border-border/80 bg-card/90 p-6 shadow-2xl backdrop-blur-xl sm:p-10">
+    <DashboardLayout>
+      <div className="mx-auto w-full max-w-3xl space-y-6 pb-10">
+        <Link to="/dashboard" className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"><ArrowLeft size={16} /> Back to workspace</Link>
+        <article className="rounded-2xl border border-border bg-card p-6 sm:p-10">
           <div className="flex items-start gap-4">
-            <div className="rounded-2xl bg-[#376E6F]/15 p-3 text-[#75aaa6]"><ShieldCheck size={24} /></div>
+            <div className="rounded-xl bg-muted p-3 text-muted-foreground"><ShieldCheck size={24} /></div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[.2em] text-[#75aaa6]">Your data</p>
+              <p className="text-xs font-semibold uppercase tracking-[.2em] text-muted-foreground">Your data</p>
               <h1 className="mt-1 font-display text-3xl font-bold sm:text-4xl">Privacy Notice</h1>
               <p className="mt-2 text-sm text-muted-foreground">How information may be handled by this application.</p>
             </div>
@@ -36,8 +31,8 @@ export default function PrivacyPage() {
           <div className="mt-9 border-t border-border pt-6">
             <Link to="/register" className="inline-flex h-11 items-center rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground transition hover:opacity-90">Return to sign up</Link>
           </div>
-        </Card>
+        </article>
       </div>
-    </AuthLayout>
+    </DashboardLayout>
   );
 }
