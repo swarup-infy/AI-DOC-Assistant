@@ -77,31 +77,31 @@
 :root[data-theme="light"] {
   color-scheme: light;
 
-  --bg: #f5f7fb;
+  --bg: #f7f7fb;
   --bg-elevated: #ffffff;
   --surface: #ffffff;
-  --surface-2: #f4f5f9;
-  --surface-3: #eceef5;
+  --surface-2: #f1f2f7;
+  --surface-3: #e8eaf2;
   --card: rgba(255, 255, 255, 0.92);
   --card-solid: #ffffff;
   --muted: #f1f2f7;
   --accent: #F3E7EA;
 
   --fg: #151722;
-  --fg-muted: #5f6479;
-  --fg-dim: #8b90a4;
+  --fg-muted: #50566b;
+  --fg-dim: #70778d;
 
-  --border: rgba(15, 23, 42, 0.09);
-  --border-strong: rgba(15, 23, 42, 0.15);
-  --ring: rgba(46, 21, 27, 0.32);
+  --border: rgba(23, 25, 42, 0.12);
+  --border-strong: rgba(23, 25, 42, 0.2);
+  --ring: rgba(219, 39, 119, 0.42);
 
-  --primary: #2E151B;
-  --primary-hover: #1C3334;
-  --primary-active: #1C3334;
+  --primary: #db2777;
+  --primary-hover: #be185d;
+  --primary-active: #9d174d;
   --primary-fg: #ffffff;
 
-  --secondary: #376E6F;
-  --secondary-hover: #1C3334;
+  --secondary: #7c3aed;
+  --secondary-hover: #6d28d9;
   --secondary-fg: #ffffff;
 
   --success: #16a34a;
@@ -109,8 +109,8 @@
   --danger: #e11d48;
   --info: #0284c7;
 
-  --gradient-brand: linear-gradient(135deg, #2E151B 0%, #DA7B93 45%, #376E6F 100%);
-  --gradient-text: linear-gradient(90deg, #171722 0%, #2E151B 55%, #376E6F 100%);
+  --gradient-brand: linear-gradient(135deg, #db2777 0%, #a855f7 52%, #7c3aed 100%);
+  --gradient-text: linear-gradient(90deg, #171722 0%, #be185d 55%, #6d28d9 100%);
 
   --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
   --shadow-sm: 0 6px 18px -10px rgba(15, 23, 42, 0.12);
@@ -263,7 +263,7 @@ ol {
 .aurora-bg {
   position: relative;
   isolation: isolate;
-  background: #08070b !important;
+  background: var(--bg) !important;
 }
 
 .app-shell::before,
@@ -455,3 +455,26 @@ ol {
     transition-duration: .01ms !important;
   }
 }
+
+
+/* Keep the workspace coherent in light mode instead of mixing pale cards with a near-black canvas. */
+:root[data-theme="light"] .app-shell,
+:root[data-theme="light"] .aurora-bg {
+  background: var(--bg) !important;
+}
+:root[data-theme="light"] .app-shell::before,
+:root[data-theme="light"] .aurora-bg::before,
+:root[data-theme="light"] .app-shell::after,
+:root[data-theme="light"] .aurora-bg::after {
+  content: none;
+}
+
+/* Comfortable type scale and stronger legibility across the workspace. */
+.app-shell {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.6;
+}
+.app-shell :where(.text-\\[10px\\], .text-\\[11px\\]) { line-height: 1.45; }
+.app-shell :where(button, input, textarea, select) { font-family: inherit; }
+.app-shell :where(button) { font-weight: 600; }
