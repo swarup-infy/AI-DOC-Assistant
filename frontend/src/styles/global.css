@@ -180,7 +180,7 @@ body {
   min-width: 320px;
   margin: 0;
   overflow-x: hidden;
-  background: var(--bg);
+  background: #08070b;
   color: var(--fg);
   font-family: var(--font-sans);
   line-height: 1.55;
@@ -258,11 +258,12 @@ ol {
   scrollbar-color: var(--border-strong) transparent;
 }
 
-/* App background */
+/* Shared app background — match the login page across every workspace route. */
 .app-shell,
 .aurora-bg {
   position: relative;
   isolation: isolate;
+  background: #08070b !important;
 }
 
 .app-shell::before,
@@ -273,9 +274,12 @@ ol {
   z-index: -2;
   pointer-events: none;
   background:
-    radial-gradient(600px 420px at 8% 0%, color-mix(in srgb, var(--primary) 13%, transparent), transparent 70%),
-    radial-gradient(560px 400px at 96% 4%, color-mix(in srgb, var(--secondary) 8%, transparent), transparent 72%),
-    radial-gradient(700px 520px at 50% 100%, color-mix(in srgb, var(--primary) 8%, transparent), transparent 74%);
+    radial-gradient(ellipse at 50% 48%, rgba(45, 23, 38, .2), transparent 62%),
+    radial-gradient(ellipse at 18% 18%, rgba(255, 8, 126, .16), transparent 28%),
+    radial-gradient(ellipse at 82% 82%, rgba(129, 44, 240, .17), transparent 30%),
+    linear-gradient(135deg, #08070b 0%, #0a080d 52%, #060609 100%);
+  background-size: 100% 100%, 180% 180%, 180% 180%, 100% 100%;
+  animation: sharedAuroraDrift 24s ease-in-out infinite alternate;
 }
 
 .app-shell::after,
@@ -285,12 +289,19 @@ ol {
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background-image:
-    linear-gradient(to right, var(--border) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--border) 1px, transparent 1px);
-  background-size: 56px 56px;
-  mask-image: linear-gradient(to bottom, black, transparent 78%);
-  opacity: 0.3;
+  background: url("/images/liquid-ribbon.svg") center / cover no-repeat;
+  opacity: .12;
+  animation: sharedRibbonDrift 24s ease-in-out infinite alternate;
+}
+
+@keyframes sharedAuroraDrift {
+  from { background-position: 0 0, 0% 0%, 100% 100%, 0 0; }
+  to { background-position: 0 0, 100% 55%, 0% 45%, 0 0; }
+}
+
+@keyframes sharedRibbonDrift {
+  from { transform: scale(1); opacity: .08; }
+  to { transform: scale(1.035); opacity: .16; }
 }
 
 /* Reusable premium surfaces */
