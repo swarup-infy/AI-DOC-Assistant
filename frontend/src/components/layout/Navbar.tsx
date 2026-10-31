@@ -51,6 +51,7 @@ function Navbar({ onMenuClick }: NavbarProps) {
   const { user, logout } = useAuth();
 
   const [search, setSearch] = useState("");
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [theme, setTheme] = useState<Theme>(getInitialTheme);
   const darkMode = theme === "dark";
 
@@ -95,6 +96,13 @@ function Navbar({ onMenuClick }: NavbarProps) {
     []
   );
 
+  const submitSearch = useCallback(() => {
+    const query = search.trim();
+    if (!query) return;
+    navigate("/search", { state: { query } });
+    setMobileSearchOpen(false);
+  }, [navigate, search]);
+
   const handleProfile = useCallback(() => {
     navigate("/profile");
   }, [navigate]);
@@ -129,7 +137,7 @@ function Navbar({ onMenuClick }: NavbarProps) {
         </div>
       </div>
 
-      <div role="search" className="hidden min-w-0 flex-1 justify-center px-5 md:flex">
+      <form role="search" onSubmit={(event) => { event.preventDefault(); submitSearch(); }} className="hidden min-w-0 flex-1 justify-center px-5 md:flex">
         <div className="flex w-full max-w-[560px] items-center gap-3 rounded-xl border border-border bg-card/65 px-3.5 py-2.5 shadow-sm transition-all focus-within:border-primary/60 focus-within:bg-card focus-within:ring-4 focus-within:ring-primary/10">
           <Search size={17} className="shrink-0 text-muted-foreground" />
           <input
@@ -148,16 +156,10 @@ function Navbar({ onMenuClick }: NavbarProps) {
             /
           </kbd>
         </div>
-      </div>
+      </form>
 
       <div className="flex shrink-0 items-center gap-2">
-        <button
-          type="button"
-          aria-label="Search"
-          className={`${iconButtonClass} h-10 w-10 md:hidden`}
-        >
-          <Search size={18} />
-        </button>
+        <button type="button" onClick={() => setMobileSearchOpen((open) => !open)} aria-label={mobileSearchOpen ? "Close search" : "Open search"} aria-expanded={mobileSearchOpen} className={`${iconButtonClass} h-10 w-10 md:hidden`}><Search size={18} /></button>
 
         <button
           type="button"
@@ -196,6 +198,14 @@ function Navbar({ onMenuClick }: NavbarProps) {
           <span className="hidden md:inline">Logout</span>
         </button>
       </div>
+      {mobileSearchOpen && (
+        <form role="search" onSubmit={(event) => { event.preventDefault(); submitSearch(); }} className="absolute left-0 right-0 top-full z-30 border-b border-border bg-card p-3 shadow-sm md:hidden">
+          <div className="flex items-center gap-2">
+            <input type="search" value={search} onChange={handleSearchChange} autoFocus placeholder="Search your documents..." aria-label="Search documents" className="h-11 min-w-0 flex-1 rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none focus:border-primary" />
+            <button type="submit" disabled={!search.trim()} className="h-11 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-50">Search</button>
+          </div>
+        </form>
+      )}
     </div>
   );
 }
