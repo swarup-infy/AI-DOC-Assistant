@@ -2,13 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowRight,
-  Bot,
   Clock3,
   FileText,
   HardDrive,
-  MessageSquare,
-  Search,
-  Sparkles,
   UploadCloud,
   type LucideIcon,
 } from "lucide-react";
@@ -62,9 +58,7 @@ export default function DashboardPage() {
     const storage = documents.reduce((total, document) => total + document.file_size, 0);
     return [
       { label: "Documents", value: documents.length.toString(), icon: FileText },
-      { label: "AI Chats", value: "—", icon: MessageSquare },
-      { label: "Semantic Searches", value: "—", icon: Search },
-      { label: "Storage", value: formatSize(storage), icon: HardDrive },
+      { label: "Storage used", value: formatSize(storage), icon: HardDrive },
     ];
   }, [documents]);
 
@@ -75,45 +69,27 @@ export default function DashboardPage() {
   return (
     <DashboardLayout>
       <div className="space-y-7 pb-10 fade-in">
-        <section className="relative overflow-hidden rounded-3xl border border-border bg-card p-6 shadow-sm sm:p-8 lg:p-10">
-          <div className="pointer-events-none absolute -right-24 -top-28 h-80 w-80 rounded-full bg-primary/15 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-36 left-1/3 h-72 w-72 rounded-full bg-secondary/10 blur-3xl" />
+        <section className="rounded-2xl border border-border bg-card p-6 sm:p-8 lg:p-10">
           <div className="relative flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-2xl">
-              <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary">
-                <Sparkles size={14} />
-                AI-powered workspace
-              </div>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Your workspace</p>
               <h2 className="mt-5 font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl lg:text-5xl">
                 {greeting}, {firstName}.
               </h2>
               <p className="mt-4 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">
-                Your documents, semantic search, and AI conversations — organized in one focused workspace.
+                Manage your source files and continue working with your document assistant.
               </p>
               <div className="mt-7 flex flex-wrap gap-3">
                 <button type="button" onClick={() => navigate("/documents")} className="group inline-flex h-11 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-md shadow-primary/20 transition hover:-translate-y-0.5 hover:opacity-95">
                   <UploadCloud size={17} /> Upload document <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />
                 </button>
-                <button type="button" onClick={() => navigate("/chat")} className="inline-flex h-11 items-center gap-2 rounded-xl border border-border bg-background/60 px-4 text-sm font-semibold text-foreground transition hover:bg-accent">
-                  <Bot size={17} className="text-primary" /> Open AI chat
-                </button>
-              </div>
-            </div>
-            <div className="hidden w-64 shrink-0 rounded-2xl border border-border bg-background/55 p-5 backdrop-blur-xl lg:block">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-muted-foreground">System status</span>
-                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-success"><span className="h-1.5 w-1.5 rounded-full bg-success" />Ready</span>
-              </div>
-              <div className="mt-5 h-px bg-border" />
-              <div className="mt-4 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary"><Sparkles size={19} /></div>
-                <div><p className="text-sm font-semibold text-foreground">Groq AI</p><p className="text-xs text-muted-foreground">Assistant engine connected</p></div>
+                <button type="button" onClick={() => navigate("/chat")} className="inline-flex h-11 items-center gap-2 rounded-xl border border-border bg-background px-4 text-sm font-semibold text-foreground transition-colors hover:bg-muted">Open AI chat</button>
               </div>
             </div>
           </div>
         </section>
 
-        <section className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
+        <section className="grid max-w-xl grid-cols-2 gap-3 lg:gap-4">
           {stats.map(({ label, value, icon: Icon }) => (
             <article key={label} className="surface surface-hover rounded-2xl p-5 sm:p-6">
               <div className="flex items-center justify-between gap-3"><span className="text-xs font-medium text-muted-foreground sm:text-sm">{label}</span><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary"><Icon size={17} /></span></div>
@@ -155,11 +131,11 @@ export default function DashboardPage() {
           </article>
 
           <article className="surface rounded-2xl p-5 sm:p-6">
-            <div className="flex items-center gap-3"><div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary"><Sparkles size={19} /></div><div><h3 className="text-base font-semibold text-foreground">Quick actions</h3><p className="text-xs text-muted-foreground">Jump straight into your workflow.</p></div></div>
+            <div><h3 className="text-base font-semibold text-foreground">Quick actions</h3><p className="text-xs text-muted-foreground">Open a part of your workspace.</p></div>
             <div className="mt-5 space-y-2">
               <QuickAction icon={UploadCloud} title="Upload document" description="Add a new source" onClick={() => navigate("/documents")} />
-              <QuickAction icon={Search} title="Semantic search" description="Find knowledge fast" onClick={() => navigate("/search")} />
-              <QuickAction icon={MessageSquare} title="AI chat" description="Ask your assistant" onClick={() => navigate("/chat")} />
+              <QuickAction icon={FileText} title="Browse documents" description="Review uploaded files" onClick={() => navigate("/documents")} />
+              <QuickAction icon={FileText} title="AI chat" description="Ask questions about your files" onClick={() => navigate("/chat")} />
             </div>
           </article>
         </section>
@@ -169,5 +145,5 @@ export default function DashboardPage() {
 }
 
 function QuickAction({ icon: Icon, title, description, onClick }: { icon: LucideIcon; title: string; description: string; onClick: () => void }) {
-  return <button type="button" onClick={onClick} className="group flex w-full items-center gap-3 rounded-xl border border-transparent p-3 text-left transition hover:border-border hover:bg-muted/50"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><Icon size={17} /></span><span className="min-w-0 flex-1"><span className="block text-sm font-semibold text-foreground">{title}</span><span className="block text-xs text-muted-foreground">{description}</span></span><ArrowRight size={15} className="text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-foreground" /></button>;
+  return <button type="button" onClick={onClick} className="flex w-full items-center gap-3 rounded-lg border border-transparent p-3 text-left transition-colors hover:border-border hover:bg-muted/50"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground"><Icon size={17} /></span><span className="min-w-0 flex-1"><span className="block text-sm font-semibold text-foreground">{title}</span><span className="block text-xs text-muted-foreground">{description}</span></span><ArrowRight size={15} className="text-muted-foreground" /></button>;
 }
