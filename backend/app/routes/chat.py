@@ -51,6 +51,16 @@ def _build_search_filter(*, user_id: int, document_id: int | None) -> dict[str, 
     }
 
 
+def _create_query_embedding(question: str) -> list[float]:
+    """Create an embedding with the model's query-specific encoder."""
+    from app.services.embedding_service import EmbeddingService
+
+    embedding = EmbeddingService().create_embedding(question)
+    if not embedding:
+        raise RuntimeError("Embedding service returned no query embedding.")
+    return embedding
+
+
 def _validate_document_access(
     db: Session,
     *,
@@ -254,13 +264,9 @@ def _retrieve_document_evidence(
     document_id: int | None,
 ) -> tuple[list[str], list[SourceDocument]]:
     """Retrieve only relevant indexed passages within the caller scope."""
-    from app.services.embedding_service import EmbeddingService
     from app.vector_db.chroma_service import ChromaService
 
-    query_embedding = EmbeddingService().create_embedding(question)
-    if not query_embedding:
-        raise RuntimeError("Embedding service returned no query embedding.")
-
+    query_embedding = _create_query_embedding(question)
     results = ChromaService().search(
         query_embedding=query_embedding,
         n_results=settings.RAG_TOP_K,
@@ -488,17 +494,10 @@ def chat(
 
         # Semantic retrieval is used when the question does not name a
         # particular uploaded document.
-        from app.services.embedding_service import EmbeddingService
         from app.vector_db.chroma_service import ChromaService
 
-        embedding_service = EmbeddingService()
-        # Queries must use query_embed(), while indexed document chunks use
-        # passage_embed(). Mixing these embedding paths hurts retrieval quality.
-        query_embedding = embedding_service.create_embedding(request.question)
-
-        if not query_embedding:
-            raise RuntimeError("Embedding service returned no query embedding.")
-
+        # Use the same query encoder as the dedicated Semantic Search API.
+        query_embedding = _create_query_embedding(request.question)
         chroma_service = ChromaService()
         search_results = chroma_service.search(
             query_embedding=query_embedding,
