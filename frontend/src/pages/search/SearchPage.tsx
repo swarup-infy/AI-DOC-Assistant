@@ -45,6 +45,9 @@ export default function SearchPage() {
   const [searched, setSearched] = useState(false);
   const [results, setResults] = useState<SearchResult[]>([]);
   const [error, setError] = useState("");
+  const [topK, setTopK] = useState(8);
+  const [minSimilarity, setMinSimilarity] = useState(20);
+  const [diagnostics, setDiagnostics] = useState<RagDiagnostics | null>(null);
 
   useEffect(() => {
     const nextQuery = (location.state as { query?: string } | null)?.query ?? "";
@@ -55,6 +58,14 @@ export default function SearchPage() {
       setError("");
     }
   }, [location.key, location.state]);
+
+  useEffect(() => {
+    let active = true;
+    api.get<RagDiagnostics>("/search/diagnostics")
+      .then(({ data }) => { if (active) setDiagnostics(data); })
+      .catch((requestError) => console.error("RAG diagnostics failed:", requestError));
+    return () => { active = false; };
+  }, []);
 
   async function handleSearch() {
     const searchText = query.trim();
@@ -68,7 +79,8 @@ export default function SearchPage() {
     try {
       const { data } = await api.post<SearchResponse>("/search/", {
         query: searchText,
-        top_k: 8,
+        top_k: topK,
+        min_similarity: minSimilarity / 100,
       });
       setResults(Array.isArray(data.results) ? data.results : []);
     } catch (requestError) {
