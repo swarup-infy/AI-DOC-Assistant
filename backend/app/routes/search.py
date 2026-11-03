@@ -219,3 +219,58 @@ def semantic_search(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to perform semantic search.",
         ) from exc
+
+
+@router.get(
+    "/diagnostics",
+    summary="RAG index diagnostics",
+    description="Return the authenticated user's document-index statistics.",
+)
+def rag_diagnostics(
+    db: Annotated[Session, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> dict[str, Any]:
+    """Report index availability without exposing other users' metadata."""
+    try:
+        from app.services.embedding_service import EmbeddingService
+        from app.vector_db.chroma_service import ChromaService
+
+        embedding_service = EmbeddingService()
+        chroma_service = ChromaService()
+        scoped = chroma_service.collection.get(
+            where={"user_id": current_user.id},
+            include=["metadatas"],
+        )
+        metadatas = scoped.get("metadatas") or []
+        indexed_documents = {
+            _optional_int(item.get("document_id"))
+            for item in metadatas
+            if isinstance(item, dict)
+        }
+        indexed_documents.discard(None)
+        owned_documents = DocumentService.get_documents(
+            db=db,
+            user_id=current_user.id,
+        )
+        indexed_count = len(metadatas)
+        document_count = len(owned_documents)
+        indexed_ids = indexed_documents
+        return {
+            "status": "healthy",
+            "embedding_model": embedding_service.model_name,
+            "embedding_dimension": embedding_service.dimension,
+            "vector_collection": chroma_service.collection.name,
+            "indexed_chunks": indexed_count,
+            "indexed_documents": len(indexed_ids),
+            "owned_documents": document_count,
+            "documents_without_index": max(0, document_count - len(indexed_ids)),
+        }
+    except Exception as exc:
+        logger.exception(
+            "RAG diagnostics failed. user_id=%d.",
+            current_user.id,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="RAG index diagnostics are temporarily unavailable.",
+        ) from exc
