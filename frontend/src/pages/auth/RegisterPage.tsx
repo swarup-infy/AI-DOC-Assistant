@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   AlertCircle,
@@ -28,7 +28,7 @@ export default function RegisterPage() {
 
   const {
     register,
-    watch,
+    control,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormData>({
@@ -36,7 +36,7 @@ export default function RegisterPage() {
     mode: "onTouched",
   });
 
-  const password = watch("password") ?? "";
+  const password = useWatch({ control, name: "password" }) ?? "";
   const passwordStrength = useMemo(() => {
     let score = 0;
     if (password.length >= 8) score += 1;
