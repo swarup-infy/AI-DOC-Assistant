@@ -10,6 +10,15 @@ import "./styles/global.css";
 
 import App from "./App";
 
+// Apply the saved color scheme before React mounts to prevent a light/dark flash.
+const savedTheme = window.localStorage.getItem("theme");
+const initialTheme = savedTheme === "light" || savedTheme === "dark"
+  ? savedTheme
+  : window.matchMedia("(prefers-color-scheme: dark)").matches
+    ? "dark"
+    : "light";
+document.documentElement.setAttribute("data-theme", initialTheme);
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
