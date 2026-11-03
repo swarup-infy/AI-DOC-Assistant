@@ -36,7 +36,7 @@ export default function LoginPage() {
     setServerError("");
     try {
       const response = await loginUser(data);
-      await login(response.access_token);
+      await login(response.access_token, response.user);
       navigate("/dashboard", { replace: true });
     } catch (error) {
       setServerError(error instanceof Error ? error.message : "Unable to sign in.");
