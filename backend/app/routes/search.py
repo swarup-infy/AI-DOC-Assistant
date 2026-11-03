@@ -242,6 +242,7 @@ def rag_diagnostics(
             include=["metadatas"],
         )
         metadatas = scoped.get("metadatas") or []
+        indexed_count = len(metadatas)
         indexed_documents = {
             parsed_id
             for item in metadatas
