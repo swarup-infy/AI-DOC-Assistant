@@ -21,6 +21,22 @@ interface SearchResponse {
   results: SearchResult[];
 }
 
+interface RagDiagnostics {
+  status: string;
+  embedding_model: string;
+  embedding_dimension: number;
+  vector_collection: string;
+  indexed_chunks: number;
+  indexed_documents: number;
+  owned_documents: number;
+  documents_without_index: number;
+}
+
+function relevance(distance: number | null): number | null {
+  if (distance === null || !Number.isFinite(distance)) return null;
+  return Math.round(Math.max(0, Math.min(1, 1 - distance)) * 100);
+}
+
 export default function SearchPage() {
   const location = useLocation();
   const initialQuery = (location.state as { query?: string } | null)?.query ?? "";
