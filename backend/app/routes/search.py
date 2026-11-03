@@ -243,27 +243,27 @@ def rag_diagnostics(
         )
         metadatas = scoped.get("metadatas") or []
         indexed_documents = {
-            _optional_int(item.get("document_id"))
+            parsed_id
             for item in metadatas
             if isinstance(item, dict)
+            for parsed_id in [_optional_int(item.get("document_id"))]
+            if parsed_id is not None
         }
-        indexed_documents.discard(None)
         owned_documents = DocumentService.get_documents(
             db=db,
             user_id=current_user.id,
         )
-        indexed_count = len(metadatas)
-        document_count = len(owned_documents)
-        indexed_ids = indexed_documents
+        owned_document_ids = {document.id for document in owned_documents}
+        indexed_owned_ids = indexed_documents.intersection(owned_document_ids)
         return {
             "status": "healthy",
             "embedding_model": embedding_service.model_name,
             "embedding_dimension": embedding_service.dimension,
             "vector_collection": chroma_service.collection.name,
             "indexed_chunks": indexed_count,
-            "indexed_documents": len(indexed_ids),
-            "owned_documents": document_count,
-            "documents_without_index": max(0, document_count - len(indexed_ids)),
+            "indexed_documents": len(indexed_owned_ids),
+            "owned_documents": len(owned_document_ids),
+            "documents_without_index": len(owned_document_ids - indexed_owned_ids),
         }
     except Exception as exc:
         logger.exception(
