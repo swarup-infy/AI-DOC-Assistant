@@ -118,6 +118,11 @@ export default function HistoryPage() {
   }, [loadHistory]);
 
   useEffect(() => {
+    const timer = window.setTimeout(() => setCurrentTime(Date.now()), 0);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
     try {
       localStorage.setItem(
         HISTORY_SETTINGS_KEY,
