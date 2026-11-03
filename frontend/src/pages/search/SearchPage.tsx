@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { FileText, Loader2, Search, AlertCircle, SlidersHorizontal, Filter } from "lucide-react";
+import { FileText, Loader2, Search, AlertCircle,  } from "lucide-react";
 
 import DashboardLayout from "../../layouts/DashboardLayout";
 import api from "../../api/api";
@@ -116,20 +116,6 @@ export default function SearchPage() {
           </div>
         ) : null}
 
-        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="RAG index overview">
-          <div className="surface rounded-xl p-4"><p className="text-xs text-muted-foreground">Indexed passages</p><p className="mt-2 text-2xl font-semibold text-foreground">{diagnostics?.indexed_chunks ?? "—"}</p></div>
-          <div className="surface rounded-xl p-4"><p className="text-xs text-muted-foreground">Indexed documents</p><p className="mt-2 text-2xl font-semibold text-foreground">{diagnostics ? `${diagnostics.indexed_documents}/${diagnostics.owned_documents}` : "—"}</p></div>
-          <div className="surface rounded-xl p-4"><p className="text-xs text-muted-foreground">Embedding dimension</p><p className="mt-2 text-2xl font-semibold text-foreground">{diagnostics?.embedding_dimension ?? "—"}</p></div>
-          <div className="surface rounded-xl p-4"><p className="text-xs text-muted-foreground">Embedding model</p><p className="mt-2 truncate text-sm font-semibold text-foreground" title={diagnostics?.embedding_model}>{diagnostics?.embedding_model ?? "Checking…"}</p></div>
-        </section>
-
-        {diagnostics?.documents_without_index ? (
-          <div className="flex items-start gap-3 rounded-xl border border-amber-500/25 bg-amber-500/5 p-4 text-sm text-foreground">
-            <AlertCircle size={18} className="mt-0.5 shrink-0 text-amber-600" />
-            <div><p className="font-semibold">{diagnostics.documents_without_index} document(s) have no indexed passages.</p><p className="mt-1 text-muted-foreground">Re-upload those files to rebuild their vector index.</p></div>
-          </div>
-        ) : null}
-
         <section className="surface rounded-xl p-4 sm:p-5">
           <form onSubmit={(event) => { event.preventDefault(); void handleSearch(); }} className="flex flex-col gap-2 sm:flex-row">
             <div className="relative flex-1">
@@ -157,18 +143,6 @@ export default function SearchPage() {
               <span className="block text-xs font-semibold text-foreground">Minimum relevance: {minSimilarity}%</span>
               <input type="range" min={0} max={90} step={5} value={minSimilarity} onChange={(event) => setMinSimilarity(Number(event.target.value))} className="w-full accent-primary" />
               <span className="flex justify-between text-[11px] text-muted-foreground"><span>Broader results</span><span>Stricter results</span></span>
-            </label>
-          </div>
-          <div className="mt-4 grid gap-4 border-t border-border pt-4 sm:grid-cols-2">
-            <label className="space-y-2">
-              <span className="flex items-center gap-2 text-xs font-semibold text-foreground"><SlidersHorizontal size={14} /> Maximum passages: {topK}</span>
-              <input type="range" min={1} max={20} value={topK} onChange={(event) => setTopK(Number(event.target.value))} className="w-full accent-primary" />
-              <span className="flex justify-between text-[11px] text-muted-foreground"><span>1 passage</span><span>20 passages</span></span>
-            </label>
-            <label className="space-y-2">
-              <span className="flex items-center gap-2 text-xs font-semibold text-foreground"><Filter size={14} /> Minimum relevance: {minSimilarity}%</span>
-              <input type="range" min={0} max={90} step={5} value={minSimilarity} onChange={(event) => setMinSimilarity(Number(event.target.value))} className="w-full accent-primary" />
-              <span className="flex justify-between text-[11px] text-muted-foreground"><span>Broader</span><span>Stricter</span></span>
             </label>
           </div>
           <p className="mt-3 px-1 text-[11px] text-muted-foreground">Search is scoped to your account. Relevance is estimated from cosine distance returned by the vector index.</p>
@@ -212,7 +186,6 @@ export default function SearchPage() {
                   {result.distance !== null && (
                     <span className="mt-3 inline-flex rounded-md bg-primary/10 px-2 py-1 text-[11px] font-semibold text-primary">{relevance(result.distance)}% relevance</span>
                   )}
-                  {result.distance !== null && <span className="mt-3 inline-flex rounded-md bg-primary/10 px-2 py-1 text-[11px] font-semibold text-primary">{relevance(result.distance)}% relevance</span>}
                   <p className="mt-4 whitespace-pre-wrap text-sm leading-7 text-muted-foreground">{result.text}</p>
                 </article>
               ))}
