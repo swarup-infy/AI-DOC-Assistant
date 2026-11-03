@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { FileText, Loader2, Search, AlertCircle,  } from "lucide-react";
+import { FileText, Loader2, Search, AlertCircle } from "lucide-react";
 
 import DashboardLayout from "../../layouts/DashboardLayout";
 import api from "../../api/api";
