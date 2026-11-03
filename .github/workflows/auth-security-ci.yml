@@ -1,4 +1,4 @@
-name: Authentication and security checks
+name: Application quality and security checks
 
 on:
   pull_request:
@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   backend:
-    name: Backend tests and dependency audit
+    name: Backend RAG, API tests and dependency audit
     runs-on: ubuntu-latest
     defaults:
       run:
