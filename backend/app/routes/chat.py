@@ -492,14 +492,16 @@ def chat(
         from app.vector_db.chroma_service import ChromaService
 
         embedding_service = EmbeddingService()
-        embeddings = embedding_service.create_embeddings([request.question])
+        # Queries must use query_embed(), while indexed document chunks use
+        # passage_embed(). Mixing these embedding paths hurts retrieval quality.
+        query_embedding = embedding_service.create_embedding(request.question)
 
-        if not embeddings:
+        if not query_embedding:
             raise RuntimeError("Embedding service returned no query embedding.")
 
         chroma_service = ChromaService()
         search_results = chroma_service.search(
-            query_embedding=embeddings[0],
+            query_embedding=query_embedding,
             n_results=settings.RAG_TOP_K,
             where=_build_search_filter(
                 user_id=user_id,
