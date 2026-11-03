@@ -75,12 +75,7 @@ def test_default_access_token_lifetime_is_at_least_one_day() -> None:
 
 
 def test_expired_access_token_is_rejected() -> None:
-    token = create_access_token(
-        {"sub": "person@example.com"},
-        expires_delta=timedelta(seconds=-1),
-    ) if False else None
-    # Expired tokens are rejected by the decoder; a negative lifetime
-    # is rejected at issuance so callers cannot create already-expired tokens.
+    # Refuse to issue tokens that are already expired.
     try:
         create_access_token(
             {"sub": "person@example.com"},
