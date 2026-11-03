@@ -62,6 +62,8 @@ chromadb==1.5.9
 # ==========================================================
 
 pymupdf==1.28.0
+# Pillow is pulled in by document/vision dependencies; pin a patched release.
+pillow>=13.0.0
 python-docx==1.2.0
 pandas==3.0.3
 openpyxl==3.1.5
