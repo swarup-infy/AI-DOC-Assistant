@@ -324,6 +324,98 @@ def _generate_direct_response(
     )
 
 
+def _retrieve_document_evidence(
+    *,
+    user_id: int,
+    question: str,
+    document_id: int | None,
+) -> tuple[list[str], list[SourceDocument]]:
+    """Retrieve only relevant indexed passages within the caller scope."""
+    from app.services.embedding_service import EmbeddingService
+    from app.vector_db.chroma_service import ChromaService
+
+    query_embedding = EmbeddingService().create_embedding(question)
+    if not query_embedding:
+        raise RuntimeError("Embedding service returned no query embedding.")
+
+    results = ChromaService().search(
+        query_embedding=query_embedding,
+        n_results=settings.RAG_TOP_K,
+        where=_build_search_filter(user_id=user_id, document_id=document_id),
+    )
+    return _extract_relevant_results(results)
+
+
+def _build_chat_history(
+    db: Session,
+    *,
+    user_id: int,
+    document_id: int | None,
+) -> str:
+    if settings.CHAT_HISTORY_LIMIT <= 0:
+        return ""
+    previous_chats = ChatHistoryService.get_chat_history(
+        db=db,
+        user_id=user_id,
+        limit=settings.CHAT_HISTORY_LIMIT,
+        document_id=document_id,
+    )
+    if not previous_chats:
+        return ""
+    return "\n\n".join(
+        f"User: {item.question}\nAssistant: {item.answer}"
+        for item in previous_chats
+    )
+
+
+def _build_rag_context(*, history: str, documents: list[str]) -> str:
+    """Create bounded evidence context; history is never treated as evidence."""
+    remaining = 24000
+    selected: list[str] = []
+    for index, document in enumerate(documents, start=1):
+        if remaining <= 0:
+            break
+        chunk = document.strip()[:remaining]
+        if chunk:
+            selected.append(f"[Retrieved Chunk {index}]\n{chunk}")
+            remaining -= len(chunk)
+    parts = [
+        "RETRIEVED DOCUMENT EVIDENCE\n"
+        "===========================\n"
+        + "\n\n".join(selected)
+    ]
+    if history:
+        parts.append(
+            "PREVIOUS CONVERSATION (continuity only; not document evidence)\n"
+            "=============================================================\n"
+            + history[:4000]
+        )
+    return "\n\n".join(parts)
+
+
+def _save_chat(
+    db: Session,
+    *,
+    user_id: int,
+    question: str,
+    answer: str,
+    mode: ChatMode,
+    document_id: int | None,
+) -> None:
+    ChatHistoryService.save_chat(
+        db=db,
+        user_id=user_id,
+        question=question,
+        answer=answer,
+        mode=mode,
+        document_id=document_id,
+    )
+
+
+def _generate_direct_response(*, llm_service: LLMService, question: str) -> str:
+    return llm_service.generate_response(question=question, context="")
+
+
 def _answer_from_explicit_document(
     db: Session,
     *,
@@ -331,16 +423,8 @@ def _answer_from_explicit_document(
     user_id: int,
     question: str,
     document_id: int | None,
-) -> tuple[str, SourceDocument] | None:
-    """
-    Read an explicitly selected or named document before semantic retrieval.
-
-    A selected document from the chat attachment is always treated as an
-    explicit document request. This allows every AI mode to work from the
-    same uploaded file while keeping Groq AI capable of normal chat when no
-    document is attached.
-    """
-
+) -> tuple[str, list[SourceDocument]] | None:
+    """Use top-ranked indexed chunks instead of extracting the full file."""
     if document_id is not None:
         document = DocumentService.get_document_by_id(
             db=db,
@@ -357,58 +441,36 @@ def _answer_from_explicit_document(
     if document is None:
         return None
 
-    chunks = _extract_document_chunks(
-        file_path=document.file_path,
-        file_type=document.file_type,
+    chunks, sources = _retrieve_document_evidence(
+        user_id=user_id,
+        question=question,
+        document_id=document.id,
     )
-
     if not chunks:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="The uploaded document contains no readable text.",
+            detail=(
+                "No relevant indexed passages found. "
+                "Re-upload this document to rebuild its index."
+            ),
         )
-
-    context = _build_direct_document_context(
-        document_chunks=chunks,
-    )
 
     history = _build_chat_history(
         db=db,
         user_id=user_id,
         document_id=document.id,
     )
-
-    if history:
-        context = (
-            f"{context}\n\n"
-            "PREVIOUS CONVERSATION\n"
-            "=====================\n"
-            "Use this only for conversational continuity.\n\n"
-            f"{history}"
-        )
-
     answer = llm_service.generate_response(
         question=question,
-        context=context,
+        context=_build_rag_context(history=history, documents=chunks),
     )
-
-    source = SourceDocument(
-        document_id=document.id,
-        filename=document.filename,
-        page=None,
-        similarity=None,
-    )
-
     logger.info(
-        "Answered chat directly from explicitly selected document. "
-        "user_id=%d document_id=%d filename='%s' mode=%s.",
+        "Indexed document retrieval completed. user_id=%d document_id=%d chunks=%d.",
         user_id,
         document.id,
-        document.filename,
-        "selected-document",
+        len(chunks),
     )
-
-    return answer, source
+    return answer, sources
 
 
 @router.post(
@@ -446,9 +508,7 @@ def chat(
 
         llm_service = LLMService()
 
-        # A document selected in the chat composer always takes priority.
-        # This happens before the Groq-only branch so Groq AI can also answer
-        # questions using the attached document as context.
+        # Selected or named documents are answered using indexed chunks.
         explicit_document_answer = _answer_from_explicit_document(
             db,
             llm_service=llm_service,
@@ -458,8 +518,8 @@ def chat(
         )
 
         if explicit_document_answer is not None:
-            answer, source = explicit_document_answer
-            resolved_document_id = document_id or source.document_id
+            answer, sources = explicit_document_answer
+            resolved_document_id = document_id or (sources[0].document_id if sources else None)
 
             _save_chat(
                 db=db,
@@ -475,7 +535,7 @@ def chat(
                 message="Response generated from the selected uploaded document.",
                 answer=answer,
                 mode=mode,
-                sources=[source],
+                sources=sources,
             )
 
         # Without an attached or explicitly named document, Groq AI remains
