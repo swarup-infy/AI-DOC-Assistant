@@ -97,3 +97,26 @@ def test_rag_context_is_bounded_and_marks_history_as_non_evidence() -> None:
     assert "RETRIEVED DOCUMENT EVIDENCE" in context
     assert "continuity only; not document evidence" in context
     assert "previous answer" in context
+
+
+
+def test_query_embedding_uses_query_encoder(monkeypatch) -> None:
+    from app.routes import chat as chat_route
+
+    calls: list[str] = []
+
+    class FakeEmbeddingService:
+        def create_embedding(self, query: str) -> list[float]:
+            calls.append(query)
+            return [0.1, 0.2, 0.3]
+
+        def create_embeddings(self, passages: list[str]) -> list[list[float]]:
+            raise AssertionError("Query retrieval must not use passage embeddings.")
+
+    monkeypatch.setattr(
+        "app.services.embedding_service.EmbeddingService",
+        FakeEmbeddingService,
+    )
+
+    assert chat_route._create_query_embedding("What is RAG?") == [0.1, 0.2, 0.3]
+    assert calls == ["What is RAG?"]
