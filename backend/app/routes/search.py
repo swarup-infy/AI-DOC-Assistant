@@ -23,6 +23,7 @@ class SearchRequest(BaseModel):
     query: str = Field(..., min_length=1, max_length=5000)
     top_k: int = Field(default=5, ge=1, le=20)
     document_id: int | None = Field(default=None, gt=0)
+    min_similarity: float = Field(default=0.0, ge=0.0, le=1.0)
 
     @field_validator("query")
     @classmethod
@@ -183,6 +184,10 @@ def semantic_search(
                         "Ignoring invalid ChromaDB distance at result index %d.",
                         index,
                     )
+
+            similarity = max(0.0, min(1.0, 1.0 - distance)) if distance is not None else None
+            if similarity is not None and similarity < request.min_similarity:
+                continue
 
             results.append(
                 SearchResult(
