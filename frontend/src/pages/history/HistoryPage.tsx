@@ -89,6 +89,7 @@ export default function HistoryPage() {
   const [compactView, setCompactView] = useState(() => readViewSettings().compactView);
   const [showSettings, setShowSettings] = useState(false);
   const [page, setPage] = useState(1);
+  const [currentTime, setCurrentTime] = useState(0);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
@@ -129,7 +130,7 @@ export default function HistoryPage() {
 
   const filteredHistory = useMemo(() => {
     const keyword = search.trim().toLocaleLowerCase();
-    const now = Date.now();
+    const now = currentTime;
     const rangeMs = dateRange === "today"
       ? 24 * 60 * 60 * 1000
       : dateRange === "7d"
@@ -153,7 +154,7 @@ export default function HistoryPage() {
         const difference = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
         return sortOrder === "newest" ? -difference : difference;
       });
-  }, [history, search, mode, dateRange, sortOrder]);
+  }, [history, search, mode, dateRange, sortOrder, currentTime]);
 
   useEffect(() => {
     setPage(1);
