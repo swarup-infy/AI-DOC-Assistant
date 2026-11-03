@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -15,10 +14,7 @@ from app.models.user import User
 from app.schemas.chat import ChatRequest, ChatResponse, SourceDocument
 from app.services.chat_history_service import ChatHistoryService, ChatMode
 from app.services.document_service import DocumentService
-from app.services.extractor import extract_pdf_pages, extract_text
 from app.services.llm_service import LLMService
-from app.services.text_chunker import chunk_text
-from app.services.text_preprocessor import clean_text
 
 
 router = APIRouter(
