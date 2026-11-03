@@ -7,7 +7,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock3,
-  Download,
   FileJson,
   FileSpreadsheet,
   Filter,
@@ -34,6 +33,25 @@ type DateFilter = "all" | "today" | "7d" | "30d";
 type SortOrder = "newest" | "oldest";
 
 const PAGE_SIZE = 10;
+const HISTORY_SETTINGS_KEY = "chat_history_view_settings";
+
+function readViewSettings(): { showAnswers: boolean; compactView: boolean } {
+  try {
+    const raw = localStorage.getItem(HISTORY_SETTINGS_KEY);
+    if (!raw) return { showAnswers: true, compactView: false };
+    const parsed: unknown = JSON.parse(raw);
+    if (typeof parsed !== "object" || parsed === null) {
+      return { showAnswers: true, compactView: false };
+    }
+    const settings = parsed as Record<string, unknown>;
+    return {
+      showAnswers: typeof settings.showAnswers === "boolean" ? settings.showAnswers : true,
+      compactView: typeof settings.compactView === "boolean" ? settings.compactView : false,
+    };
+  } catch {
+    return { showAnswers: true, compactView: false };
+  }
+}
 
 function formatDate(value: string): string {
   const date = new Date(value);
@@ -67,8 +85,8 @@ export default function HistoryPage() {
   const [mode, setMode] = useState<ModeFilter>("all");
   const [dateRange, setDateRange] = useState<DateFilter>("all");
   const [sortOrder, setSortOrder] = useState<SortOrder>("newest");
-  const [showAnswers, setShowAnswers] = useState(true);
-  const [compactView, setCompactView] = useState(false);
+  const [showAnswers, setShowAnswers] = useState(() => readViewSettings().showAnswers);
+  const [compactView, setCompactView] = useState(() => readViewSettings().compactView);
   const [showSettings, setShowSettings] = useState(false);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -97,6 +115,17 @@ export default function HistoryPage() {
   useEffect(() => {
     void loadHistory();
   }, [loadHistory]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        HISTORY_SETTINGS_KEY,
+        JSON.stringify({ showAnswers, compactView })
+      );
+    } catch (err) {
+      console.warn("Unable to save chat history view settings:", err);
+    }
+  }, [showAnswers, compactView]);
 
   const filteredHistory = useMemo(() => {
     const keyword = search.trim().toLocaleLowerCase();
