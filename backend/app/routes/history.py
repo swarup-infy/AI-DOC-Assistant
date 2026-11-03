@@ -2,11 +2,13 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.security import get_current_user
 from app.db.database import get_db
+from app.models.chat_history import ChatHistory
 from app.models.user import User
 from app.schemas.chat import (
     ChatHistoryListResponse,
@@ -141,4 +143,47 @@ def clear_history(
     return ClearChatHistoryResponse(
         message="Chat history cleared successfully.",
         deleted_records=deleted_records,
+    )
+
+
+@router.delete(
+    "/{history_id}",
+    response_model=ClearChatHistoryResponse,
+    summary="Delete one chat-history record",
+    description="Delete one conversation owned by the authenticated user.",
+)
+def delete_history_item(
+    history_id: int,
+    db: Annotated[Session, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> ClearChatHistoryResponse:
+    """Delete a single history item without exposing other users' records."""
+    if history_id <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="History ID must be greater than zero.",
+        )
+
+    item = db.scalar(
+        select(ChatHistory).where(
+            ChatHistory.id == history_id,
+            ChatHistory.user_id == current_user.id,
+        )
+    )
+    if item is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Conversation not found.",
+        )
+
+    try:
+        db.delete(item)
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+
+    return ClearChatHistoryResponse(
+        message="Conversation deleted successfully.",
+        deleted_records=1,
     )
