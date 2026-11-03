@@ -21,6 +21,22 @@ interface SearchResponse {
   results: SearchResult[];
 }
 
+interface RagDiagnostics {
+  status: string;
+  embedding_model: string;
+  embedding_dimension: number;
+  vector_collection: string;
+  indexed_chunks: number;
+  indexed_documents: number;
+  owned_documents: number;
+  documents_without_index: number;
+}
+
+function relevance(distance: number | null): number | null {
+  if (distance === null || !Number.isFinite(distance)) return null;
+  return Math.round(Math.max(0, Math.min(1, 1 - distance)) * 100);
+}
+
 export default function SearchPage() {
   const location = useLocation();
   const initialQuery = (location.state as { query?: string } | null)?.query ?? "";
@@ -29,6 +45,9 @@ export default function SearchPage() {
   const [searched, setSearched] = useState(false);
   const [results, setResults] = useState<SearchResult[]>([]);
   const [error, setError] = useState("");
+  const [topK, setTopK] = useState(8);
+  const [minSimilarity, setMinSimilarity] = useState(20);
+  const [diagnostics, setDiagnostics] = useState<RagDiagnostics | null>(null);
 
   useEffect(() => {
     const nextQuery = (location.state as { query?: string } | null)?.query ?? "";
@@ -39,6 +58,14 @@ export default function SearchPage() {
       setError("");
     }
   }, [location.key, location.state]);
+
+  useEffect(() => {
+    let active = true;
+    api.get<RagDiagnostics>("/search/diagnostics")
+      .then(({ data }) => { if (active) setDiagnostics(data); })
+      .catch((requestError) => console.error("RAG diagnostics failed:", requestError));
+    return () => { active = false; };
+  }, []);
 
   async function handleSearch() {
     const searchText = query.trim();
@@ -52,7 +79,8 @@ export default function SearchPage() {
     try {
       const { data } = await api.post<SearchResponse>("/search/", {
         query: searchText,
-        top_k: 8,
+        top_k: topK,
+        min_similarity: minSimilarity / 100,
       });
       setResults(Array.isArray(data.results) ? data.results : []);
     } catch (requestError) {
@@ -70,9 +98,23 @@ export default function SearchPage() {
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Document retrieval</p>
           <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">Semantic Search</h2>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-            Find passages by meaning across the documents in your account.
+            Find passages by meaning, tune retrieval quality, and inspect your personal document index.
           </p>
         </section>
+
+        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="RAG index overview">
+          <div className="surface rounded-xl p-4"><p className="text-xs text-muted-foreground">Indexed passages</p><p className="mt-2 text-2xl font-semibold text-foreground">{diagnostics?.indexed_chunks ?? "—"}</p></div>
+          <div className="surface rounded-xl p-4"><p className="text-xs text-muted-foreground">Indexed documents</p><p className="mt-2 text-2xl font-semibold text-foreground">{diagnostics ? `${diagnostics.indexed_documents}/${diagnostics.owned_documents}` : "—"}</p></div>
+          <div className="surface rounded-xl p-4"><p className="text-xs text-muted-foreground">Embedding dimension</p><p className="mt-2 text-2xl font-semibold text-foreground">{diagnostics?.embedding_dimension ?? "—"}</p></div>
+          <div className="surface rounded-xl p-4"><p className="text-xs text-muted-foreground">Embedding model</p><p className="mt-2 truncate text-sm font-semibold text-foreground" title={diagnostics?.embedding_model}>{diagnostics?.embedding_model ?? "Checking…"}</p></div>
+        </section>
+
+        {diagnostics?.documents_without_index ? (
+          <div className="flex items-start gap-3 rounded-xl border border-amber-500/25 bg-amber-500/5 p-4 text-sm text-foreground">
+            <AlertCircle size={18} className="mt-0.5 shrink-0 text-amber-600" />
+            <div><p className="font-semibold">{diagnostics.documents_without_index} document(s) have no indexed passages.</p><p className="mt-1 text-muted-foreground">Re-upload those files to rebuild their vector index.</p></div>
+          </div>
+        ) : null}
 
         <section className="surface rounded-xl p-4 sm:p-5">
           <form onSubmit={(event) => { event.preventDefault(); void handleSearch(); }} className="flex flex-col gap-2 sm:flex-row">
@@ -91,7 +133,19 @@ export default function SearchPage() {
               {loading ? "Searching" : "Search"}
             </button>
           </form>
-          <p className="mt-3 px-1 text-[11px] text-muted-foreground">Search uses your account's indexed document chunks. Results depend on successful document processing.</p>
+          <div className="mt-4 grid gap-4 border-t border-border pt-4 sm:grid-cols-2">
+            <label className="space-y-2">
+              <span className="block text-xs font-semibold text-foreground">Maximum passages: {topK}</span>
+              <input type="range" min={1} max={20} value={topK} onChange={(event) => setTopK(Number(event.target.value))} className="w-full accent-primary" />
+              <span className="flex justify-between text-[11px] text-muted-foreground"><span>1 passage</span><span>20 passages</span></span>
+            </label>
+            <label className="space-y-2">
+              <span className="block text-xs font-semibold text-foreground">Minimum relevance: {minSimilarity}%</span>
+              <input type="range" min={0} max={90} step={5} value={minSimilarity} onChange={(event) => setMinSimilarity(Number(event.target.value))} className="w-full accent-primary" />
+              <span className="flex justify-between text-[11px] text-muted-foreground"><span>Broader results</span><span>Stricter results</span></span>
+            </label>
+          </div>
+          <p className="mt-3 px-1 text-[11px] text-muted-foreground">Search is scoped to your account. Relevance is estimated from cosine distance returned by the vector index.</p>
         </section>
 
         <section className="surface overflow-hidden rounded-xl">
@@ -129,6 +183,9 @@ export default function SearchPage() {
                     {result.page !== null && <span className="rounded-md border border-border bg-muted px-2 py-1 text-[10px] font-semibold text-muted-foreground">Page {result.page}</span>}
                     {result.chunk_index !== null && <span className="text-xs text-muted-foreground">Passage {result.chunk_index + 1}</span>}
                   </div>
+                  {result.distance !== null && (
+                    <span className="mt-3 inline-flex rounded-md bg-primary/10 px-2 py-1 text-[11px] font-semibold text-primary">{relevance(result.distance)}% relevance</span>
+                  )}
                   <p className="mt-4 whitespace-pre-wrap text-sm leading-7 text-muted-foreground">{result.text}</p>
                 </article>
               ))}

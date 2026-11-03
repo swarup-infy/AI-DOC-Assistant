@@ -64,3 +64,24 @@ def test_security_headers_are_added_to_responses() -> None:
     assert response.headers["x-frame-options"] == "DENY"
     assert response.headers["referrer-policy"] == "strict-origin-when-cross-origin"
     assert "frame-ancestors 'none'" in response.headers["content-security-policy"]
+
+
+def test_default_access_token_lifetime_is_at_least_one_day() -> None:
+    token = create_access_token({"sub": "person@example.com"})
+    payload = decode_access_token(token)
+
+    assert payload is not None
+    assert payload["exp"] - payload["iat"] >= 24 * 60 * 60
+
+
+def test_expired_access_token_is_rejected() -> None:
+    # Refuse to issue tokens that are already expired.
+    try:
+        create_access_token(
+            {"sub": "person@example.com"},
+            expires_delta=timedelta(seconds=-1),
+        )
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("Expired access tokens must not be issued.")

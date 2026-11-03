@@ -25,7 +25,7 @@ interface AuthContextType {
   loading: boolean;
   isAuthenticated: boolean;
 
-  login: (token: string) => Promise<void>;
+  login: (token: string, fallbackUser?: User) => Promise<void>;
   logout: () => void;
 
   refreshUser: () => Promise<void>;
@@ -76,29 +76,40 @@ export function AuthProvider({
       saveUser(profile);
       setUser(profile);
     } catch {
-      logout();
-      throw new Error(
-        "Failed to refresh user."
-      );
+      // Keep a still-valid cached session during temporary API/network failures.
+      // A 401 response is handled centrally by the API client and clears the token.
+      if (!getAccessToken()) {
+        setUser(null);
+      }
+      throw new Error("Failed to refresh user.");
     }
   }, [logout]);
 
-  const login = useCallback(async (token: string) => {
+  const login = useCallback(async (token: string, fallbackUser?: User) => {
     saveAccessToken(token);
 
-    // Load cached account details first, so the UI can respond immediately.
-    const cachedUser = getCurrentUser();
-    if (cachedUser) setUser(cachedUser);
+    // Use the user returned by the login endpoint immediately. This avoids
+    // navigating to a protected route while user state is still null.
+    const cachedUser = fallbackUser ?? getCurrentUser();
+    if (cachedUser) {
+      saveUser(cachedUser);
+      setUser(cachedUser);
+    }
 
-    // Refresh in the background instead of delaying the transition to dashboard.
-    void getProfile()
-      .then((profile) => {
-        saveUser(profile);
-        setUser(profile);
-      })
-      .catch(() => {
-        // The token is stored; a temporary profile-read failure won't block login.
-      });
+    try {
+      const profile = await getProfile();
+      saveUser(profile);
+      setUser(profile);
+    } catch (error) {
+      // The login endpoint already authenticated this token and supplied the
+      // user object. Keep the session on transient profile failures; a 401
+      // interceptor clears the token and therefore still prevents access.
+      if (!getAccessToken() || !cachedUser) {
+        logoutService();
+        setUser(null);
+        throw error;
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -114,10 +125,13 @@ export function AuthProvider({
 
       try {
         await refreshUser();
+      } catch {
+        // Network/server errors must not leave the app stuck on a loader.
+        // A valid cached user remains signed in; invalid tokens are cleared by
+        // the API client's 401 handler.
+        if (!getAccessToken() && mounted) setUser(null);
       } finally {
-        if (mounted) {
-          setLoading(false);
-        }
+        if (mounted) setLoading(false);
       }
     }
 

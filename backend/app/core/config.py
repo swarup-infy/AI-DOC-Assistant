@@ -35,7 +35,7 @@ class Settings(BaseSettings):
 
     SECRET_KEY: SecretStr
     ALGORITHM: Literal["HS256", "HS384", "HS512"] = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=60, gt=0, le=1440)
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=1440, ge=1440, le=10080)
 
     # FastEmbed model. BGE-small is a 384-dimensional ONNX model
     # designed for lightweight CPU inference.

@@ -23,6 +23,7 @@ class SearchRequest(BaseModel):
     query: str = Field(..., min_length=1, max_length=5000)
     top_k: int = Field(default=5, ge=1, le=20)
     document_id: int | None = Field(default=None, gt=0)
+    min_similarity: float = Field(default=0.0, ge=0.0, le=1.0)
 
     @field_validator("query")
     @classmethod
@@ -184,6 +185,10 @@ def semantic_search(
                         index,
                     )
 
+            similarity = max(0.0, min(1.0, 1.0 - distance)) if distance is not None else None
+            if similarity is not None and similarity < request.min_similarity:
+                continue
+
             results.append(
                 SearchResult(
                     text=text,
@@ -213,4 +218,60 @@ def semantic_search(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to perform semantic search.",
+        ) from exc
+
+
+@router.get(
+    "/diagnostics",
+    summary="RAG index diagnostics",
+    description="Return the authenticated user's document-index statistics.",
+)
+def rag_diagnostics(
+    db: Annotated[Session, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> dict[str, Any]:
+    """Report index availability without exposing other users' metadata."""
+    try:
+        from app.services.embedding_service import EmbeddingService
+        from app.vector_db.chroma_service import ChromaService
+
+        embedding_service = EmbeddingService()
+        chroma_service = ChromaService()
+        scoped = chroma_service.collection.get(
+            where={"user_id": current_user.id},
+            include=["metadatas"],
+        )
+        metadatas = scoped.get("metadatas") or []
+        indexed_count = len(metadatas)
+        indexed_documents = {
+            parsed_id
+            for item in metadatas
+            if isinstance(item, dict)
+            for parsed_id in [_optional_int(item.get("document_id"))]
+            if parsed_id is not None
+        }
+        owned_documents = DocumentService.get_documents(
+            db=db,
+            user_id=current_user.id,
+        )
+        owned_document_ids = {document.id for document in owned_documents}
+        indexed_owned_ids = indexed_documents.intersection(owned_document_ids)
+        return {
+            "status": "healthy",
+            "embedding_model": embedding_service.model_name,
+            "embedding_dimension": embedding_service.dimension,
+            "vector_collection": chroma_service.collection.name,
+            "indexed_chunks": indexed_count,
+            "indexed_documents": len(indexed_owned_ids),
+            "owned_documents": len(owned_document_ids),
+            "documents_without_index": len(owned_document_ids - indexed_owned_ids),
+        }
+    except Exception as exc:
+        logger.exception(
+            "RAG diagnostics failed. user_id=%d.",
+            current_user.id,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="RAG index diagnostics are temporarily unavailable.",
         ) from exc
