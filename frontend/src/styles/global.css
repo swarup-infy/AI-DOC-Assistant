@@ -403,53 +403,59 @@ ol {
   }
 }
 
+/* ==========================================================================
+   LIGHT THEME ACCESSIBILITY LAYER
+   Global on purpose: dashboard chrome, nested panels and route content all
+   share the same readable semantic palette, regardless of wrapper placement.
+   ========================================================================== */
 
-
-
-
-
-/* Strong light-mode contrast layer. Keep all workspace text and controls readable
-   even when older components still use hard-coded dark-theme utility classes. */
 :root[data-theme="light"] {
   color-scheme: light;
-  /* Explicit semantic tokens for legacy and current UI surfaces. */
-  --bg: #f3f5fa;
+  --bg: #f4f6fb;
   --bg-elevated: #ffffff;
   --surface: #ffffff;
-  --surface-2: #f7f8fc;
-  --surface-3: #edf0f6;
+  --surface-2: #f8f9fc;
+  --surface-3: #eef1f7;
   --card: #ffffff;
   --card-solid: #ffffff;
-  --muted: #e9edf4;
+  --muted: #edf0f6;
   --accent: #e8eaf2;
+
   --fg: #171b2b;
-  --fg-muted: #39445b;
+  --fg-muted: #3f4a60;
   --fg-dim: #59657b;
-  --border: #d9deea;
-  --border-strong: #b9c2d3;
-  --ring: rgba(169, 31, 93, .38);
+
+  --border: #d7deea;
+  --border-strong: #b8c3d4;
+  --ring: rgba(157, 23, 77, .38);
+
   --primary: #9d174d;
   --primary-hover: #831342;
   --primary-active: #6f1038;
   --primary-fg: #ffffff;
+
   --secondary: #4b3b91;
   --secondary-hover: #3d3079;
   --secondary-fg: #ffffff;
+
   --success: #11663d;
   --warning: #875000;
   --danger: #a51d35;
   --info: #075985;
+
   --gradient-brand: linear-gradient(135deg, #9d174d 0%, #7050a8 55%, #4b3b91 100%);
   --gradient-text: linear-gradient(90deg, #171b2b 0%, #831342 55%, #4b3b91 100%);
+
   --shadow-xs: 0 1px 2px rgba(26, 35, 55, .05);
   --shadow-sm: 0 5px 16px -8px rgba(26, 35, 55, .12);
   --shadow-md: 0 14px 36px -18px rgba(26, 35, 55, .16);
   --shadow-lg: 0 24px 60px -24px rgba(26, 35, 55, .19);
 }
 
-/* Neutral utility classes from dark-first screens are translated to readable
-   light-theme colors instead of leaving pale text on white surfaces. */
-:root[data-theme="light"] .app-shell :is(
+/* Translate legacy dark-first neutral utilities throughout the application.
+   Do not limit this to .app-shell: fixed headers and mobile navigation can
+   live outside nested wrappers and must receive the same contrast treatment. */
+:root[data-theme="light"] :is(
   .text-white, .text-gray-50, .text-gray-100, .text-gray-200,
   .text-gray-300, .text-gray-400, .text-slate-50, .text-slate-100,
   .text-slate-200, .text-slate-300, .text-slate-400, .text-zinc-50,
@@ -460,70 +466,69 @@ ol {
   color: var(--fg) !important;
 }
 
-:root[data-theme="light"] .app-shell :is(
-  .text-gray-500, .text-gray-600, .text-slate-500, .text-slate-600,
-  .text-zinc-500, .text-zinc-600, .text-neutral-500, .text-neutral-600,
+:root[data-theme="light"] :is(
+  .text-gray-500, .text-gray-600, .text-gray-700,
+  .text-slate-500, .text-slate-600, .text-slate-700,
+  .text-zinc-500, .text-zinc-600, .text-zinc-700,
+  .text-neutral-500, .text-neutral-600, .text-neutral-700,
   .text-muted-foreground
 ) {
   color: var(--fg-muted) !important;
 }
 
-:root[data-theme="light"] .app-shell :is(
-  .placeholder\:text-white\/30::placeholder,
-  .placeholder\:text-white\/40::placeholder,
-  .placeholder\:text-white\/50::placeholder
+:root[data-theme="light"] :is(
+  .placeholder\\:text-white\\/30::placeholder,
+  .placeholder\\:text-white\\/40::placeholder,
+  .placeholder\\:text-white\\/50::placeholder
 ) {
   color: var(--fg-dim) !important;
   opacity: 1;
 }
 
-/* Replace dark translucent panels and borders with neutral surfaces. */
-:root[data-theme="light"] .app-shell :is(
-  .bg-black, .bg-black\/10, .bg-black\/20, .bg-black\/30,
-  .bg-black\/40, .bg-black\/50, .bg-slate-950, .bg-slate-900,
-  .bg-slate-900\/20, .bg-slate-900\/30, .bg-slate-900\/40,
+/* Legacy dark panels become subtle neutral surfaces in light mode. */
+:root[data-theme="light"] :is(
+  .bg-black, .bg-black\\/10, .bg-black\\/20, .bg-black\\/30,
+  .bg-black\\/40, .bg-black\\/50, .bg-slate-950, .bg-slate-900,
+  .bg-slate-900\\/20, .bg-slate-900\\/30, .bg-slate-900\\/40,
   .bg-gray-950, .bg-gray-900, .bg-zinc-950, .bg-zinc-900
 ) {
   background-color: var(--surface-2) !important;
 }
 
-:root[data-theme="light"] .app-shell :is(
-  .border-white, .border-white\/5, .border-white\/10,
-  .border-white\/15, .border-white\/20, .border-gray-700,
+:root[data-theme="light"] :is(
+  .border-white, .border-white\\/5, .border-white\\/10,
+  .border-white\\/15, .border-white\\/20, .border-gray-700,
   .border-gray-800, .border-slate-700, .border-slate-800,
   .border-zinc-700, .border-zinc-800
 ) {
   border-color: var(--border) !important;
 }
 
-/* Form fields, menus, data tables and code blocks need independent contrast. */
-:root[data-theme="light"] .app-shell :is(input, textarea, select) {
+/* Inputs, menus and table content retain full-strength readable foregrounds. */
+:root[data-theme="light"] :is(input, textarea, select) {
   color: var(--fg) !important;
   background-color: #ffffff !important;
   border-color: var(--border-strong);
 }
-:root[data-theme="light"] .app-shell :is(input, textarea, select)::placeholder {
+:root[data-theme="light"] :is(input, textarea, select)::placeholder {
   color: var(--fg-dim) !important;
   opacity: 1;
 }
-:root[data-theme="light"] .app-shell :is(th, td) {
+:root[data-theme="light"] :is(th, td) {
   color: var(--fg);
   border-color: var(--border);
 }
-:root[data-theme="light"] .app-shell :is(code, pre) {
+:root[data-theme="light"] :is(code, pre) {
   color: var(--fg);
 }
-:root[data-theme="light"] .app-shell :is(.surface, .glass) {
-  background-color: rgba(255, 255, 255, .96);
+:root[data-theme="light"] :is(.surface, .glass) {
+  background-color: rgba(255, 255, 255, .97);
   border-color: var(--border);
   color: var(--fg);
   box-shadow: var(--shadow-sm);
 }
-:root[data-theme="light"] .app-shell :is(.text-primary, .text-secondary) {
-  color: var(--primary) !important;
-}
 
-/* Keep the page canvas quiet; content panels remain the visual focus. */
+/* Every screen uses a quiet light canvas; only decorative artwork is softened. */
 :root[data-theme="light"] .app-shell,
 :root[data-theme="light"] .aurora-bg {
   background-color: var(--bg) !important;
@@ -532,21 +537,20 @@ ol {
 :root[data-theme="light"] .app-shell::before,
 :root[data-theme="light"] .aurora-bg::before {
   background:
-    radial-gradient(ellipse at 18% 12%, rgba(169, 31, 93, .035), transparent 34%),
-    radial-gradient(ellipse at 84% 86%, rgba(81, 66, 165, .035), transparent 36%),
-    linear-gradient(135deg, #f3f5fa 0%, #eef1f7 100%) !important;
+    radial-gradient(ellipse at 18% 12%, rgba(157, 23, 77, .035), transparent 34%),
+    radial-gradient(ellipse at 84% 86%, rgba(75, 59, 145, .035), transparent 36%),
+    linear-gradient(135deg, #f4f6fb 0%, #eef1f7 100%) !important;
 }
 :root[data-theme="light"] .app-shell::after,
 :root[data-theme="light"] .aurora-bg::after {
   opacity: .018 !important;
 }
 
-/* Disabled and secondary copy stay distinct without becoming faint. */
-:root[data-theme="light"] .app-shell :is(.opacity-40, .opacity-50, .opacity-60) {
+/* Keep dimmed secondary copy readable; disabled controls remain visibly disabled. */
+:root[data-theme="light"] :is(.opacity-40, .opacity-50, .opacity-60) {
   filter: none;
 }
-:root[data-theme="light"] .app-shell :is(button, a):focus-visible,
-:root[data-theme="light"] .app-shell :is(input, textarea, select):focus-visible {
+:root[data-theme="light"] :is(button, a, input, textarea, select):focus-visible {
   outline-color: var(--primary);
   outline-offset: 2px;
 }
