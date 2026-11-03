@@ -32,10 +32,25 @@ export interface ChatResponse {
 
 export interface ChatHistory {
   id: number;
+  user_id: number;
+  document_id: number | null;
   question: string;
   answer: string;
   mode: ChatMode;
   created_at: string;
+  updated_at: string;
+}
+
+export interface ChatHistoryListResponse {
+  status: "success";
+  total: number;
+  history: ChatHistory[];
+}
+
+export interface ClearChatHistoryResponse {
+  status: "success";
+  message: string;
+  deleted_records: number;
 }
 
 export async function askAI(
@@ -82,30 +97,32 @@ export async function summarizeDocument(
   return data;
 }
 
-export async function getChatHistory(): Promise<
-  ChatHistory[]
-> {
-  const { data } = await api.get(
-    "/chat/history"
-  );
+export async function getChatHistory(
+  limit = 100,
+  documentId?: number | null
+): Promise<ChatHistory[]> {
+  const { data } = await api.get<ChatHistoryListResponse>("/history/", {
+    params: {
+      limit,
+      ...(documentId ? { document_id: documentId } : {}),
+    },
+  });
 
-  return data;
+  return data.history;
 }
 
 export async function deleteChatHistory(
   id: number
-) {
-  const { data } = await api.delete(
-    `/chat/history/${id}`
+): Promise<ClearChatHistoryResponse> {
+  const { data } = await api.delete<ClearChatHistoryResponse>(
+    `/history/${id}`
   );
 
   return data;
 }
 
-export async function clearChatHistory() {
-  const { data } = await api.delete(
-    "/chat/history"
-  );
+export async function clearChatHistory(): Promise<ClearChatHistoryResponse> {
+  const { data } = await api.delete<ClearChatHistoryResponse>("/history/");
 
   return data;
 }
