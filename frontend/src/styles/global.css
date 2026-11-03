@@ -77,46 +77,48 @@
 :root[data-theme="light"] {
   color-scheme: light;
 
-  --bg: #f5f7fb;
+  /* Calm neutral surfaces with consistently dark, readable typography. */
+  --bg: #f4f6fb;
   --bg-elevated: #ffffff;
   --surface: #ffffff;
-  --surface-2: #f4f5f9;
-  --surface-3: #eceef5;
-  --card: rgba(255, 255, 255, 0.92);
+  --surface-2: #f8f9fc;
+  --surface-3: #eef1f7;
+  --card: rgba(255, 255, 255, 0.98);
   --card-solid: #ffffff;
-  --muted: #f1f2f7;
-  --accent: #F3E7EA;
+  --muted: #edf0f6;
+  --accent: #e8eaf3;
 
-  --fg: #151722;
-  --fg-muted: #5f6479;
-  --fg-dim: #8b90a4;
+  --fg: #172033;
+  --fg-muted: #46536a;
+  --fg-dim: #64748b;
 
-  --border: rgba(15, 23, 42, 0.09);
-  --border-strong: rgba(15, 23, 42, 0.15);
-  --ring: rgba(46, 21, 27, 0.32);
+  --border: rgba(23, 32, 51, 0.12);
+  --border-strong: rgba(23, 32, 51, 0.2);
+  --ring: rgba(180, 35, 101, 0.42);
 
-  --primary: #2E151B;
-  --primary-hover: #1C3334;
-  --primary-active: #1C3334;
+  /* Deep berry and indigo remain legible with white button labels. */
+  --primary: #a91f5d;
+  --primary-hover: #8f194f;
+  --primary-active: #741441;
   --primary-fg: #ffffff;
 
-  --secondary: #376E6F;
-  --secondary-hover: #1C3334;
+  --secondary: #5142a5;
+  --secondary-hover: #403487;
   --secondary-fg: #ffffff;
 
-  --success: #16a34a;
-  --warning: #d97706;
-  --danger: #e11d48;
-  --info: #0284c7;
+  --success: #137547;
+  --warning: #945600;
+  --danger: #b4233c;
+  --info: #075e9a;
 
-  --gradient-brand: linear-gradient(135deg, #2E151B 0%, #DA7B93 45%, #376E6F 100%);
-  --gradient-text: linear-gradient(90deg, #171722 0%, #2E151B 55%, #376E6F 100%);
+  --gradient-brand: linear-gradient(135deg, #a91f5d 0%, #7651bd 52%, #5142a5 100%);
+  --gradient-text: linear-gradient(90deg, #172033 0%, #8f194f 55%, #5142a5 100%);
 
-  --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
-  --shadow-sm: 0 6px 18px -10px rgba(15, 23, 42, 0.12);
-  --shadow-md: 0 18px 45px -18px rgba(15, 23, 42, 0.16);
-  --shadow-lg: 0 30px 70px -24px rgba(15, 23, 42, 0.2);
-  --shadow-glow: 0 0 0 1px rgba(46, 21, 27, 0.12), 0 14px 38px -12px rgba(55, 110, 111, 0.16);
+  --shadow-xs: 0 1px 2px rgba(23, 32, 51, 0.04);
+  --shadow-sm: 0 5px 16px -8px rgba(23, 32, 51, 0.12);
+  --shadow-md: 0 16px 38px -18px rgba(23, 32, 51, 0.16);
+  --shadow-lg: 0 26px 64px -24px rgba(23, 32, 51, 0.2);
+  --shadow-glow: 0 0 0 1px rgba(169, 31, 93, 0.12), 0 12px 32px -12px rgba(81, 66, 165, 0.14);
 }
 
 @theme inline {
@@ -180,7 +182,7 @@ body {
   min-width: 320px;
   margin: 0;
   overflow-x: hidden;
-  background: #08070b;
+  background: var(--bg);
   color: var(--fg);
   font-family: var(--font-sans);
   line-height: 1.55;
@@ -263,7 +265,7 @@ ol {
 .aurora-bg {
   position: relative;
   isolation: isolate;
-  background: #08070b !important;
+  background: var(--bg);
 }
 
 .app-shell::before,
@@ -274,10 +276,10 @@ ol {
   z-index: -2;
   pointer-events: none;
   background:
-    radial-gradient(ellipse at 50% 48%, rgba(45, 23, 38, .2), transparent 62%),
-    radial-gradient(ellipse at 18% 18%, rgba(255, 8, 126, .16), transparent 28%),
-    radial-gradient(ellipse at 82% 82%, rgba(129, 44, 240, .17), transparent 30%),
-    linear-gradient(135deg, #08070b 0%, #0a080d 52%, #060609 100%);
+    radial-gradient(ellipse at 50% 48%, color-mix(in srgb, var(--primary) 5%, transparent), transparent 62%),
+    radial-gradient(ellipse at 18% 18%, color-mix(in srgb, var(--primary) 7%, transparent), transparent 28%),
+    radial-gradient(ellipse at 82% 82%, color-mix(in srgb, var(--secondary) 7%, transparent), transparent 30%),
+    linear-gradient(135deg, var(--bg) 0%, var(--bg-elevated) 52%, var(--bg) 100%);
   background-size: 100% 100%, 180% 180%, 180% 180%, 100% 100%;
   animation: sharedAuroraDrift 24s ease-in-out infinite alternate;
 }
@@ -405,53 +407,146 @@ ol {
 
 
 
-/* Accessible text and control colors for the dark workspace theme. */
-.app-shell {
-  color: var(--fg);
+
+/* Strong light-mode contrast layer. Keep all workspace text and controls readable
+   even when older components still use hard-coded dark-theme utility classes. */
+:root[data-theme="light"] {
+  color-scheme: light;
+  /* Explicit semantic tokens for legacy and current UI surfaces. */
+  --bg: #f3f5fa;
+  --bg-elevated: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #f7f8fc;
+  --surface-3: #edf0f6;
+  --card: #ffffff;
+  --card-solid: #ffffff;
+  --muted: #e9edf4;
+  --accent: #e8eaf2;
+  --fg: #171b2b;
+  --fg-muted: #39445b;
+  --fg-dim: #59657b;
+  --border: #d9deea;
+  --border-strong: #b9c2d3;
+  --ring: rgba(169, 31, 93, .38);
+  --primary: #9d174d;
+  --primary-hover: #831342;
+  --primary-active: #6f1038;
+  --primary-fg: #ffffff;
+  --secondary: #4b3b91;
+  --secondary-hover: #3d3079;
+  --secondary-fg: #ffffff;
+  --success: #11663d;
+  --warning: #875000;
+  --danger: #a51d35;
+  --info: #075985;
+  --gradient-brand: linear-gradient(135deg, #9d174d 0%, #7050a8 55%, #4b3b91 100%);
+  --gradient-text: linear-gradient(90deg, #171b2b 0%, #831342 55%, #4b3b91 100%);
+  --shadow-xs: 0 1px 2px rgba(26, 35, 55, .05);
+  --shadow-sm: 0 5px 16px -8px rgba(26, 35, 55, .12);
+  --shadow-md: 0 14px 36px -18px rgba(26, 35, 55, .16);
+  --shadow-lg: 0 24px 60px -24px rgba(26, 35, 55, .19);
 }
 
-.app-shell :where(h1, h2, h3, h4, h5, h6, strong, b) {
-  color: var(--fg);
+/* Neutral utility classes from dark-first screens are translated to readable
+   light-theme colors instead of leaving pale text on white surfaces. */
+:root[data-theme="light"] .app-shell :is(
+  .text-white, .text-gray-50, .text-gray-100, .text-gray-200,
+  .text-gray-300, .text-gray-400, .text-slate-50, .text-slate-100,
+  .text-slate-200, .text-slate-300, .text-slate-400, .text-zinc-50,
+  .text-zinc-100, .text-zinc-200, .text-zinc-300, .text-zinc-400,
+  .text-neutral-50, .text-neutral-100, .text-neutral-200,
+  .text-neutral-300, .text-neutral-400
+) {
+  color: var(--fg) !important;
 }
 
-.app-shell :where(p, li, label, small, figcaption) {
-  color: inherit;
+:root[data-theme="light"] .app-shell :is(
+  .text-gray-500, .text-gray-600, .text-slate-500, .text-slate-600,
+  .text-zinc-500, .text-zinc-600, .text-neutral-500, .text-neutral-600,
+  .text-muted-foreground
+) {
+  color: var(--fg-muted) !important;
 }
 
-.app-shell :where(input, textarea, select) {
-  color: var(--fg);
-  caret-color: var(--primary);
-}
-
-.app-shell :where(input, textarea, select)::placeholder {
-  color: var(--fg-muted);
+:root[data-theme="light"] .app-shell :is(
+  .placeholder\:text-white\/30::placeholder,
+  .placeholder\:text-white\/40::placeholder,
+  .placeholder\:text-white\/50::placeholder
+) {
+  color: var(--fg-dim) !important;
   opacity: 1;
 }
 
-.app-shell :where(button, a) {
-  -webkit-tap-highlight-color: transparent;
+/* Replace dark translucent panels and borders with neutral surfaces. */
+:root[data-theme="light"] .app-shell :is(
+  .bg-black, .bg-black\/10, .bg-black\/20, .bg-black\/30,
+  .bg-black\/40, .bg-black\/50, .bg-slate-950, .bg-slate-900,
+  .bg-slate-900\/20, .bg-slate-900\/30, .bg-slate-900\/40,
+  .bg-gray-950, .bg-gray-900, .bg-zinc-950, .bg-zinc-900
+) {
+  background-color: var(--surface-2) !important;
 }
 
-.app-shell :where(button:disabled, input:disabled, textarea:disabled, select:disabled) {
-  cursor: not-allowed;
+:root[data-theme="light"] .app-shell :is(
+  .border-white, .border-white\/5, .border-white\/10,
+  .border-white\/15, .border-white\/20, .border-gray-700,
+  .border-gray-800, .border-slate-700, .border-slate-800,
+  .border-zinc-700, .border-zinc-800
+) {
+  border-color: var(--border) !important;
 }
 
-/* Auth routes share the app's clean dark visual system. Animated orbs and cyan
-   ribbons are isolated in AuthLayout.module.css to prevent layered artifacts. */
-.auth-shell {
-  position: relative;
-  isolation: isolate;
-  min-height: 100svh;
-  overflow: hidden;
-  background: #030507 !important;
+/* Form fields, menus, data tables and code blocks need independent contrast. */
+:root[data-theme="light"] .app-shell :is(input, textarea, select) {
+  color: var(--fg) !important;
+  background-color: #ffffff !important;
+  border-color: var(--border-strong);
 }
-.auth-grid { display: none !important; }
-.auth-art-drift { animation: none; }
-.auth-node { filter: none; }
-@media (prefers-reduced-motion: reduce) {
-  .auth-shell *, .auth-shell *::before, .auth-shell *::after {
-    animation-duration: .01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: .01ms !important;
-  }
+:root[data-theme="light"] .app-shell :is(input, textarea, select)::placeholder {
+  color: var(--fg-dim) !important;
+  opacity: 1;
+}
+:root[data-theme="light"] .app-shell :is(th, td) {
+  color: var(--fg);
+  border-color: var(--border);
+}
+:root[data-theme="light"] .app-shell :is(code, pre) {
+  color: var(--fg);
+}
+:root[data-theme="light"] .app-shell :is(.surface, .glass) {
+  background-color: rgba(255, 255, 255, .96);
+  border-color: var(--border);
+  color: var(--fg);
+  box-shadow: var(--shadow-sm);
+}
+:root[data-theme="light"] .app-shell :is(.text-primary, .text-secondary) {
+  color: var(--primary) !important;
+}
+
+/* Keep the page canvas quiet; content panels remain the visual focus. */
+:root[data-theme="light"] .app-shell,
+:root[data-theme="light"] .aurora-bg {
+  background-color: var(--bg) !important;
+  color: var(--fg);
+}
+:root[data-theme="light"] .app-shell::before,
+:root[data-theme="light"] .aurora-bg::before {
+  background:
+    radial-gradient(ellipse at 18% 12%, rgba(169, 31, 93, .035), transparent 34%),
+    radial-gradient(ellipse at 84% 86%, rgba(81, 66, 165, .035), transparent 36%),
+    linear-gradient(135deg, #f3f5fa 0%, #eef1f7 100%) !important;
+}
+:root[data-theme="light"] .app-shell::after,
+:root[data-theme="light"] .aurora-bg::after {
+  opacity: .018 !important;
+}
+
+/* Disabled and secondary copy stay distinct without becoming faint. */
+:root[data-theme="light"] .app-shell :is(.opacity-40, .opacity-50, .opacity-60) {
+  filter: none;
+}
+:root[data-theme="light"] .app-shell :is(button, a):focus-visible,
+:root[data-theme="light"] .app-shell :is(input, textarea, select):focus-visible {
+  outline-color: var(--primary);
+  outline-offset: 2px;
 }

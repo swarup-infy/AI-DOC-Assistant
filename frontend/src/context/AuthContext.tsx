@@ -83,7 +83,7 @@ export function AuthProvider({
       }
       throw new Error("Failed to refresh user.");
     }
-  }, [logout]);
+  }, []);
 
   const login = useCallback(async (token: string, fallbackUser?: User) => {
     saveAccessToken(token);
