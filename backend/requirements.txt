@@ -2,7 +2,7 @@
 # Web API
 # ==========================================================
 
-fastapi==0.139.0
+fastapi==0.162.0
 uvicorn[standard]==0.51.0
 python-multipart==0.0.32
 
