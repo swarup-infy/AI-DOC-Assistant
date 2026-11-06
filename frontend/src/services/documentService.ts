@@ -1,38 +1,4 @@
-import axios from "axios";
-
-const API = axios.create({
-  baseURL:
-    import.meta.env.VITE_API_URL ??
-    "http://127.0.0.1:8000/api",
-  timeout: 30000,
-});
-
-API.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("access_token");
-
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
-API.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem("access_token");
-      localStorage.removeItem("user");
-
-      window.location.href = "/login";
-    }
-
-    return Promise.reject(error);
-  }
-);
+import api from "../api/api";
 
 export interface Document {
   id: number;
@@ -56,16 +22,20 @@ export async function uploadDocument(
   const formData = new FormData();
   formData.append("file", file);
 
-  const { data } = await API.post<UploadResponse>(
+  const { data } = await api.post<UploadResponse>(
     "/upload/file",
-    formData
+    formData,
+    {
+      // Let the browser set the multipart boundary automatically.
+      headers: { "Content-Type": undefined },
+    }
   );
 
   return data;
 }
 
 function normalizeDocuments(value: unknown): Document[] {
-  if (Array.isArray(value)) {
+  if ( Array.isArray(value) ) {
     return value as Document[];
   }
 
@@ -75,60 +45,37 @@ function normalizeDocuments(value: unknown): Document[] {
     "documents" in value
   ) {
     const documents = (value as { documents?: unknown }).documents;
-
-    return Array.isArray(documents)
-      ? (documents as Document[])
-      : [];
+    return Array.isArray(documents) ? (documents as Document[]) : [];
   }
 
   return [];
 }
 
 export async function getDocuments(): Promise<Document[]> {
-  const { data } = await API.get<unknown>("/documents");
-
+  const { data } = await api.get<unknown>("/documents");
   return normalizeDocuments(data);
 }
 
-export async function getDocument(
-  id: number
-): Promise<Document> {
-  const { data } = await API.get<Document>(
-    `/documents/${id}`
-  );
-
+export async function getDocument(id: number): Promise<Document> {
+  const { data } = await api.get<Document>(`/documents/${id}`);
   return data;
 }
 
 export async function deleteDocument(id: number) {
-  const { data } = await API.delete(
-    `/documents/${id}`
-  );
-
+  const { data } = await api.delete(`/documents/${id}`);
   return data;
 }
 
-export async function renameDocument(
-  id: number,
-  filename: string
-) {
-  const { data } = await API.put(
-    `/documents/${id}`,
-    { filename }
-  );
-
+export async function renameDocument(id: number, filename: string) {
+  const { data } = await api.put(`/documents/${id}`, { filename });
   return data;
 }
 
 export async function downloadDocument(id: number) {
-  const { data } = await API.get(
-    `/documents/${id}/download`,
-    {
-      responseType: "blob",
-    }
-  );
-
+  const { data } = await api.get(`/documents/${id}/download`, {
+    responseType: "blob",
+  });
   return data;
 }
 
-export default API;
+export default api;
