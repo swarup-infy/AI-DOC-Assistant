@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { isAxiosError } from "axios";
 import {
   CheckCircle2,
   FileSpreadsheet,
@@ -51,6 +52,8 @@ export default function DocumentsPage() {
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState<"success" | "error" | "info">("info");
   const [dragActive, setDragActive] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadPhase, setUploadPhase] = useState<"uploading" | "processing">("uploading");
 
   useEffect(() => {
     void loadDocuments();
@@ -76,6 +79,12 @@ export default function DocumentsPage() {
 
     if (!accepted) {
       setMessage("Please choose a PDF, DOCX, CSV, XLS, or XLSX file.");
+      setMessageType("error");
+      return false;
+    }
+
+    if (file.size === 0) {
+      setMessage("The selected file is empty. Please choose a valid PDF or document.");
       setMessageType("error");
       return false;
     }
@@ -116,18 +125,50 @@ export default function DocumentsPage() {
 
     try {
       setLoading(true);
-      setMessage("");
-      const result = await uploadDocument(selectedFile);
-      setMessage(result.message || "Document uploaded successfully.");
+      setUploadProgress(0);
+      setUploadPhase("uploading");
+      setMessage("Connecting to the document service...");
+      setMessageType("info");
+
+      const result = await uploadDocument(selectedFile, (percentage) => {
+        setUploadProgress(percentage);
+        if (percentage >= 100) {
+          setUploadPhase("processing");
+          setMessage("File received. Extracting text and preparing AI search...");
+        } else {
+          setMessage(`Uploading file... ${percentage}%`);
+        }
+      });
+
+      setUploadProgress(100);
+      setMessage(
+        `${result.message || "Document uploaded successfully."} ${result.chunks} text chunks indexed.`
+      );
       setMessageType("success");
       await loadDocuments();
       clearSelectedFile();
     } catch (error) {
-      console.error(error);
-      setMessage("Upload failed. Please try again.");
+      console.error("Document upload failed:", error);
+
+      let errorMessage = "Upload failed. Please try again.";
+      if (isAxiosError(error)) {
+        const detail = error.response?.data?.detail;
+        if (typeof detail === "string" && detail.trim()) {
+          errorMessage = detail;
+        } else if (error.code === "ECONNABORTED") {
+          errorMessage = "Document processing took too long. Please retry; your file may be large or the server may be starting.";
+        } else if (!error.response) {
+          errorMessage = "Cannot reach the upload server. Check your connection and try again.";
+        } else if (error.response.status === 413) {
+          errorMessage = "This file is larger than the server upload limit (20 MB).";
+        }
+      }
+
+      setMessage(errorMessage);
       setMessageType("error");
     } finally {
       setLoading(false);
+      setUploadProgress(0);
     }
   }
 
@@ -280,6 +321,30 @@ export default function DocumentsPage() {
                     )}
                   </button>
                 </div>
+              </div>
+            )}
+
+            {loading && (
+              <div className="mt-4 rounded-xl border border-border bg-muted/30 p-4" aria-live="polite">
+                <div className="mb-2 flex items-center justify-between gap-3 text-xs">
+                  <span className="font-medium text-foreground">
+                    {uploadPhase === "uploading" ? "Transferring file" : "Processing and indexing document"}
+                  </span>
+                  <span className="tabular-nums text-muted-foreground">
+                    {uploadPhase === "uploading" ? `${uploadProgress}%` : "Please wait"}
+                  </span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-border">
+                  <div
+                    className={`h-full rounded-full bg-primary transition-all duration-200 ${uploadPhase === "processing" ? "w-full animate-pulse" : ""}`}
+                    style={{ width: uploadPhase === "uploading" ? `${uploadProgress}%` : "100%" }}
+                  />
+                </div>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {uploadPhase === "uploading"
+                    ? "Sending your file securely to the server."
+                    : "The file is received. Text extraction and AI indexing can take a little longer."}
+                </p>
               </div>
             )}
 
