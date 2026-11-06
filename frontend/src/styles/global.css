@@ -520,3 +520,140 @@ ol {
     animation: none !important;
   }
 }
+
+
+/* --------------------------------------------------------------------------
+   Editorial / infrared interface refresh
+   Crisp type, measured rules, quiet surfaces. No neon glow or bloom effects.
+   -------------------------------------------------------------------------- */
+:root {
+  --font-display: "Inter", "Aptos Display", "Segoe UI", system-ui, sans-serif;
+  --font-sans: "Inter", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, .12);
+  --shadow-sm: 0 4px 14px rgba(0, 0, 0, .12);
+  --shadow-md: 0 12px 30px rgba(0, 0, 0, .16);
+  --shadow-lg: 0 20px 48px rgba(0, 0, 0, .2);
+  --shadow-glow: none;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+}
+
+:root[data-theme="light"] {
+  --shadow-xs: 0 1px 2px rgba(20, 27, 42, .035);
+  --shadow-sm: 0 4px 14px rgba(20, 27, 42, .055);
+  --shadow-md: 0 12px 30px rgba(20, 27, 42, .075);
+  --shadow-lg: 0 20px 48px rgba(20, 27, 42, .09);
+  --shadow-glow: none;
+}
+
+html { scroll-padding-top: 88px; }
+body {
+  font-feature-settings: "ss01" on, "cv11" on;
+  font-kerning: normal;
+  letter-spacing: -0.012em;
+}
+h1, h2, h3, h4 {
+  text-wrap: balance;
+  letter-spacing: -0.035em;
+}
+p, li, label { text-wrap: pretty; }
+button, input, textarea, select { letter-spacing: inherit; }
+::selection { background: var(--primary); color: #fff; }
+
+/* Subtle thermal scan field: fine grid, restrained heat bands, no bloom. */
+.app-shell::before,
+.aurora-bg::before {
+  background:
+    linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px),
+    linear-gradient(112deg, transparent 0 42%, rgba(255,75,105,.055) 48%, rgba(255,157,83,.035) 51%, transparent 58%),
+    linear-gradient(250deg, transparent 0 58%, rgba(104,86,181,.045) 65%, transparent 73%),
+    linear-gradient(135deg, var(--bg) 0%, var(--bg-elevated) 54%, var(--bg) 100%);
+  background-size: 34px 34px, 34px 34px, 180% 180%, 160% 160%, 100% 100%;
+  background-position: center, center, 0% 50%, 100% 50%, center;
+  animation: thermalFieldDrift 34s ease-in-out infinite alternate;
+}
+.app-shell::after,
+.aurora-bg::after {
+  background-image:
+    repeating-linear-gradient(0deg, transparent 0 5px, rgba(255,255,255,.018) 6px, transparent 7px),
+    linear-gradient(90deg, transparent, rgba(255,92,106,.025), transparent);
+  background-size: auto, 180% 100%;
+  opacity: .34;
+  animation: thermalScanDrift 28s linear infinite alternate;
+  mix-blend-mode: screen;
+}
+:root[data-theme="light"] .app-shell::before,
+:root[data-theme="light"] .aurora-bg::before {
+  background:
+    linear-gradient(rgba(28,39,61,.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(28,39,61,.035) 1px, transparent 1px),
+    linear-gradient(112deg, transparent 0 42%, rgba(190,43,81,.035) 48%, rgba(224,133,75,.025) 51%, transparent 58%),
+    linear-gradient(250deg, transparent 0 58%, rgba(93,79,159,.025) 65%, transparent 73%),
+    linear-gradient(135deg, #f4f6fb 0%, #eef1f7 54%, #f7f8fb 100%);
+  background-size: 34px 34px, 34px 34px, 180% 180%, 160% 160%, 100% 100%;
+}
+:root[data-theme="light"] .app-shell::after,
+:root[data-theme="light"] .aurora-bg::after {
+  background-image: repeating-linear-gradient(0deg, transparent 0 5px, rgba(28,39,61,.018) 6px, transparent 7px);
+  opacity: .45;
+  mix-blend-mode: multiply;
+}
+@keyframes thermalFieldDrift {
+  from { background-position: center, center, 0% 50%, 100% 50%, center; }
+  to { background-position: center, center, 100% 50%, 0% 50%, center; }
+}
+@keyframes thermalScanDrift {
+  from { background-position: 0 0, 0% 50%; }
+  to { background-position: 0 0, 100% 50%; }
+}
+
+/* Flat, precise surfaces replace glowing panels and oversized shadows. */
+.surface, .glass {
+  border-color: var(--border);
+  background: var(--card);
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.surface-hover { transition: border-color 180ms ease, background-color 180ms ease; }
+.surface-hover:hover {
+  border-color: var(--border-strong);
+  box-shadow: none;
+  transform: translateY(-1px);
+}
+:where(.shadow-primary\/10, .shadow-primary\/20, .shadow-primary\/25,
+       .shadow-primary\/30, .shadow-primary\/40) {
+  box-shadow: none !important;
+}
+:where(.shadow-glow) { box-shadow: none !important; }
+
+/* Thin editorial separators and restrained active states. */
+.app-shell :where(section, article) > :where(header, .section-heading) {
+  border-color: var(--border);
+}
+.app-shell :where(button, a) {
+  transition-duration: 160ms;
+}
+.app-shell :where(button, a):focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+  box-shadow: none;
+}
+.app-shell :where(input, textarea, select) {
+  border-radius: 10px;
+}
+.app-shell :where(input, textarea, select):focus {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 16%, transparent);
+}
+.app-shell .gradient-text {
+  background: none;
+  color: var(--fg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-shell::before, .app-shell::after, .aurora-bg::before, .aurora-bg::after {
+    animation: none !important;
+  }
+}
