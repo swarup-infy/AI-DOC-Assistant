@@ -44,7 +44,7 @@ const applyTheme = (theme: Theme) => {
 };
 
 const iconButtonClass =
-  "inline-flex items-center justify-center rounded-xl border border-border bg-card/70 text-muted-foreground transition-all duration-200 hover:border-primary/30 hover:bg-accent hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary";
+  "inline-flex items-center justify-center rounded-xl border border-border bg-card/70 text-muted-foreground transition-all duration-200 hover:border-border-strong hover:bg-accent hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary";
 
 function Navbar({ onMenuClick }: NavbarProps) {
   const navigate = useNavigate();
@@ -176,7 +176,7 @@ function Navbar({ onMenuClick }: NavbarProps) {
           onClick={handleProfile}
           aria-label="Open profile"
           title="Profile"
-          className="hidden h-10 items-center gap-2.5 rounded-xl border border-border bg-card/70 px-3 transition-all hover:border-primary/30 hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary sm:flex"
+          className="hidden h-10 items-center gap-2.5 rounded-xl border border-border bg-card px-3 transition-all hover:border-border-strong hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary sm:flex"
         >
           <UserCircle size={20} className="text-muted-foreground" />
           <div className="hidden text-left lg:block">
