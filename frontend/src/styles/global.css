@@ -408,23 +408,22 @@ ol {
 
 
 
-/* Strong light-mode contrast layer. Keep all workspace text and controls readable
-   even when older components still use hard-coded dark-theme utility classes. */
+/* Accessible light-theme compatibility layer.
+   Keep semantic foreground classes intact and never recolor text on branded controls. */
 :root[data-theme="light"] {
   color-scheme: light;
-  /* Explicit semantic tokens for legacy and current UI surfaces. */
-  --bg: #f3f5fa;
+  --bg: #f4f6fb;
   --bg-elevated: #ffffff;
   --surface: #ffffff;
-  --surface-2: #f7f8fc;
-  --surface-3: #edf0f6;
+  --surface-2: #f8f9fc;
+  --surface-3: #eef1f7;
   --card: #ffffff;
   --card-solid: #ffffff;
-  --muted: #e9edf4;
-  --accent: #e8eaf2;
-  --fg: #171b2b;
-  --fg-muted: #39445b;
-  --fg-dim: #59657b;
+  --muted: #edf0f6;
+  --accent: #e8eaf3;
+  --fg: #172033;
+  --fg-muted: #46536a;
+  --fg-dim: #64748b;
   --border: #d9deea;
   --border-strong: #b9c2d3;
   --ring: rgba(169, 31, 93, .38);
@@ -440,93 +439,16 @@ ol {
   --danger: #a51d35;
   --info: #075985;
   --gradient-brand: linear-gradient(135deg, #9d174d 0%, #7050a8 55%, #4b3b91 100%);
-  --gradient-text: linear-gradient(90deg, #171b2b 0%, #831342 55%, #4b3b91 100%);
+  --gradient-text: linear-gradient(90deg, #172033 0%, #831342 55%, #4b3b91 100%);
   --shadow-xs: 0 1px 2px rgba(26, 35, 55, .05);
   --shadow-sm: 0 5px 16px -8px rgba(26, 35, 55, .12);
   --shadow-md: 0 14px 36px -18px rgba(26, 35, 55, .16);
   --shadow-lg: 0 24px 60px -24px rgba(26, 35, 55, .19);
 }
 
-/* Neutral utility classes from dark-first screens are translated to readable
-   light-theme colors instead of leaving pale text on white surfaces. */
-:root[data-theme="light"] .app-shell :is(
-  .text-white, .text-gray-50, .text-gray-100, .text-gray-200,
-  .text-gray-300, .text-gray-400, .text-slate-50, .text-slate-100,
-  .text-slate-200, .text-slate-300, .text-slate-400, .text-zinc-50,
-  .text-zinc-100, .text-zinc-200, .text-zinc-300, .text-zinc-400,
-  .text-neutral-50, .text-neutral-100, .text-neutral-200,
-  .text-neutral-300, .text-neutral-400
-) {
-  color: var(--fg) !important;
-}
-
-:root[data-theme="light"] .app-shell :is(
-  .text-gray-500, .text-gray-600, .text-slate-500, .text-slate-600,
-  .text-zinc-500, .text-zinc-600, .text-neutral-500, .text-neutral-600,
-  .text-muted-foreground
-) {
-  color: var(--fg-muted) !important;
-}
-
-:root[data-theme="light"] .app-shell :is(
-  .placeholder\:text-white\/30::placeholder,
-  .placeholder\:text-white\/40::placeholder,
-  .placeholder\:text-white\/50::placeholder
-) {
-  color: var(--fg-dim) !important;
-  opacity: 1;
-}
-
-/* Replace dark translucent panels and borders with neutral surfaces. */
-:root[data-theme="light"] .app-shell :is(
-  .bg-black, .bg-black\/10, .bg-black\/20, .bg-black\/30,
-  .bg-black\/40, .bg-black\/50, .bg-slate-950, .bg-slate-900,
-  .bg-slate-900\/20, .bg-slate-900\/30, .bg-slate-900\/40,
-  .bg-gray-950, .bg-gray-900, .bg-zinc-950, .bg-zinc-900
-) {
-  background-color: var(--surface-2) !important;
-}
-
-:root[data-theme="light"] .app-shell :is(
-  .border-white, .border-white\/5, .border-white\/10,
-  .border-white\/15, .border-white\/20, .border-gray-700,
-  .border-gray-800, .border-slate-700, .border-slate-800,
-  .border-zinc-700, .border-zinc-800
-) {
-  border-color: var(--border) !important;
-}
-
-/* Form fields, menus, data tables and code blocks need independent contrast. */
-:root[data-theme="light"] .app-shell :is(input, textarea, select) {
-  color: var(--fg) !important;
-  background-color: #ffffff !important;
-  border-color: var(--border-strong);
-}
-:root[data-theme="light"] .app-shell :is(input, textarea, select)::placeholder {
-  color: var(--fg-dim) !important;
-  opacity: 1;
-}
-:root[data-theme="light"] .app-shell :is(th, td) {
-  color: var(--fg);
-  border-color: var(--border);
-}
-:root[data-theme="light"] .app-shell :is(code, pre) {
-  color: var(--fg);
-}
-:root[data-theme="light"] .app-shell :is(.surface, .glass) {
-  background-color: rgba(255, 255, 255, .96);
-  border-color: var(--border);
-  color: var(--fg);
-  box-shadow: var(--shadow-sm);
-}
-:root[data-theme="light"] .app-shell :is(.text-primary, .text-secondary) {
-  color: var(--primary) !important;
-}
-
-/* Keep the page canvas quiet; content panels remain the visual focus. */
 :root[data-theme="light"] .app-shell,
 :root[data-theme="light"] .aurora-bg {
-  background-color: var(--bg) !important;
+  background-color: var(--bg);
   color: var(--fg);
 }
 :root[data-theme="light"] .app-shell::before,
@@ -534,19 +456,67 @@ ol {
   background:
     radial-gradient(ellipse at 18% 12%, rgba(169, 31, 93, .035), transparent 34%),
     radial-gradient(ellipse at 84% 86%, rgba(81, 66, 165, .035), transparent 36%),
-    linear-gradient(135deg, #f3f5fa 0%, #eef1f7 100%) !important;
+    linear-gradient(135deg, #f4f6fb 0%, #eef1f7 100%);
 }
 :root[data-theme="light"] .app-shell::after,
-:root[data-theme="light"] .aurora-bg::after {
-  opacity: .018 !important;
-}
+:root[data-theme="light"] .aurora-bg::after { opacity: .018; }
 
-/* Disabled and secondary copy stay distinct without becoming faint. */
-:root[data-theme="light"] .app-shell :is(.opacity-40, .opacity-50, .opacity-60) {
-  filter: none;
+/* Translate legacy dark text utilities only on ordinary content surfaces. */
+:root[data-theme="light"] .app-shell :is(
+  .text-gray-50, .text-gray-100, .text-gray-200, .text-gray-300, .text-gray-400,
+  .text-slate-50, .text-slate-100, .text-slate-200, .text-slate-300, .text-slate-400,
+  .text-zinc-50, .text-zinc-100, .text-zinc-200, .text-zinc-300, .text-zinc-400,
+  .text-neutral-50, .text-neutral-100, .text-neutral-200, .text-neutral-300, .text-neutral-400
+) {
+  color: var(--fg);
+}
+:root[data-theme="light"] .app-shell :is(
+  .text-gray-500, .text-gray-600, .text-slate-500, .text-slate-600,
+  .text-zinc-500, .text-zinc-600, .text-neutral-500, .text-neutral-600
+) { color: var(--fg-muted); }
+
+/* Preserve white labels/icons on high-contrast primary and secondary actions. */
+:root[data-theme="light"] .app-shell :is(
+  button.bg-primary, a.bg-primary, .bg-primary.text-white,
+  button.bg-secondary, a.bg-secondary, .bg-secondary.text-white,
+  .gradient-brand.text-white
+) { color: #ffffff !important; }
+:root[data-theme="light"] .app-shell :is(.bg-primary, .bg-secondary, .gradient-brand) :is(.text-white, .text-primary-foreground, .text-secondary-foreground) {
+  color: #ffffff !important;
+}
+:root[data-theme="light"] .app-shell .text-primary { color: var(--primary) !important; }
+:root[data-theme="light"] .app-shell .text-secondary { color: var(--secondary) !important; }
+
+/* Inputs, placeholders, tables and reusable panels retain readable contrast. */
+:root[data-theme="light"] .app-shell :is(input, textarea, select) {
+  color: var(--fg);
+  background-color: #ffffff;
+  border-color: var(--border-strong);
+}
+:root[data-theme="light"] .app-shell :is(input, textarea, select)::placeholder {
+  color: var(--fg-dim);
+  opacity: 1;
+}
+:root[data-theme="light"] .app-shell :is(th, td) {
+  color: var(--fg);
+  border-color: var(--border);
+}
+:root[data-theme="light"] .app-shell :is(code, pre) { color: var(--fg); }
+:root[data-theme="light"] .app-shell :is(.surface, .glass) {
+  background-color: rgba(255, 255, 255, .96);
+  border-color: var(--border);
+  color: var(--fg);
+  box-shadow: var(--shadow-sm);
 }
 :root[data-theme="light"] .app-shell :is(button, a):focus-visible,
 :root[data-theme="light"] .app-shell :is(input, textarea, select):focus-visible {
   outline-color: var(--primary);
   outline-offset: 2px;
+}
+:root[data-theme="light"] .app-shell :is(.opacity-40, .opacity-50, .opacity-60) { filter: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .app-shell::before, .app-shell::after, .aurora-bg::before, .aurora-bg::after {
+    animation: none !important;
+  }
 }
