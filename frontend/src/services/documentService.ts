@@ -16,8 +16,11 @@ export interface UploadResponse {
   chunks: number;
 }
 
+export type UploadProgressCallback = (percentage: number) => void;
+
 export async function uploadDocument(
-  file: File
+  file: File,
+  onProgress?: UploadProgressCallback
 ): Promise<UploadResponse> {
   const formData = new FormData();
   formData.append("file", file);
@@ -27,7 +30,18 @@ export async function uploadDocument(
     formData,
     {
       // Let the browser set the multipart boundary automatically.
+      // PDF extraction + embedding can take longer than a normal API call,
+      // especially when the production service is waking from sleep.
       headers: { "Content-Type": false },
+      timeout: 5 * 60 * 1000,
+      onUploadProgress: (event) => {
+        if (!onProgress || !event.total) return;
+        const percentage = Math.min(
+          100,
+          Math.round((event.loaded / event.total) * 100)
+        );
+        onProgress(percentage);
+      },
     }
   );
 
