@@ -27,7 +27,7 @@ export async function uploadDocument(
     formData,
     {
       // Let the browser set the multipart boundary automatically.
-      headers: { "Content-Type": undefined },
+      headers: { "Content-Type": "multipart/form-data" },
     }
   );
 
