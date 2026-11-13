@@ -1,38 +1,14 @@
 import { Link } from "react-router-dom";
 import { ArrowLeft, ShieldCheck } from "lucide-react";
-import DashboardLayout from "../../layouts/DashboardLayout";
-
 const sections = [
-  ["Information processed", "The service may process account details such as name and email, authentication data, uploaded documents, extracted text, questions, answers, and technical logs needed to operate the application."],
-  ["Purpose and access", "Information is used to authenticate users, process documents, provide search and AI features, maintain security, and troubleshoot reliability. Do not upload information unless you are authorized to do so."],
-  ["Third-party processors", "Depending on the deployed configuration, data may be processed by hosting, database, file-storage, embedding, or AI providers. The operator must document the actual providers and their terms before production use."],
-  ["Retention and deletion", "Retention depends on the deployed database, storage configuration, backups, and provider policies. This starter notice does not promise automatic deletion. The operator should publish verified retention and account-deletion procedures."],
-  ["Security and your choices", "Use a unique password and keep credentials private. No internet service can promise absolute security. For questions about access, correction, or deletion, contact the service operator using the contact channel published by the operator."],
-  ["Notice status", "This is a starter privacy notice, not a legal compliance certification. It must be reviewed and completed with the actual business identity, contact details, applicable jurisdiction, cookie practices, data locations, and subprocessors before launch."],
+["Information handled","When you create an account, we receive the name and email address you provide and credentials needed to authenticate you. When you use document features, the service processes uploaded files, extracted text, prompts, chat messages, generated responses, and related document metadata. Technical request and error information may also be logged for security and troubleshooting."],
+["Purposes","Information is processed to create and secure accounts, store and retrieve documents, provide search and AI-assisted responses, maintain the application, prevent misuse, and comply with legal obligations. Please do not provide information that is not needed for these purposes."],
+["AI and infrastructure providers","The application is configured to use external hosting, database, and AI infrastructure. The exact provider, subprocessor, region, retention terms, and contractual safeguards depend on the deployed configuration. Do not upload confidential or sensitive material unless you have authority to do so and have reviewed the applicable provider arrangements."],
+["Cookies and local storage","The web application uses browser local storage for its authentication token, cached user information, and display preference. These items support sign-in and the display settings. See the Cookie Policy for details."],
+["Retention and deletion","Account and document retention depend on the live database, file storage, vector index, backups, and provider configuration. Removing a document in the interface may not immediately remove backup copies or operational logs. The current application does not expose a verified self-service account deletion workflow. Do not assume a deletion request is complete until the operator confirms it."],
+["Your choices and rights","You choose which documents to upload and should avoid submitting passwords, API keys, private keys, or unnecessary personal information. Depending on applicable law, you may have rights to access, correct, delete, or object to certain processing. The operator must publish and monitor a privacy contact before public launch."],
+["Security and international processing","The service uses authentication and transport security controls, but no online service can guarantee absolute security. Data locations and international transfer safeguards depend on the selected infrastructure providers and must be confirmed by the operator."],
+["Children","This application is not designed for children under 18 and is not intended to collect children's personal information. Do not create an account or upload a child's personal information."],
+["Changes and contact","This notice must be updated when actual data practices change. The operator's verified legal name, postal address, privacy email, governing jurisdiction, provider list, and retention schedule must be added before launch. This template is not legal advice or a compliance certification."]
 ];
-
-export default function PrivacyPage() {
-  return (
-    <DashboardLayout>
-      <div className="mx-auto w-full max-w-3xl space-y-6 pb-10">
-        <Link to="/dashboard" className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"><ArrowLeft size={16} /> Back to workspace</Link>
-        <article className="rounded-2xl border border-border bg-card p-6 sm:p-10">
-          <div className="flex items-start gap-4">
-            <div className="rounded-xl bg-muted p-3 text-muted-foreground"><ShieldCheck size={24} /></div>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[.2em] text-muted-foreground">Your data</p>
-              <h1 className="mt-1 font-display text-3xl font-bold sm:text-4xl">Privacy Notice</h1>
-              <p className="mt-2 text-sm text-muted-foreground">How information may be handled by this application.</p>
-            </div>
-          </div>
-          <div className="mt-8 space-y-7">
-            {sections.map(([title, body]) => <section key={title}><h2 className="font-semibold text-foreground">{title}</h2><p className="mt-2 text-sm leading-7 text-muted-foreground">{body}</p></section>)}
-          </div>
-          <div className="mt-9 border-t border-border pt-6">
-            <Link to="/register" className="inline-flex h-11 items-center rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground transition hover:opacity-90">Return to sign up</Link>
-          </div>
-        </article>
-      </div>
-    </DashboardLayout>
-  );
-}
+export default function PrivacyPage(){return <main className="app-shell min-h-screen bg-background px-4 py-8 text-foreground sm:px-6 lg:px-8"><div className="mx-auto max-w-4xl"><Link to="/login" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-4"><ArrowLeft size={16} aria-hidden="true"/>Back to sign in</Link><article className="mt-8 rounded-3xl border border-border bg-card p-6 sm:p-10"><header className="flex items-start gap-4"><div className="rounded-xl bg-muted p-3 text-muted-foreground"><ShieldCheck size={24} aria-hidden="true"/></div><div><p className="text-xs font-semibold uppercase tracking-[.2em] text-muted-foreground">Your data</p><h1 className="mt-1 text-3xl font-bold sm:text-4xl">Privacy Policy</h1><p className="mt-2 text-sm text-muted-foreground">Last updated: November 13, 2026</p></div></header><p className="mt-6 rounded-xl border border-border bg-muted/40 p-4 text-sm leading-6 text-foreground">This notice describes the application at a high level. The operator must verify production infrastructure, data flows, retention, and contact details before treating it as a final legal notice.</p><div className="mt-8 space-y-7">{sections.map(([title,body])=><section key={title}><h2 className="font-semibold text-foreground">{title}</h2><p className="mt-2 text-sm leading-7 text-muted-foreground">{body}</p></section>)}</div><footer className="mt-9 flex flex-wrap gap-4 border-t border-border pt-6 text-sm"><Link to="/terms" className="font-semibold text-primary underline underline-offset-4">Terms of Service</Link><Link to="/cookies" className="font-semibold text-primary underline underline-offset-4">Cookie Policy</Link><Link to="/refunds" className="font-semibold text-primary underline underline-offset-4">Refund Policy</Link></footer></article></div></main>}
