@@ -9,6 +9,11 @@ import LoginPage from "../pages/auth/LoginPage";
 import RegisterPage from "../pages/auth/RegisterPage";
 const TermsPage = lazy(() => import("../pages/legal/TermsPage"));
 const PrivacyPage = lazy(() => import("../pages/legal/PrivacyPage"));
+const CookiePolicyPage = lazy(() => import("../pages/legal/CookiePolicyPage"));
+const RefundPolicyPage = lazy(() => import("../pages/legal/RefundPolicyPage"));
+const DataRequestPage = lazy(() => import("../pages/legal/DataRequestPage"));
+import CookieConsent from "../components/legal/CookieConsent";
+import LegalFooter from "../components/legal/LegalFooter";
 const DashboardPage = lazy(() => import("../pages/dashboard/DashboardPage"));
 const DocumentsPage = lazy(() => import("../pages/documents/DocumentsPage"));
 const ChatPage = lazy(() => import("../pages/chat/ChatPage"));
@@ -23,6 +28,9 @@ const publicRoutes: AppRoute[] = [
   { path: "/register", element: <RegisterPage /> },
   { path: "/terms", element: <TermsPage /> },
   { path: "/privacy", element: <PrivacyPage /> },
+  { path: "/cookies", element: <CookiePolicyPage /> },
+  { path: "/refunds", element: <RefundPolicyPage /> },
+  { path: "/data-deletion", element: <DataRequestPage /> },
 ];
 
 const protectedRoutes: AppRoute[] = [
@@ -66,6 +74,7 @@ function RootRedirect() {
 
 export default function AppRouter() {
   return (
+    <>
     <Suspense fallback={<PageLoader />}>
       <Routes>
         <Route path="/" element={<RootRedirect />} />
@@ -76,5 +85,8 @@ export default function AppRouter() {
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </Suspense>
+    <CookieConsent />
+    <LegalFooter />
+    </>
   );
 }

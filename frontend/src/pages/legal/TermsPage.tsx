@@ -1,44 +1,14 @@
 import { Link } from "react-router-dom";
-import { ArrowLeft, FileText, ShieldCheck } from "lucide-react";
-import DashboardLayout from "../../layouts/DashboardLayout";
-
+import { ArrowLeft, FileText } from "lucide-react";
 const sections = [
-  { title: "1. Using the service", body: "AI Document Assistant helps you upload, organize, search, summarize, and ask questions about documents. You are responsible for ensuring you have the right to upload the content you submit." },
-  { title: "2. Your documents and data", body: "Only upload documents you are authorized to use. Do not submit unlawful content, confidential information belonging to others without permission, or sensitive personal data unless you have an appropriate legal basis and understand the risks." },
-  { title: "3. AI-generated results", body: "AI-generated summaries and answers can be incomplete or incorrect. Review important information against the original source before relying on it for legal, financial, medical, academic, or business decisions." },
-  { title: "4. Account security", body: "Keep your login credentials private and notify the service operator if you suspect unauthorized access. You are responsible for activity performed through your account, subject to applicable law." },
-  { title: "5. Acceptable use", body: "Do not attempt to bypass authentication, access another user's documents, interfere with service availability, upload malware, or use the service in violation of applicable law." },
-  { title: "6. Availability and changes", body: "The service may change, become temporarily unavailable, or be discontinued. No specific availability, retention period, or AI output accuracy is guaranteed by this page." },
-  { title: "7. Contact and legal review", body: "This page is a starter notice for the application and is not legal advice. Before public commercial use, the service operator should replace it with terms reviewed for the actual business, jurisdiction, data retention, and subprocessors." },
+["1. Scope","AI Document Assistant provides tools for uploading, organizing, searching, summarizing, and asking questions about documents. Features and availability may change as the application develops."],
+["2. Account and security","Provide accurate account information, keep your credentials secure, and notify the operator if you suspect unauthorized access. You are responsible for activity through your account except where applicable law provides otherwise."],
+["3. Your content","You retain rights you already hold in documents and other material you upload. You confirm you have permission and a lawful basis to submit that material. You grant the service only the limited permission needed to store, process, and return it to provide requested features and maintain security."],
+["4. AI output","AI-generated summaries, extracted text, and answers may be incomplete, inaccurate, outdated, or fabricated. Check important claims against the original documents. Do not rely on AI output as professional legal, medical, financial, tax, or other specialist advice."],
+["5. Acceptable use","Do not use the service to violate law or third-party rights, access another user's information, upload malware, bypass access controls, disrupt the service, or submit content you are not authorized to process."],
+["6. Third-party services and availability","The service depends on hosting, database, storage, and AI providers. Their availability and terms may affect the application. We do not promise uninterrupted service, a particular response time, or that generated output will meet your requirements."],
+["7. Payments, cancellation, and refunds","The repository does not establish an active paid subscription, checkout flow, or refund-processing system. No fee should be charged unless the seller, total price, billing interval, renewal, cancellation method, and applicable refund terms are clearly shown before payment. Mandatory consumer law continues to apply. See the Refund Policy."],
+["8. Suspension and changes","Access may be restricted where reasonably necessary to protect users, address abuse or security incidents, or comply with law. Material changes should be communicated and renewed agreement obtained where required."],
+["9. Legal rights and operator information","Nothing in these terms excludes rights or liabilities that cannot be excluded under applicable law. The operator must specify its legal identity, contact details, governing law, and dispute-resolution process before public commercial launch."]
 ];
-
-export default function TermsPage() {
-  return (
-    <DashboardLayout>
-      <div className="mx-auto w-full max-w-3xl space-y-6 pb-10">
-        <Link to="/dashboard" className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"><ArrowLeft size={16} /> Back to workspace</Link>
-        <article className="rounded-2xl border border-border bg-card p-6 sm:p-10">
-          <div className="flex items-start gap-4">
-            <div className="rounded-xl bg-muted p-3 text-muted-foreground"><FileText size={24} /></div>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[.2em] text-muted-foreground">Legal</p>
-              <h1 className="mt-1 font-display text-3xl font-bold sm:text-4xl">Terms of Service</h1>
-              <p className="mt-2 text-sm text-muted-foreground">Plain-language service terms for AI Document Assistant.</p>
-            </div>
-          </div>
-          <div className="my-7 flex gap-3 rounded-xl border border-border bg-muted/40 p-4 text-sm leading-6 text-muted-foreground">
-            <ShieldCheck className="mt-0.5 shrink-0 text-muted-foreground" size={20} />
-            <p>Please read these terms before creating an account. They describe responsible use of the application and the limits of AI-generated content.</p>
-          </div>
-          <div className="space-y-7">
-            {sections.map((section) => <section key={section.title}><h2 className="font-semibold text-foreground">{section.title}</h2><p className="mt-2 text-sm leading-7 text-muted-foreground">{section.body}</p></section>)}
-          </div>
-          <div className="mt-9 flex flex-wrap gap-3 border-t border-border pt-6">
-            <Link to="/register" className="inline-flex h-11 items-center rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground transition hover:opacity-90">Return to sign up</Link>
-            <Link to="/privacy" className="inline-flex h-11 items-center rounded-xl border border-border px-5 text-sm font-semibold transition hover:bg-muted">Privacy notice</Link>
-          </div>
-        </article>
-      </div>
-    </DashboardLayout>
-  );
-}
+export default function TermsPage(){return <main className="app-shell min-h-screen bg-background px-4 py-8 text-foreground sm:px-6 lg:px-8"><div className="mx-auto max-w-4xl"><Link to="/login" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-4"><ArrowLeft size={16} aria-hidden="true"/>Back to sign in</Link><article className="mt-8 rounded-3xl border border-border bg-card p-6 sm:p-10"><header className="flex items-start gap-4"><div className="rounded-xl bg-muted p-3 text-muted-foreground"><FileText size={24} aria-hidden="true"/></div><div><p className="text-xs font-semibold uppercase tracking-[.2em] text-muted-foreground">Legal</p><h1 className="mt-1 text-3xl font-bold sm:text-4xl">Terms of Service</h1><p className="mt-2 text-sm text-muted-foreground">Last updated: November 13, 2026</p></div></header><p className="my-7 rounded-xl border border-border bg-muted/40 p-4 text-sm leading-6 text-foreground">Please read these terms before using the service. They explain your responsibilities and the limits of AI-generated content. This template must be reviewed against the operator's actual business and applicable law.</p><div className="space-y-7">{sections.map(([title,body])=><section key={title}><h2 className="font-semibold text-foreground">{title}</h2><p className="mt-2 text-sm leading-7 text-muted-foreground">{body}</p></section>)}</div><footer className="mt-9 flex flex-wrap gap-4 border-t border-border pt-6 text-sm"><Link to="/privacy" className="font-semibold text-primary underline underline-offset-4">Privacy Policy</Link><Link to="/cookies" className="font-semibold text-primary underline underline-offset-4">Cookie Policy</Link><Link to="/refunds" className="font-semibold text-primary underline underline-offset-4">Refund Policy</Link></footer></article></div></main>}

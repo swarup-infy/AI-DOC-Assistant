@@ -85,6 +85,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       <div className="flex min-h-screen flex-col lg:hidden">
         <aside
           aria-hidden={!sidebarOpen}
+          inert={!sidebarOpen}
+          id="mobile-navigation"
           className={`fixed inset-y-0 left-0 z-50 w-[min(86vw,20rem)] overflow-y-auto border-r border-border bg-card shadow-2xl transition-transform duration-300 ease-out ${
             sidebarOpen ? "translate-x-0" : "-translate-x-full"
           }`}
