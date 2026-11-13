@@ -228,3 +228,10 @@ export async function refreshAccessToken(): Promise<LoginResponse> {
 
   return data;
 }
+
+
+/** Permanently delete the authenticated account and application data. */
+export async function deleteMyAccount(): Promise<void> {
+  await api.delete("/auth/me");
+  logout();
+}

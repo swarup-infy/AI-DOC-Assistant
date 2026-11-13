@@ -224,7 +224,9 @@ export default function DocumentsPage() {
           </div>
 
           <div className="p-5 sm:p-6">
+            <label htmlFor="document-file-input" className="sr-only">Choose a PDF, DOCX, CSV, XLS, or XLSX document to upload</label>
             <input
+              id="document-file-input"
               ref={inputRef}
               type="file"
               accept={ACCEPTED_TYPES}
@@ -235,6 +237,7 @@ export default function DocumentsPage() {
             <div
               role="button"
               tabIndex={0}
+              aria-label="Choose a document to upload. You can also drag and drop a file here."
               onClick={() => inputRef.current?.click()}
               onKeyDown={(event) => {
                 if (event.key === "Enter" || event.key === " ") {
@@ -262,7 +265,7 @@ export default function DocumentsPage() {
               }`}
             >
               <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-transform group-hover:scale-105">
-                <UploadCloud size={27} />
+                <UploadCloud size={27} aria-hidden="true" />
               </div>
               <h4 className="mt-4 text-sm font-semibold text-foreground sm:text-base">
                 Drop your document here or browse
@@ -271,7 +274,7 @@ export default function DocumentsPage() {
                 Securely upload a file to your workspace.
               </p>
               <span className="mt-4 inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3.5 py-2 text-xs font-semibold text-foreground shadow-sm">
-                <FileUp size={15} />
+                <FileUp size={15} aria-hidden="true" />
                 Choose file
               </span>
             </div>

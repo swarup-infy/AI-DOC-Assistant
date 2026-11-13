@@ -41,7 +41,7 @@ function Sidebar() {
 
       <footer className="flex-shrink-0 border-t border-border/70 p-4">
         <section className="rounded-2xl border border-border bg-muted/45 p-4">
-          <div className="flex items-center gap-3"><div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><Sparkles size={17} /></div><div className="min-w-0"><h2 className="truncate text-xs font-semibold text-foreground">AI Workspace</h2><p className="text-[11px] text-muted-foreground">Powered by Groq</p></div></div>
+          <div className="flex items-center gap-3"><div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><Sparkles size={17} /></div><div className="min-w-0"><h2 className="truncate text-xs font-semibold text-foreground">AI Workspace</h2><p className="text-[11px] text-muted-foreground">AI-assisted document workspace</p></div></div>
           <p className="mt-3 text-xs leading-5 text-muted-foreground">Upload documents, search your knowledge base, and chat with your AI assistant.</p>
         </section>
       </footer>

@@ -24,7 +24,7 @@ function ChatHeader({ mode }: ChatHeaderProps) {
         </div>
         <div className="hidden shrink-0 items-center gap-3 rounded-xl border border-border bg-muted/50 px-4 py-3 sm:flex">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary"><Bot size={18} /></div>
-          <div><p className="text-xs font-semibold text-foreground">Assistant ready</p><p className="text-[11px] text-muted-foreground">Powered by Groq</p></div>
+          <div><p className="text-xs font-semibold text-foreground">Assistant ready</p><p className="text-[11px] text-muted-foreground">AI responses may use an external provider</p></div>
         </div>
       </div>
     </section>

@@ -234,3 +234,95 @@ def get_me(
     return UserResponse.model_validate(
         current_user
     )
+
+# ==========================================================
+# Account deletion
+# ==========================================================
+
+
+@router.delete(
+    "/me",
+    status_code=status.HTTP_200_OK,
+    summary="Delete current account",
+    description=(
+        "Permanently delete the authenticated account and its primary "
+        "application data, including documents, vectors, and chat history."
+    ),
+)
+def delete_current_account(
+    current_user: Annotated[
+        User,
+        Depends(get_current_user),
+    ],
+    db: Annotated[
+        Session,
+        Depends(get_db),
+    ],
+) -> dict[str, str]:
+    """
+    Delete the authenticated account and associated primary application data.
+
+    Vector records are removed before relational data. If vector cleanup fails,
+    the database account and its related records remain available for retry.
+    Physical file cleanup is attempted after the database transaction commits;
+    failures are logged and require operator follow-up.
+    """
+    from app.services.upload_service import delete_uploaded_file
+    from app.vector_db.chroma_service import ChromaService
+
+    try:
+        # Materialize these while the ORM session is active.
+        documents = list(current_user.documents)
+        file_paths = [document.file_path for document in documents]
+        user_id = current_user.id
+
+        if documents:
+            chroma_service = ChromaService()
+            for document in documents:
+                chroma_service.delete_document_chunks(
+                    document_id=document.id,
+                    user_id=user_id,
+                )
+
+        # ORM relationships cascade document and chat-history rows.
+        db.delete(current_user)
+        db.commit()
+
+    except Exception as exc:
+        db.rollback()
+        logger.exception(
+            "Account deletion failed before database commit. user_id=%d.",
+            current_user.id,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unable to delete account. Please retry or contact the operator.",
+        ) from exc
+
+    failed_file_paths: list[str] = []
+    for file_path in file_paths:
+        if not delete_uploaded_file(file_path):
+            failed_file_paths.append(file_path)
+
+    if failed_file_paths:
+        logger.error(
+            "Account %d was deleted, but %d uploaded file(s) remain on disk.",
+            user_id,
+            len(failed_file_paths),
+        )
+
+    logger.info(
+        "Account deletion committed. user_id=%d documents=%d failed_file_cleanup=%d.",
+        user_id,
+        len(documents),
+        len(failed_file_paths),
+    )
+    return {
+        "status": "success",
+        "message": (
+            "Account and associated primary application records deleted. "
+            "Some physical files may require operator cleanup."
+            if failed_file_paths
+            else "Account and associated primary application data deleted."
+        ),
+    }
