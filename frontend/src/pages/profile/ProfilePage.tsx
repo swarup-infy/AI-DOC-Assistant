@@ -1,11 +1,16 @@
 import { useEffect, useState } from "react";
-import { Calendar, Camera, CheckCircle2, Mail, Save, Shield, User, type LucideIcon } from "lucide-react";
+import { Calendar, Camera, CheckCircle2, Mail, Save, Shield, Trash2, User, type LucideIcon } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { deleteMyAccount } from "../../services/authService";
 
 import DashboardLayout from "../../layouts/DashboardLayout";
 import { useAuth } from "../../hooks/useAuth";
 
 export default function ProfilePage() {
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, logout } = useAuth();
+  const navigate = useNavigate();
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
   const [name, setName] = useState(user?.name ?? "");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -20,6 +25,22 @@ export default function ProfilePage() {
       updateUser({ ...user, name: name.trim() });
       setSaved(true);
     } finally { setSaving(false); }
+  }
+
+  async function handleDeleteAccount() {
+    const confirmation = window.prompt("This permanently deletes your account and associated documents, vectors, and chat history. Type DELETE to continue.");
+    if (confirmation !== "DELETE") return;
+    setDeleting(true);
+    setDeleteError("");
+    try {
+      await deleteMyAccount();
+      logout();
+      navigate("/login", { replace: true });
+    } catch (error) {
+      setDeleteError(error instanceof Error ? error.message : "Account deletion failed. Please try again.");
+    } finally {
+      setDeleting(false);
+    }
   }
 
   const initials = (user?.name ?? "User").split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("");
@@ -53,6 +74,14 @@ export default function ProfilePage() {
               <div className="flex flex-wrap items-center gap-3 pt-2"><button type="button" onClick={() => void handleSave()} disabled={saving || !name.trim()} className="inline-flex h-11 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-md shadow-primary/20 transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"><Save size={17} />{saving ? "Saving..." : "Save changes"}</button>{saved && <span className="inline-flex items-center gap-2 text-sm font-medium text-success"><CheckCircle2 size={16} />Saved</span>}</div>
             </div>
           </article>
+        </section>
+        <section aria-labelledby="delete-account-heading" className="rounded-2xl border border-destructive/30 bg-card p-5 sm:p-6">
+          <h3 id="delete-account-heading" className="font-semibold text-foreground">Delete account and data</h3>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">Permanently removes your account, uploaded documents, document vectors, and chat history from application primary storage. This cannot be undone. Provider backups and infrastructure logs may follow separate retention schedules.</p>
+          {deleteError && <p role="alert" className="mt-3 text-sm text-destructive">{deleteError}</p>}
+          <button type="button" onClick={() => void handleDeleteAccount()} disabled={deleting} className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl border border-destructive px-4 text-sm font-semibold text-destructive hover:bg-destructive/10 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-60">
+            <Trash2 size={16} aria-hidden="true" />{deleting ? "Deleting account..." : "Delete my account"}
+          </button>
         </section>
       </div>
     </DashboardLayout>
