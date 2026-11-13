@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Calendar, Camera, CheckCircle2, Mail, Save, Shield, Trash2, User, type LucideIcon } from "lucide-react";
+import { Calendar, CheckCircle2, Mail, Save, Shield, Trash2, User, type LucideIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { deleteMyAccount } from "../../services/authService";
 
@@ -58,7 +58,6 @@ export default function ProfilePage() {
           <article className="surface rounded-2xl p-6 text-center">
             <div className="relative mx-auto flex h-24 w-24 items-center justify-center rounded-3xl bg-primary text-2xl font-semibold text-primary-foreground shadow-lg shadow-primary/20">
               {initials || "U"}
-              <button type="button" aria-label="Change profile photo" className="absolute -bottom-2 -right-2 flex h-9 w-9 items-center justify-center rounded-xl border-2 border-card bg-card text-muted-foreground shadow-sm transition hover:text-foreground"><Camera size={16} /></button>
             </div>
             <h3 className="mt-5 text-lg font-semibold text-foreground">{user?.name || "User"}</h3>
             <p className="mt-1 break-all text-sm text-muted-foreground">{user?.email || "—"}</p>
