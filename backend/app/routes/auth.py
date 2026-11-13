@@ -245,8 +245,8 @@ def get_me(
     status_code=status.HTTP_200_OK,
     summary="Delete current account",
     description=(
-        "Permanently delete the authenticated account, its documents, "
-        "uploaded files, vectors, and chat history."
+        "Permanently delete the authenticated account and its primary "
+        "application data, including documents, vectors, and chat history."
     ),
 )
 def delete_current_account(
@@ -260,60 +260,69 @@ def delete_current_account(
     ],
 ) -> dict[str, str]:
     """
-    Delete only the authenticated user's account and associated content.
+    Delete the authenticated account and associated primary application data.
 
-    Vector records and uploaded files are cleaned before the database
-    transaction is committed. If vector cleanup fails, the account is
-    retained so the operation can safely be retried.
+    Vector records are removed before relational data. If vector cleanup fails,
+    the database account and its related records remain available for retry.
+    Physical file cleanup is attempted after the database transaction commits;
+    failures are logged and require operator follow-up.
     """
     from app.services.upload_service import delete_uploaded_file
     from app.vector_db.chroma_service import ChromaService
 
     try:
+        # Materialize these while the ORM session is active.
         documents = list(current_user.documents)
-        chroma_service = ChromaService()
-
-        # Remove vector records first. Keep the account intact if any
-        # vector cleanup fails so this operation can be retried.
-        for document in documents:
-            chroma_service.delete_document_chunks(
-                document_id=document.id,
-                user_id=current_user.id,
-            )
-
-        # Remove database records (documents/chat history cascade from
-        # the user model's relationships and database constraints).
         file_paths = [document.file_path for document in documents]
+        user_id = current_user.id
+
+        if documents:
+            chroma_service = ChromaService()
+            for document in documents:
+                chroma_service.delete_document_chunks(
+                    document_id=document.id,
+                    user_id=user_id,
+                )
+
+        # ORM relationships cascade document and chat-history rows.
         db.delete(current_user)
         db.commit()
 
-        # Physical files are removed after the database commit. A failed
-        # disk cleanup is logged for operator follow-up; the account data
-        # is no longer available through the application.
-        for file_path in file_paths:
-            if not delete_uploaded_file(file_path):
-                logger.warning(
-                    "Account deleted but uploaded file cleanup failed: %s",
-                    file_path,
-                )
-
-        logger.info(
-            "Account deletion completed. user_id=%d documents=%d.",
-            current_user.id,
-            len(documents),
-        )
-        return {"status": "success", "message": "Account and associated application data deleted."}
-
-    except HTTPException:
-        db.rollback()
-        raise
     except Exception as exc:
         db.rollback()
         logger.exception(
-            "Account deletion failed. user_id=%d.",
+            "Account deletion failed before database commit. user_id=%d.",
             current_user.id,
         )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Unable to delete account. No account deletion was confirmed.",
+            detail="Unable to delete account. Please retry or contact the operator.",
         ) from exc
+
+    failed_file_paths: list[str] = []
+    for file_path in file_paths:
+        if not delete_uploaded_file(file_path):
+            failed_file_paths.append(file_path)
+
+    if failed_file_paths:
+        logger.error(
+            "Account %d was deleted, but %d uploaded file(s) remain on disk.",
+            user_id,
+            len(failed_file_paths),
+        )
+
+    logger.info(
+        "Account deletion committed. user_id=%d documents=%d failed_file_cleanup=%d.",
+        user_id,
+        len(documents),
+        len(failed_file_paths),
+    )
+    return {
+        "status": "success",
+        "message": (
+            "Account and associated primary application records deleted. "
+            "Some physical files may require operator cleanup."
+            if failed_file_paths
+            else "Account and associated primary application data deleted."
+        ),
+    }
