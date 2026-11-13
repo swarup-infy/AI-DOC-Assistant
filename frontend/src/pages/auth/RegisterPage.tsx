@@ -86,7 +86,7 @@ export default function RegisterPage() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <Input
               label="Full Name"
               autoComplete="name"
@@ -161,7 +161,7 @@ export default function RegisterPage() {
             </div>
 
             <label className="flex items-start gap-3 text-sm text-white/90">
-              <input type="checkbox" checked={consentAccepted} onChange={(event) => setConsentAccepted(event.target.checked)} className="mt-1 h-4 w-4 shrink-0 rounded accent-pink-500" aria-label="Agree to Terms of Service and Privacy Policy" aria-describedby="legal-consent-description" />
+              <input type="checkbox" checked={consentAccepted} onChange={(event) => setConsentAccepted(event.target.checked)} className="mt-1 h-4 w-4 shrink-0 rounded accent-pink-500" aria-label="Agree to Terms of Service and Privacy Policy" aria-describedby="legal-consent-description" required />
               <span>
                 <span id="legal-consent-description">I have read and agree to the <Link to="/terms" className="mx-1 font-semibold text-pink-200 underline underline-offset-2">Terms</Link> and acknowledge the <Link to="/privacy" className="ml-1 font-semibold text-pink-200 underline underline-offset-2">Privacy Policy</Link>. This is required to create an account.</span>
               </span>
