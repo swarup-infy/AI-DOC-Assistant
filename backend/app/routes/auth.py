@@ -234,3 +234,86 @@ def get_me(
     return UserResponse.model_validate(
         current_user
     )
+
+# ==========================================================
+# Account deletion
+# ==========================================================
+
+
+@router.delete(
+    "/me",
+    status_code=status.HTTP_200_OK,
+    summary="Delete current account",
+    description=(
+        "Permanently delete the authenticated account, its documents, "
+        "uploaded files, vectors, and chat history."
+    ),
+)
+def delete_current_account(
+    current_user: Annotated[
+        User,
+        Depends(get_current_user),
+    ],
+    db: Annotated[
+        Session,
+        Depends(get_db),
+    ],
+) -> dict[str, str]:
+    """
+    Delete only the authenticated user's account and associated content.
+
+    Vector records and uploaded files are cleaned before the database
+    transaction is committed. If vector cleanup fails, the account is
+    retained so the operation can safely be retried.
+    """
+    from app.services.upload_service import delete_uploaded_file
+    from app.vector_db.chroma_service import ChromaService
+
+    try:
+        documents = list(current_user.documents)
+        chroma_service = ChromaService()
+
+        # Remove vector records first. Keep the account intact if any
+        # vector cleanup fails so this operation can be retried.
+        for document in documents:
+            chroma_service.delete_document_chunks(
+                document_id=document.id,
+                user_id=current_user.id,
+            )
+
+        # Remove database records (documents/chat history cascade from
+        # the user model's relationships and database constraints).
+        file_paths = [document.file_path for document in documents]
+        db.delete(current_user)
+        db.commit()
+
+        # Physical files are removed after the database commit. A failed
+        # disk cleanup is logged for operator follow-up; the account data
+        # is no longer available through the application.
+        for file_path in file_paths:
+            if not delete_uploaded_file(file_path):
+                logger.warning(
+                    "Account deleted but uploaded file cleanup failed: %s",
+                    file_path,
+                )
+
+        logger.info(
+            "Account deletion completed. user_id=%d documents=%d.",
+            current_user.id,
+            len(documents),
+        )
+        return {"status": "success", "message": "Account and associated application data deleted."}
+
+    except HTTPException:
+        db.rollback()
+        raise
+    except Exception as exc:
+        db.rollback()
+        logger.exception(
+            "Account deletion failed. user_id=%d.",
+            current_user.id,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unable to delete account. No account deletion was confirmed.",
+        ) from exc
