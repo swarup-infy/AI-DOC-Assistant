@@ -25,6 +25,7 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [serverError, setServerError] = useState("");
+  const [consentAccepted, setConsentAccepted] = useState(false);
 
   const {
     register,
@@ -55,13 +56,14 @@ export default function RegisterPage() {
 
   const onSubmit = useCallback(async (data: RegisterFormData) => {
     setServerError("");
+    if (!consentAccepted) { setServerError("Please accept the Terms of Service and acknowledge the Privacy Policy to create an account."); return; }
     try {
       await registerUser({ name: data.name, email: data.email, password: data.password });
       navigate("/login", { replace: true });
     } catch (error) {
       setServerError(error instanceof Error ? error.message : "Unable to create account.");
     }
-  }, [navigate]);
+  }, [consentAccepted, navigate]);
 
   return (
     <AuthLayout>
@@ -84,7 +86,7 @@ export default function RegisterPage() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
             <Input
               label="Full Name"
               autoComplete="name"
@@ -158,11 +160,10 @@ export default function RegisterPage() {
               </button>
             </div>
 
-            <label className="flex items-start gap-3 text-sm text-white/75">
-              <input type="checkbox" className="mt-1 h-4 w-4 shrink-0 rounded accent-pink-500" aria-label="Agree to Terms of Service and Privacy Notice" required />
+            <label className="flex items-start gap-3 text-sm text-white/90">
+              <input type="checkbox" checked={consentAccepted} onChange={(event) => setConsentAccepted(event.target.checked)} className="mt-1 h-4 w-4 shrink-0 rounded accent-pink-500" aria-label="Agree to Terms of Service and Privacy Policy" aria-describedby="legal-consent-description" />
               <span>
-                I agree to the <Link to="/terms" className="mx-1 font-semibold text-pink-300 hover:underline">Terms</Link>
-                and <Link to="/privacy" className="ml-1 font-semibold text-pink-300 hover:underline">Privacy Policy</Link>
+                <span id="legal-consent-description">I have read and agree to the <Link to="/terms" className="mx-1 font-semibold text-pink-200 underline underline-offset-2">Terms</Link> and acknowledge the <Link to="/privacy" className="ml-1 font-semibold text-pink-200 underline underline-offset-2">Privacy Policy</Link>. This is required to create an account.</span>
               </span>
             </label>
 
